@@ -1,0 +1,3735 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <title>FlowCAS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f1f5f9;
+            --panel: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --accent: #10b981;
+            --accent-hover: #059669;
+            --danger: #ef4444;
+            --radius: 8px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 100;
+        }
+
+        header h1 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        header .exam-info {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        /* Main layout */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Resizer */
+        .resizer {
+            width: 6px;
+            background: var(--border);
+            cursor: col-resize;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .resizer:hover, .resizer.active {
+            background: var(--primary);
+        }
+
+        /* Left panel - Text Editor */
+        .left-panel {
+            width: 50%;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            background: var(--panel);
+        }
+
+        .editor-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+            background: #f8fafc;
+        }
+
+        .toolbar-btn {
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--text);
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg);
+            border-color: var(--primary);
+        }
+
+        .toolbar-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            background: var(--border);
+            margin: 0 4px;
+        }
+
+        .editor-area {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            outline: none;
+            font-size: 1rem;
+            line-height: 1.7;
+            min-height: 0;
+        }
+
+        .editor-area:empty::before {
+            content: "Skriv din besvarelse her... Du kan indsætte resultater fra værktøjerne til højre.";
+            color: var(--text-light);
+            font-style: italic;
+        }
+
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0 2px;
+            font-size: 0.85em;
+            line-height: 1.2;
+        }
+        .fraction .num, .fraction .den {
+            padding: 0 4px;
+        }
+        .fraction .den {
+            border-top: 1.5px solid currentColor;
+        }
+        .fraction-hint {
+            position: absolute;
+            background: #1e293b;
+            color: #e2e8f0;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 200;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .editor-area table {
+            border-collapse: collapse;
+            margin: 8px 0;
+            position: relative;
+        }
+
+        .editor-area table td, .editor-area table th {
+            border: 1.5px solid #bbb;
+            padding: 6px 10px;
+            min-width: 30px;
+            min-height: 24px;
+            vertical-align: top;
+        }
+
+        .editor-area table td.cell-selected,
+        .editor-area table th.cell-selected {
+            background-color: #d2e3fc !important;
+        }
+
+        .editor-area table.cell-selecting td::selection,
+        .editor-area table.cell-selecting th::selection,
+        .editor-area table.cell-selecting td *::selection,
+        .editor-area table.cell-selecting th *::selection {
+            background: transparent;
+        }
+
+        .table-plus-btn {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: transparent;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            line-height: 1;
+            color: #cbd5e1;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.2s, color 0.15s, background 0.15s;
+            pointer-events: none;
+        }
+        .table-plus-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .table-plus-btn:hover {
+            background: #e2e8f0;
+            color: #64748b;
+        }
+
+        /* Right panel - Tools */
+        .right-panel {
+            flex: 1;
+            min-width: 350px;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+        }
+
+        .tool-tabs {
+            display: flex;
+            background: var(--panel);
+            border-bottom: 2px solid var(--border);
+            padding: 0 8px;
+        }
+
+        .tool-tab {
+            padding: 12px 18px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-light);
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tool-tab:hover {
+            color: var(--text);
+        }
+
+        .tool-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tool-content {
+            flex: 1;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .tool-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Calculator */
+        .calculator {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .calc-display {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: var(--radius);
+            font-family: 'Consolas', 'Courier New', monospace;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .calc-expression {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            min-height: 1.4em;
+            word-break: break-all;
+        }
+
+        .calc-result {
+            font-size: 1.8rem;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        .calc-history {
+            max-height: 120px;
+            overflow-y: auto;
+            margin-bottom: 8px;
+        }
+
+        .calc-history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            border-bottom: 1px solid #334155;
+        }
+
+        .calc-history-item:hover {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        .calc-hist-entry:hover {
+            background: #f1f5f9 !important;
+        }
+
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+        }
+
+        .calc-btn {
+            padding: 14px 8px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.15s;
+            text-align: center;
+        }
+
+        .calc-btn:hover {
+            background: var(--bg);
+            transform: translateY(-1px);
+        }
+
+        .calc-btn:active {
+            transform: translateY(0);
+        }
+
+        .calc-btn.number {
+            background: white;
+            font-weight: 600;
+        }
+
+        .calc-btn.operator {
+            background: #eff6ff;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .calc-btn.function {
+            background: #f0fdf4;
+            color: #16a34a;
+            font-size: 0.85rem;
+        }
+
+        .calc-btn.equals {
+            background: var(--primary);
+            color: white;
+            font-weight: 700;
+        }
+
+        .calc-btn.equals:hover {
+            background: var(--primary-hover);
+        }
+
+        .calc-btn.danger {
+            background: #fef2f2;
+            color: var(--danger);
+        }
+
+        .calc-btn.wide {
+            grid-column: span 2;
+        }
+
+        .insert-btn {
+            padding: 12px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .insert-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        /* Formula Collection */
+        .formulas {
+            padding: 16px;
+        }
+
+        .formula-category {
+            margin-bottom: 16px;
+        }
+
+        .formula-category h3 {
+            font-size: 1rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid var(--primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .formula-category h3::after {
+            content: "▼";
+            font-size: 0.7rem;
+            transition: transform 0.2s;
+        }
+
+        .formula-category.collapsed h3::after {
+            transform: rotate(-90deg);
+        }
+
+        .formula-category.collapsed .formula-list {
+            display: none;
+        }
+
+        .formula-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 6px;
+            transition: all 0.15s;
+        }
+
+        .formula-item:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .formula-name {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 2px;
+        }
+
+        .formula-expr {
+            font-size: 1.05rem;
+            font-family: 'Cambria Math', 'Times New Roman', serif;
+            font-style: italic;
+        }
+
+        .formula-insert-btn {
+            padding: 6px 12px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+
+        .formula-insert-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        /* Geometry / Graph canvas */
+        .geometry {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .geo-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .geo-btn {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .geo-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .geo-btn:hover {
+            border-color: var(--primary);
+            background: #eff6ff;
+        }
+
+        .geo-btn.active:not(.color-quick) {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .geo-btn.color-quick {
+            border: 2px solid var(--border);
+            box-shadow: none;
+        }
+
+        .geo-btn.color-quick:hover {
+            opacity: 0.8;
+        }
+
+        .geo-btn.color-quick.active {
+            border-color: var(--text);
+            box-shadow: 0 0 0 2px white, 0 0 0 3px var(--text);
+        }
+
+        .geo-btn.color-quick,
+        .geo-btn.color-quick:hover,
+        .geo-btn.color-quick.active {
+            color: transparent;
+        }
+
+        .geo-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            padding: 8px 12px;
+            background: white;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .geo-options label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .geo-options input, .geo-options select {
+            padding: 4px 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.85rem;
+            width: 70px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            min-height: 400px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            position: relative;
+            overflow: visible;
+        }
+
+        #geoCanvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        .geo-delete-btn {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: white;
+            color: #94a3b8;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 15;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.15s;
+            pointer-events: auto;
+        }
+
+        .geo-delete-btn:hover {
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .snip-overlay {
+            position: absolute;
+            border: 2px dashed var(--accent);
+            background: rgba(16, 185, 129, 0.1);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .snip-active #geoCanvas {
+            cursor: crosshair;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Print styles */
+        @media print {
+            header, .right-panel, .resizer, .editor-toolbar, .status-bar { display: none !important; }
+            body { background: white !important; }
+            .main-container { display: block !important; }
+            .left-panel { width: 100% !important; flex: none !important; border: none !important; }
+            .editor-area { padding: 20px; border: none !important; box-shadow: none !important; min-height: auto !important; height: auto !important; overflow: visible !important; }
+        }
+
+        /* Inserted content styling */
+
+        .inserted-geo {
+            display: block;
+            margin: 8px 0;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+
+        /* Graph function input */
+        .graph-input-area {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .graph-input-area input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            font-family: 'Consolas', monospace;
+        }
+
+        .graph-input-area button {
+            padding: 8px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .graph-input-area button:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Status bar */
+        .status-bar {
+            padding: 4px 12px;
+            background: #f8fafc;
+            border-top: 1px solid var(--border);
+            font-size: 0.75rem;
+            color: var(--text-light);
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>FlowCAS</h1>
+    <span class="exam-info" id="examDate"></span>
+</header>
+
+<div class="main-container">
+    <!-- Left Panel: Text Editor -->
+    <div class="left-panel" id="leftPanel">
+        <div class="editor-toolbar">
+            <button class="toolbar-btn" onclick="execCmd('bold')" title="Fed"><b>F</b></button>
+            <button class="toolbar-btn" onclick="execCmd('italic')" title="Kursiv"><i>K</i></button>
+            <button class="toolbar-btn" onclick="execCmd('underline')" title="Understreg"><u>U</u></button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" onclick="execCmd('insertUnorderedList')" title="Punktliste">• Liste</button>
+            <button class="toolbar-btn" onclick="execCmd('insertOrderedList')" title="Nummereret liste">1. Liste</button>
+            <div class="toolbar-separator"></div>
+            <select class="toolbar-btn" id="fontSizeSelect" onchange="execCmdVal('fontSize', this.value);">
+                <option value="3" selected>Normal</option>
+                <option value="1">Mindst</option>
+                <option value="2">Lille</option>
+                <option value="3">Normal</option>
+                <option value="4">Stor</option>
+                <option value="5">Større</option>
+                <option value="6">Overskrift</option>
+            </select>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" onclick="insertMathSymbol('²')" title="Opløftet 2">x²</button>
+            <button class="toolbar-btn" onclick="insertMathSymbol('³')" title="Opløftet 3">x³</button>
+            <button class="toolbar-btn" onclick="insertMathSymbol('√')" title="Kvadratrod">√</button>
+            <button class="toolbar-btn" onclick="insertMathSymbol('π')" title="Pi">π</button>
+            <button class="toolbar-btn" onclick="insertMathSymbol('±')" title="Plus/minus">±</button>
+            <button class="toolbar-btn" onclick="insertMathSymbol('≈')" title="Cirka lig med">≈</button>
+            <button class="toolbar-btn" onclick="insertMathSymbol('≠')" title="Ikke lig med">≠</button>
+            <button class="toolbar-btn" onclick="insertMathSymbol('≤')" title="Mindre end eller lig med">≤</button>
+            <button class="toolbar-btn" onclick="insertMathSymbol('≥')" title="Større end eller lig med">≥</button>
+            <button class="toolbar-btn" onclick="insertMathSymbol('°')" title="Grader">°</button>
+            <div class="toolbar-separator"></div>
+            <div style="position:relative;display:inline-block;">
+                <button class="toolbar-btn" onclick="toggleTablePicker()" title="Indsæt tabel">▦ Tabel</button>
+                <div id="tablePicker" style="display:none;position:absolute;top:100%;left:0;z-index:50;background:white;border:1px solid var(--border);border-radius:var(--radius);padding:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                    <div id="tablePickerLabel" style="font-size:0.8rem;color:var(--text-light);margin-bottom:4px;text-align:center;">Vælg størrelse</div>
+                    <div id="tableGrid" style="display:grid;grid-template-columns:repeat(8,20px);gap:2px;"></div>
+                </div>
+            </div>
+            <button class="toolbar-btn" onclick="window.print()" title="Print">🖨 Print</button>
+            <button class="toolbar-btn" id="exampleBtn" onclick="toggleExample()" title="Eksempelvisning" style="display:none;">📋 Eksempelvisning</button>
+        </div>
+        <div class="editor-area" id="editor" contenteditable="true" spellcheck="true"></div>
+        <div class="status-bar">
+            <span id="wordCount">0 ord</span>
+            <span id="charCount">0 tegn</span>
+        </div>
+    </div>
+
+    <!-- Resizer -->
+    <div class="resizer" id="resizer"></div>
+
+    <!-- Right Panel: Tools -->
+    <div class="right-panel" id="rightPanel">
+        <div class="tool-tabs">
+            <div class="tool-tab active" onclick="switchTab('calculator')">🧮 Lommeregner</div>
+            <div class="tool-tab" onclick="switchTab('formulas')">📖 Formelsamling</div>
+            <div class="tool-tab" onclick="switchTab('geometry')">📐 Tegning & Grafer</div>
+        </div>
+
+        <!-- Calculator Tab -->
+        <div class="tool-content active" id="tab-calculator">
+            <div class="calculator">
+                <div class="calc-display">
+                    <div class="calc-history" id="calcHistory"></div>
+                    <div class="calc-expression" id="calcExpr"></div>
+                    <div class="calc-result" id="calcResult">0</div>
+                </div>
+
+                <div class="calc-buttons">
+                    <button class="calc-btn function" onclick="calcInput('sin(')">sin</button>
+                    <button class="calc-btn function" onclick="calcInput('cos(')">cos</button>
+                    <button class="calc-btn function" onclick="calcInput('tan(')">tan</button>
+                    <button class="calc-btn function" onclick="calcInput('sqrt(')">√</button>
+                    <button class="calc-btn function" onclick="calcInput('pi')">π</button>
+
+                    <button class="calc-btn function" onclick="calcInput('asin(')">sin⁻¹</button>
+                    <button class="calc-btn function" onclick="calcInput('acos(')">cos⁻¹</button>
+                    <button class="calc-btn function" onclick="calcInput('atan(')">tan⁻¹</button>
+                    <button class="calc-btn function" onclick="calcInput('^')">xⁿ</button>
+                    <button class="calc-btn function" onclick="calcInput('log(')">log</button>
+
+                    <button class="calc-btn function" onclick="calcInput('abs(')">|x|</button>
+                    <button class="calc-btn function" onclick="calcInput('(')">(</button>
+                    <button class="calc-btn function" onclick="calcInput(')')">)</button>
+                    <button class="calc-btn danger" onclick="calcBackspace()">⌫</button>
+                    <button class="calc-btn danger" onclick="calcClear()">C</button>
+
+                    <button class="calc-btn number" onclick="calcInput('7')">7</button>
+                    <button class="calc-btn number" onclick="calcInput('8')">8</button>
+                    <button class="calc-btn number" onclick="calcInput('9')">9</button>
+                    <button class="calc-btn operator" onclick="calcInput('/')">÷</button>
+                    <button class="calc-btn operator" onclick="calcInput('%')">%</button>
+
+                    <button class="calc-btn number" onclick="calcInput('4')">4</button>
+                    <button class="calc-btn number" onclick="calcInput('5')">5</button>
+                    <button class="calc-btn number" onclick="calcInput('6')">6</button>
+                    <button class="calc-btn operator" onclick="calcInput('*')">×</button>
+                    <button class="calc-btn function" onclick="calcInput('^2')">x²</button>
+
+                    <button class="calc-btn number" onclick="calcInput('1')">1</button>
+                    <button class="calc-btn number" onclick="calcInput('2')">2</button>
+                    <button class="calc-btn number" onclick="calcInput('3')">3</button>
+                    <button class="calc-btn operator" onclick="calcInput('-')">−</button>
+                    <button class="calc-btn function" onclick="calcInput('^3')">x³</button>
+
+                    <button class="calc-btn number" onclick="calcInput('0')">0</button>
+                    <button class="calc-btn number" onclick="calcInput('.')">.</button>
+                    <button class="calc-btn equals" onclick="calcEvaluate()">=</button>
+                    <button class="calc-btn operator" onclick="calcInput('+')">+</button>
+                    <button class="calc-btn function" onclick="calcNegate()">±</button>
+                </div>
+
+                <button class="insert-btn" onclick="insertCalcToEditor()">
+                    ⬅ Indsæt resultat i besvarelse
+                </button>
+
+                <div id="calcHistoryList" style="max-height:200px;overflow-y:auto;margin-top:4px;"></div>
+            </div>
+        </div>
+
+        <!-- Formulas Tab -->
+        <div class="tool-content" id="tab-formulas">
+            <div style="padding:8px 12px;position:sticky;top:0;background:var(--bg);z-index:5;">
+                <input type="text" id="formulaSearch" placeholder="Søg efter formel..." style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:0.9rem;outline:none;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            <div class="formulas" id="formulaContainer"></div>
+        </div>
+
+        <!-- Geometry Tab -->
+        <div class="tool-content" id="tab-geometry">
+            <div class="geometry">
+                <div class="geo-toolbar">
+                    <button class="geo-btn active" onclick="setGeoTool('select')" id="geo-select" title="Vælg & flyt"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><polyline points="12,3 15,6"/><polyline points="12,3 9,6"/><polyline points="12,21 15,18"/><polyline points="12,21 9,18"/><polyline points="3,12 6,9"/><polyline points="3,12 6,15"/><polyline points="21,12 18,9"/><polyline points="21,12 18,15"/></svg></button>
+                    <button class="geo-btn" onclick="setGeoTool('line')" id="geo-line" title="Linje"><svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"/><circle cx="5" cy="19" r="1.5" fill="currentColor"/><circle cx="19" cy="5" r="1.5" fill="currentColor"/></svg></button>
+                    <div style="position:relative;display:inline-flex;" onmouseenter="document.getElementById('rectDropdown').style.display='block'" onmouseleave="document.getElementById('rectDropdown').style.display='none'">
+                        <button class="geo-btn" onclick="setGeoTool(currentRectTool)" id="geo-rect" title="Rektangel">
+                            <svg viewBox="0 0 24 24" id="rectBtnIcon"><rect x="3" y="5" width="18" height="14" rx="1.5"/></svg>
+                        </button>
+                        <div id="rectDropdown" style="display:none;position:absolute;top:100%;left:0;z-index:50;background:white;border:1px solid var(--border);border-radius:var(--radius);padding:4px;box-shadow:0 4px 12px rgba(0,0,0,0.15);min-width:130px;">
+                            <div onclick="selectRectType('rect')" style="display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;border-radius:4px;font-size:0.85rem;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''"><svg viewBox="0 0 24 24" width="16" height="16"><rect x="3" y="5" width="18" height="14" rx="1.5" fill="none" stroke="#334155" stroke-width="1.8"/></svg> Rektangel</div>
+                            <div onclick="selectRectType('square')" style="display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;border-radius:4px;font-size:0.85rem;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''"><svg viewBox="0 0 24 24" width="16" height="16"><rect x="4" y="4" width="16" height="16" rx="1.5" fill="none" stroke="#334155" stroke-width="1.8"/></svg> Kvadrat</div>
+                            <div onclick="selectRectType('diamond')" style="display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;border-radius:4px;font-size:0.85rem;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''"><svg viewBox="0 0 24 24" width="16" height="16"><polygon points="12,3 21,12 12,21 3,12" fill="none" stroke="#334155" stroke-width="1.8"/></svg> Rombe</div>
+                        </div>
+                    </div>
+                    <div style="position:relative;display:inline-flex;" onmouseenter="document.getElementById('circleDropdown').style.display='block'" onmouseleave="document.getElementById('circleDropdown').style.display='none'">
+                        <button class="geo-btn" onclick="setGeoTool(currentCircleTool)" id="geo-circle" title="Cirkel">
+                            <svg viewBox="0 0 24 24" id="circleBtnIcon"><circle cx="12" cy="12" r="9"/></svg>
+                        </button>
+                        <div id="circleDropdown" style="display:none;position:absolute;top:100%;left:0;z-index:50;background:white;border:1px solid var(--border);border-radius:var(--radius);padding:4px;box-shadow:0 4px 12px rgba(0,0,0,0.15);min-width:150px;">
+                            <div onclick="selectCircleType('circle')" style="display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;border-radius:4px;font-size:0.85rem;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''"><svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="9" fill="none" stroke="#334155" stroke-width="1.8"/></svg> Cirkel</div>
+                            <div onclick="selectCircleType('circle-dot')" style="display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;border-radius:4px;font-size:0.85rem;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''"><svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="9" fill="none" stroke="#334155" stroke-width="1.8"/><circle cx="12" cy="12" r="1.5" fill="#334155"/></svg> Cirkel med centrum</div>
+                        </div>
+                    </div>
+                    <div style="position:relative;display:inline-flex;" onmouseenter="document.getElementById('triDropdown').style.display='block'" onmouseleave="document.getElementById('triDropdown').style.display='none'">
+                        <button class="geo-btn" onclick="setGeoTool(currentTriTool)" id="geo-triangle" title="Trekant">
+                            <svg viewBox="0 0 24 24" id="triBtnIcon"><polygon points="12,3 3,21 21,21"/></svg>
+                        </button>
+                        <div id="triDropdown" style="display:none;position:absolute;top:100%;left:0;z-index:50;background:white;border:1px solid var(--border);border-radius:var(--radius);padding:4px;box-shadow:0 4px 12px rgba(0,0,0,0.15);min-width:180px;">
+                            <div onclick="selectTriType('triangle')" style="display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;border-radius:4px;font-size:0.85rem;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''"><svg viewBox="0 0 24 24" width="16" height="16"><polygon points="12,3 3,21 21,21" fill="none" stroke="#334155" stroke-width="1.8"/></svg> Trekant</div>
+                            <div onclick="selectTriType('triangle-right')" style="display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;border-radius:4px;font-size:0.85rem;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''"><svg viewBox="0 0 24 24" width="16" height="16"><polygon points="3,3 3,21 21,21" fill="none" stroke="#334155" stroke-width="1.8"/></svg> Retvinklet</div>
+                            <div onclick="selectTriType('triangle-iso')" style="display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;border-radius:4px;font-size:0.85rem;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''"><svg viewBox="0 0 24 24" width="16" height="16"><polygon points="12,3 4,21 20,21" fill="none" stroke="#334155" stroke-width="1.8"/></svg> Ligebenet</div>
+                            <div onclick="selectTriType('triangle-right-iso')" style="display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;border-radius:4px;font-size:0.85rem;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''"><svg viewBox="0 0 24 24" width="16" height="16"><polygon points="3,3 3,21 21,21" fill="none" stroke="#334155" stroke-width="1.8"/><rect x="3" y="17" width="4" height="4" fill="none" stroke="#334155" stroke-width="1"/></svg> Retvinklet ligebenet</div>
+                        </div>
+                    </div>
+                    <button class="geo-btn" onclick="setGeoTool('freehand')" id="geo-freehand" title="Frihånd"><svg viewBox="0 0 24 24"><path d="M4 18c2-3 4-10 7-7s2 9 5 5 3-6 5-4" fill="none"/></svg></button>
+                    <button class="geo-btn" onclick="setGeoTool('text')" id="geo-text" title="Tekst"><svg viewBox="0 0 24 24"><path d="M5 4h14M12 4v16"/><path d="M8 20h8" stroke-width="1.5"/></svg></button>
+                    <button class="geo-btn" onclick="setGeoTool('graph')" id="geo-graph" title="Graf"><svg viewBox="0 0 24 24"><line x1="3" y1="21" x2="3" y2="3"/><line x1="3" y1="21" x2="21" y2="21"/><path d="M3 17c3-2 5-12 9-8s4 8 9 1" fill="none"/></svg></button>
+                </div>
+
+                <div class="geo-options">
+                    <label>Farve:</label>
+                    <button class="geo-btn color-quick" onclick="setQuickColor('#000000',this)" style="background:#000000;width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;"></button>
+                    <button class="geo-btn color-quick active" onclick="setQuickColor('#2563eb',this)" style="background:#2563eb;width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;"></button>
+                    <button class="geo-btn color-quick" onclick="setQuickColor('#ef4444',this)" style="background:#ef4444;width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;"></button>
+                    <button class="geo-btn color-quick" onclick="setQuickColor('#10b981',this)" style="background:#10b981;width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;"></button>
+                    <input type="color" id="geoColor" value="#000000" title="Vælg farve" style="width:20px;height:20px;padding:0;border:1px solid var(--border);border-radius:50%;cursor:pointer;" onchange="setCustomColor(this.value)">
+                    <label>Tykkelse:</label>
+                    <input type="range" id="geoWidth" value="2" min="1" max="10" style="width:80px" oninput="document.getElementById('geoWidthVal').textContent=this.value">
+                    <span id="geoWidthVal" style="font-size:0.85rem;min-width:16px;text-align:center">2</span>
+                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:0.85rem;color:var(--text-light);">Fyld<input type="checkbox" id="geoFill" style="width:14px;height:14px;margin:0;accent-color:var(--primary);cursor:pointer;"></label>
+                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:0.85rem;color:var(--text-light);">Vis mål<input type="checkbox" id="geoMeasure" style="width:14px;height:14px;margin:0;accent-color:var(--primary);cursor:pointer;" onchange="redrawCanvas()"></label>
+                    <button class="geo-btn" onclick="undoGeo()" title="Fortryd">↩</button>
+                    <button class="geo-btn" onclick="clearCanvas()" title="Ryd alt">🗑 Ryd</button>
+                    <button class="geo-btn" onclick="toggleGrid()" id="gridBtn" title="Vis/skjul gitter">⊞ Gitter</button>
+                    <button class="geo-btn" onclick="toggleAxes()" id="axesBtn" title="Vis/skjul koordinatsystem">📐 Graf</button>
+                </div>
+
+                <div id="graphInputArea" class="graph-input-area" style="display:none;">
+                    <label style="font-size:0.85rem; white-space:nowrap;">f(x) =</label>
+                    <input type="text" id="graphFunc" placeholder="f.eks. 2*x+3 eller x^2-4" onkeydown="if(event.key==='Enter')drawGraph()">
+                    <button onclick="drawGraph()" title="Tegn graf">📈</button>
+                    <button onclick="clearGraphs()" style="background:var(--danger)" title="Ryd grafer">🗑</button>
+                    <button onclick="randomGraph()" title="Tilfældig graf">🎲</button>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="geoCanvas"></canvas>
+                </div>
+
+                <button class="insert-btn" onclick="setGeoTool('snip')" id="geo-snip" style="background:var(--primary);">
+                    ✂ Klip & Indsæt udsnit
+                </button>
+                <button class="insert-btn" onclick="insertCanvasToEditor()">
+                    ⬅ Indsæt hele tegning i besvarelse
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ========================
+// DATE
+// ========================
+document.getElementById('examDate').textContent = new Date().toLocaleDateString('da-DK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+// ========================
+// TEXT EDITOR
+// ========================
+const editor = document.getElementById('editor');
+
+function execCmd(cmd) {
+    document.execCommand(cmd, false, null);
+    editor.focus();
+}
+
+function execCmdVal(cmd, val) {
+    if (val) document.execCommand(cmd, false, val);
+    editor.focus();
+}
+
+function insertMathSymbol(symbol) {
+    editor.focus();
+    document.execCommand('insertText', false, symbol);
+}
+
+// Example view
+let exampleActive = false;
+let savedContent = '';
+
+function toggleExample() {
+    const btn = document.getElementById('exampleBtn');
+    // Detect if example content is showing (e.g. after page reload)
+    if (!exampleActive && editor.innerHTML.includes('Rabatter i SuperBilka')) {
+        editor.innerHTML = savedContent || '';
+        btn.textContent = '📋 Eksempelvisning';
+        exampleActive = false;
+        saveState();
+        return;
+    }
+    if (!exampleActive) {
+        savedContent = editor.innerHTML;
+        editor.innerHTML = `
+<h2>Opgave: Rabatter i SuperBilka</h2>
+<p>Marie skal købe ind til en fest. Hun har et budget på <b>500 kr</b>. I SuperBilka er der tilbud på flere varer.</p>
+
+<table style="width:100%;table-layout:fixed;">
+<tr><td style="font-weight:bold;background:#f1f5f9;">Vare</td><td style="font-weight:bold;background:#f1f5f9;">Normalpris</td><td style="font-weight:bold;background:#f1f5f9;">Rabat</td><td style="font-weight:bold;background:#f1f5f9;">Tilbudspris</td></tr>
+<tr><td>Chips (3 poser)</td><td>45,00 kr</td><td>20%</td><td>36,00 kr</td></tr>
+<tr><td>Sodavand (6 stk)</td><td>72,00 kr</td><td>25%</td><td>54,00 kr</td></tr>
+<tr><td>Pizza (4 stk)</td><td>120,00 kr</td><td>15%</td><td>102,00 kr</td></tr>
+<tr><td>Kage</td><td>89,00 kr</td><td>10%</td><td>80,10 kr</td></tr>
+<tr><td>Slik (2 poser)</td><td>50,00 kr</td><td>30%</td><td>35,00 kr</td></tr>
+<tr style="font-weight:bold;"><td>I alt</td><td>376,00 kr</td><td></td><td style="background:#d1e7dd;">307,10 kr</td></tr>
+</table>
+
+<h3>Beregninger</h3>
+<p><b>Spørgsmål 1:</b> Hvad er den samlede besparelse i kroner?</p>
+<p>Samlet besparelse = 376,00 − 307,10 = <b>68,90 kr</b></p>
+
+<p><b>Spørgsmål 2:</b> Hvad er den samlede besparelse i procent?</p>
+<p>Besparelse i % = (68,90 / 376,00) × 100 = <b>18,3%</b></p>
+
+<p><b>Spørgsmål 3:</b> Hvor meget har Marie tilbage af sit budget?</p>
+<p>Rest = 500,00 − 307,10 = <b>192,90 kr</b></p>
+
+<p><b>Spørgsmål 4:</b> Hvis Marie også køber 2 liter mælk til 12,50 kr/L med 0% rabat, hvad bliver den nye total?</p>
+<p>Mælk = 2 × 12,50 = 25,00 kr</p>
+<p>Ny total = 307,10 + 25,00 = <b>332,10 kr</b></p>
+<p>Rest af budget = 500,00 − 332,10 = <b>167,90 kr</b></p>
+
+<h3>Konklusion</h3>
+<p>Marie kan købe alle varerne og har stadig 167,90 kr tilbage af sit budget. Den gennemsnitlige rabat på tilbudsvarerne er 18,3%.</p>
+`;
+        btn.textContent = '✕ Fjern eksempel';
+        exampleActive = true;
+    } else {
+        editor.innerHTML = savedContent;
+        btn.textContent = '📋 Eksempelvisning';
+        exampleActive = false;
+    }
+    saveState();
+}
+
+// Table picker
+const tableGrid = document.getElementById('tableGrid');
+const tablePicker = document.getElementById('tablePicker');
+const tablePickerLabel = document.getElementById('tablePickerLabel');
+
+// Build 8x8 grid
+for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+        const cell = document.createElement('div');
+        cell.style.cssText = 'width:20px;height:20px;border:1px solid var(--border);border-radius:2px;cursor:pointer;';
+        cell.dataset.row = r + 1;
+        cell.dataset.col = c + 1;
+        cell.addEventListener('mouseenter', () => {
+            highlightTableCells(parseInt(cell.dataset.row), parseInt(cell.dataset.col));
+        });
+        cell.addEventListener('click', () => {
+            insertTableWithSize(parseInt(cell.dataset.row), parseInt(cell.dataset.col));
+        });
+        tableGrid.appendChild(cell);
+    }
+}
+
+function toggleTablePicker() {
+    saveSelection();
+    tablePicker.style.display = tablePicker.style.display === 'none' ? 'block' : 'none';
+    if (tablePicker.style.display === 'block') {
+        highlightTableCells(0, 0);
+    }
+}
+
+function highlightTableCells(rows, cols) {
+    const cells = tableGrid.children;
+    for (let i = 0; i < cells.length; i++) {
+        const r = parseInt(cells[i].dataset.row);
+        const c = parseInt(cells[i].dataset.col);
+        cells[i].style.background = (r <= rows && c <= cols) ? '#2563eb' : 'white';
+    }
+    tablePickerLabel.textContent = rows > 0 ? `${rows} × ${cols}` : 'Vælg størrelse';
+}
+
+let savedRange = null;
+
+function saveSelection() {
+    const sel = window.getSelection();
+    if (sel.rangeCount > 0) savedRange = sel.getRangeAt(0);
+}
+
+function restoreSelection() {
+    if (savedRange) {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedRange);
+    }
+}
+
+function insertTableWithSize(rows, cols) {
+    tablePicker.style.display = 'none';
+    const colWidth = Math.floor(100 / cols);
+    let html = '<table style="width:100%;table-layout:fixed;">';
+    for (let i = 0; i < rows; i++) {
+        html += '<tr>';
+        for (let j = 0; j < cols; j++) {
+            html += '<td>&nbsp;</td>';
+        }
+        html += '</tr>';
+    }
+    html += '</table><br>';
+    editor.focus();
+    restoreSelection();
+    document.execCommand('insertHTML', false, html);
+}
+
+// Close picker when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('#tablePicker') && !e.target.closest('[onclick="toggleTablePicker()"]')) {
+        tablePicker.style.display = 'none';
+    }
+});
+
+// ========================
+// TABLE CONTEXT MENU
+const cellMenu = document.createElement('div');
+cellMenu.id = 'cellContextMenu';
+cellMenu.style.cssText = 'display:none;position:fixed;z-index:100;background:white;border:1px solid #e2e8f0;border-radius:8px;padding:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);';
+cellMenu.innerHTML = `
+    <div style="font-size:0.8rem;color:#64748b;margin-bottom:6px;">Baggrundsfarve</div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;" id="cellColorOptions"></div>
+    <div style="border-top:1px solid #e2e8f0;margin-top:6px;padding-top:6px;display:flex;flex-direction:column;gap:2px;">
+        <button id="mergeCellsBtn" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:0.8rem;color:#64748b;text-align:left;border-radius:4px;">Flet celler</button>
+        <button id="unmergeBtn" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:0.8rem;color:#64748b;text-align:left;border-radius:4px;">Ophæv fletning</button>
+        <div style="border-top:1px solid #e2e8f0;margin:2px 0;"></div>
+        <div style="font-size:0.8rem;color:#64748b;padding:2px 8px;">Kant fed</div>
+        <div style="display:flex;gap:3px;padding:2px 8px;" id="borderBoldOptions">
+            <button data-border="top" title="Top" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#f1f5f9'" style="background:#f1f5f9;border:1px solid #cbd5e1;cursor:pointer;width:26px;height:26px;border-radius:4px;font-size:10px;display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="1" width="12" height="12" fill="none" stroke="#ccc" stroke-width="1"/><line x1="1" y1="1" x2="13" y2="1" stroke="#333" stroke-width="2.5"/></svg></button>
+            <button data-border="bottom" title="Bund" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#f1f5f9'" style="background:#f1f5f9;border:1px solid #cbd5e1;cursor:pointer;width:26px;height:26px;border-radius:4px;font-size:10px;display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="1" width="12" height="12" fill="none" stroke="#ccc" stroke-width="1"/><line x1="1" y1="13" x2="13" y2="13" stroke="#333" stroke-width="2.5"/></svg></button>
+            <button data-border="left" title="Venstre" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#f1f5f9'" style="background:#f1f5f9;border:1px solid #cbd5e1;cursor:pointer;width:26px;height:26px;border-radius:4px;font-size:10px;display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="1" width="12" height="12" fill="none" stroke="#ccc" stroke-width="1"/><line x1="1" y1="1" x2="1" y2="13" stroke="#333" stroke-width="2.5"/></svg></button>
+            <button data-border="right" title="Højre" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#f1f5f9'" style="background:#f1f5f9;border:1px solid #cbd5e1;cursor:pointer;width:26px;height:26px;border-radius:4px;font-size:10px;display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="1" width="12" height="12" fill="none" stroke="#ccc" stroke-width="1"/><line x1="13" y1="1" x2="13" y2="13" stroke="#333" stroke-width="2.5"/></svg></button>
+            <button data-border="all" title="Alle" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#f1f5f9'" style="background:#f1f5f9;border:1px solid #cbd5e1;cursor:pointer;width:26px;height:26px;border-radius:4px;font-size:10px;display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="1" width="12" height="12" fill="none" stroke="#333" stroke-width="2.5"/></svg></button>
+            <button data-border="none" title="Ingen" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#f1f5f9'" style="background:#f1f5f9;border:1px solid #cbd5e1;cursor:pointer;width:26px;height:26px;border-radius:4px;font-size:10px;display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="1" width="12" height="12" fill="none" stroke="#ccc" stroke-width="1" stroke-dasharray="2,2"/></svg></button>
+        </div>
+        <div style="border-top:1px solid #e2e8f0;margin:2px 0;"></div>
+        <button id="deleteRowBtn" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:0.8rem;color:#64748b;text-align:left;border-radius:4px;">Slet række</button>
+        <button id="deleteColBtn" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:0.8rem;color:#64748b;text-align:left;border-radius:4px;">Slet kolonne</button>
+    </div>
+`;
+document.body.appendChild(cellMenu);
+
+const cellColors = [
+    { color: '', label: 'Ingen' },
+    { color: '#fff3cd', label: 'Gul' },
+    { color: '#d1e7dd', label: 'Grøn' },
+    { color: '#cfe2ff', label: 'Blå' },
+    { color: '#f8d7da', label: 'Rød' },
+    { color: '#e2d9f3', label: 'Lilla' },
+    { color: '#ffe5d0', label: 'Orange' },
+    { color: '#e2e8f0', label: 'Grå' },
+];
+
+const colorContainer = document.getElementById('cellColorOptions');
+let selectedCells = [];
+let cellDragSelecting = false;
+let cellDragStartCell = null;
+let cellDragTable = null;
+
+// Cell selection via click and drag
+let cellDragMoved = false;
+
+editor.addEventListener('mousedown', (e) => {
+    const td = e.target.closest('td, th');
+    if (!td) {
+        clearCellSelection();
+        return;
+    }
+    if (e.button !== 0) return;
+
+    clearCellSelection();
+    cellDragSelecting = true;
+    cellDragMoved = false;
+    cellDragStartCell = td;
+    cellDragTable = td.closest('table');
+});
+
+editor.addEventListener('mousemove', (e) => {
+    if (!cellDragSelecting || !cellDragStartCell) return;
+    const td = e.target.closest('td, th');
+    if (!td || td.closest('table') !== cellDragTable) return;
+
+    // Only start selecting when dragged to a different cell
+    if (td === cellDragStartCell && !cellDragMoved) return;
+    if (!cellDragMoved) {
+        cellDragMoved = true;
+        cellDragTable.classList.add('cell-selecting');
+        window.getSelection()?.removeAllRanges();
+    }
+    e.preventDefault();
+
+    const r1 = cellDragStartCell.parentElement.rowIndex, c1 = cellDragStartCell.cellIndex;
+    const r2 = td.parentElement.rowIndex, c2 = td.cellIndex;
+    const minR = Math.min(r1, r2), maxR = Math.max(r1, r2);
+    const minC = Math.min(c1, c2), maxC = Math.max(c1, c2);
+    clearCellSelection();
+    for (let r = minR; r <= maxR; r++) {
+        for (let c = minC; c <= maxC; c++) {
+            if (cellDragTable.rows[r]?.cells[c]) {
+                selectCell(cellDragTable.rows[r].cells[c]);
+            }
+        }
+    }
+});
+
+document.addEventListener('mouseup', () => {
+    if (cellDragTable) cellDragTable.classList.remove('cell-selecting');
+    cellDragSelecting = false;
+});
+
+// Also clear selection when clicking anywhere outside a table cell
+document.addEventListener('mousedown', (e) => {
+    if (!e.target.closest('td, th') && !e.target.closest('#cellContextMenu')) {
+        clearCellSelection();
+    }
+});
+
+function selectCell(td) {
+    if (!selectedCells.includes(td)) {
+        selectedCells.push(td);
+        td.classList.add('cell-selected');
+    }
+}
+
+function deselectCell(td) {
+    selectedCells = selectedCells.filter(c => c !== td);
+    td.classList.remove('cell-selected');
+}
+
+function clearCellSelection() {
+    selectedCells.forEach(c => c.classList.remove('cell-selected'));
+    selectedCells = [];
+}
+
+cellColors.forEach(c => {
+    const btn = document.createElement('button');
+    btn.title = c.label;
+    btn.style.cssText = `width:24px;height:24px;border:1.5px solid #ccc;border-radius:4px;cursor:pointer;background:${c.color || 'white'};`;
+    if (!c.color) btn.innerHTML = '<span style="color:#ccc;font-size:12px;">✕</span>';
+    btn.addEventListener('click', () => {
+        selectedCells.forEach(cell => {
+            cell.style.backgroundColor = c.color;
+        });
+        cellMenu.style.display = 'none';
+    });
+    colorContainer.appendChild(btn);
+});
+
+let contextMenuCell = null;
+
+editor.addEventListener('contextmenu', (e) => {
+    const td = e.target.closest('td, th');
+    if (!td) return;
+    e.preventDefault();
+    contextMenuCell = td;
+    // If right-clicking a non-selected cell, select only that one
+    if (!selectedCells.includes(td)) {
+        clearCellSelection();
+        selectCell(td);
+    }
+    cellMenu.style.left = e.clientX + 'px';
+    cellMenu.style.top = e.clientY + 'px';
+    cellMenu.style.display = 'block';
+});
+
+document.getElementById('deleteRowBtn').addEventListener('click', () => {
+    if (!contextMenuCell) return;
+    const table = contextMenuCell.closest('table');
+    const row = contextMenuCell.parentElement;
+    if (table && table.rows.length > 1) {
+        row.remove();
+    } else if (table) {
+        table.remove();
+    }
+    cellMenu.style.display = 'none';
+    clearCellSelection();
+    contextMenuCell = null;
+    saveState();
+});
+
+document.getElementById('deleteColBtn').addEventListener('click', () => {
+    if (!contextMenuCell) return;
+    const table = contextMenuCell.closest('table');
+    const colIdx = contextMenuCell.cellIndex;
+    if (table && table.rows[0].cells.length > 1) {
+        for (let r = 0; r < table.rows.length; r++) {
+            if (table.rows[r].cells[colIdx]) table.rows[r].deleteCell(colIdx);
+        }
+    } else if (table) {
+        table.remove();
+    }
+    cellMenu.style.display = 'none';
+    clearCellSelection();
+    contextMenuCell = null;
+    saveState();
+});
+
+// Merge cells
+document.getElementById('mergeCellsBtn').addEventListener('click', () => {
+    if (selectedCells.length < 2) { cellMenu.style.display = 'none'; return; }
+    const table = selectedCells[0].closest('table');
+    if (!table) return;
+    // Find bounding rectangle of selection
+    let minR = Infinity, maxR = -1, minC = Infinity, maxC = -1;
+    selectedCells.forEach(cell => {
+        const r = cell.parentElement.rowIndex;
+        const c = cell.cellIndex;
+        const rs = cell.rowSpan || 1;
+        const cs = cell.colSpan || 1;
+        minR = Math.min(minR, r); maxR = Math.max(maxR, r + rs - 1);
+        minC = Math.min(minC, c); maxC = Math.max(maxC, c + cs - 1);
+    });
+    // Collect content from all cells
+    let content = '';
+    for (let r = minR; r <= maxR; r++) {
+        for (let c = maxC; c >= minC; c--) {
+            const cell = table.rows[r]?.cells[c];
+            if (!cell) continue;
+            const txt = cell.innerHTML.trim();
+            if (txt && txt !== '&nbsp;') {
+                content = txt + (content ? ' ' + content : '');
+            }
+            // Remove all cells except top-left
+            if (r === minR && c === minC) continue;
+            cell.remove();
+        }
+    }
+    const topLeft = table.rows[minR]?.cells[minC];
+    if (topLeft) {
+        topLeft.rowSpan = maxR - minR + 1;
+        topLeft.colSpan = maxC - minC + 1;
+        topLeft.innerHTML = content || '&nbsp;';
+    }
+    cellMenu.style.display = 'none';
+    clearCellSelection();
+    saveState();
+});
+
+// Unmerge cells
+document.getElementById('unmergeBtn').addEventListener('click', () => {
+    if (!contextMenuCell) { cellMenu.style.display = 'none'; return; }
+    const cell = contextMenuCell;
+    const table = cell.closest('table');
+    if (!table || (cell.rowSpan <= 1 && cell.colSpan <= 1)) { cellMenu.style.display = 'none'; return; }
+    const startRow = cell.parentElement.rowIndex;
+    const startCol = cell.cellIndex;
+    const rs = cell.rowSpan;
+    const cs = cell.colSpan;
+    cell.rowSpan = 1;
+    cell.colSpan = 1;
+    // Re-insert missing cells
+    for (let r = startRow; r < startRow + rs; r++) {
+        const row = table.rows[r];
+        if (!row) continue;
+        for (let c = startCol; c < startCol + cs; c++) {
+            if (r === startRow && c === startCol) continue;
+            const newCell = document.createElement('td');
+            newCell.innerHTML = '&nbsp;';
+            newCell.style.border = '1.5px solid #bbb';
+            newCell.style.padding = '6px 10px';
+            // Insert at the right position
+            if (r === startRow) {
+                // Same row, insert after
+                const refIdx = startCol + (c - startCol);
+                if (row.cells[refIdx]) row.cells[refIdx].before(newCell);
+                else row.appendChild(newCell);
+            } else {
+                // Find correct insert position in the row
+                let insertIdx = 0;
+                let colCount = 0;
+                for (let ci = 0; ci < row.cells.length; ci++) {
+                    if (colCount >= c) { insertIdx = ci; break; }
+                    colCount += row.cells[ci].colSpan || 1;
+                    insertIdx = ci + 1;
+                }
+                if (row.cells[insertIdx]) row.cells[insertIdx].before(newCell);
+                else row.appendChild(newCell);
+            }
+        }
+    }
+    cellMenu.style.display = 'none';
+    clearCellSelection();
+    saveState();
+});
+
+// Bold border toggle
+document.querySelectorAll('#borderBoldOptions button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const side = btn.dataset.border;
+        selectedCells.forEach(cell => {
+            if (side === 'all') {
+                cell.style.borderTop = '2.5px solid #333';
+                cell.style.borderBottom = '2.5px solid #333';
+                cell.style.borderLeft = '2.5px solid #333';
+                cell.style.borderRight = '2.5px solid #333';
+            } else if (side === 'none') {
+                cell.style.borderTop = '1.5px solid #bbb';
+                cell.style.borderBottom = '1.5px solid #bbb';
+                cell.style.borderLeft = '1.5px solid #bbb';
+                cell.style.borderRight = '1.5px solid #bbb';
+            } else if (side === 'top') {
+                cell.style.borderTop = cell.style.borderTop === '2.5px solid #333' ? '1.5px solid #bbb' : '2.5px solid #333';
+            } else if (side === 'bottom') {
+                cell.style.borderBottom = cell.style.borderBottom === '2.5px solid #333' ? '1.5px solid #bbb' : '2.5px solid #333';
+            } else if (side === 'left') {
+                cell.style.borderLeft = cell.style.borderLeft === '2.5px solid #333' ? '1.5px solid #bbb' : '2.5px solid #333';
+            } else if (side === 'right') {
+                cell.style.borderRight = cell.style.borderRight === '2.5px solid #333' ? '1.5px solid #bbb' : '2.5px solid #333';
+            }
+        });
+        cellMenu.style.display = 'none';
+        saveState();
+    });
+});
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('#cellContextMenu')) {
+        cellMenu.style.display = 'none';
+    }
+});
+
+// TABLE PLUS BUTTONS (add row/column)
+// ========================
+const tablePlusBtns = {};
+['top', 'bottom', 'left', 'right'].forEach(side => {
+    const btn = document.createElement('div');
+    btn.className = 'table-plus-btn';
+    btn.contentEditable = 'false';
+    btn.innerHTML = '+';
+    btn.dataset.side = side;
+    tablePlusBtns[side] = btn;
+});
+
+let currentPlusTable = null;
+
+function showTablePlusBtns(table) {
+    if (currentPlusTable === table) {
+        positionPlusBtns(table);
+        return;
+    }
+    hideTablePlusBtns();
+    currentPlusTable = table;
+    Object.values(tablePlusBtns).forEach(btn => {
+        table.parentElement.appendChild(btn);
+        requestAnimationFrame(() => btn.classList.add('visible'));
+    });
+    positionPlusBtns(table);
+}
+
+function positionPlusBtns(table) {
+    const w = table.offsetWidth;
+    const h = table.offsetHeight;
+    const t = table.offsetTop;
+    const l = table.offsetLeft;
+    // Top: centered above table
+    tablePlusBtns.top.style.left = (l + w / 2 - 7) + 'px';
+    tablePlusBtns.top.style.top = (t - 18) + 'px';
+    // Bottom: centered below table
+    tablePlusBtns.bottom.style.left = (l + w / 2 - 7) + 'px';
+    tablePlusBtns.bottom.style.top = (t + h + 2) + 'px';
+    // Left: centered left of table
+    tablePlusBtns.left.style.left = (l - 18) + 'px';
+    tablePlusBtns.left.style.top = (t + h / 2 - 7) + 'px';
+    // Right: centered right of table
+    tablePlusBtns.right.style.left = (l + w + 2) + 'px';
+    tablePlusBtns.right.style.top = (t + h / 2 - 7) + 'px';
+}
+
+function hideTablePlusBtns() {
+    if (!currentPlusTable) return;
+    Object.values(tablePlusBtns).forEach(btn => {
+        btn.classList.remove('visible');
+        if (btn.parentElement) btn.parentElement.removeChild(btn);
+    });
+    currentPlusTable = null;
+}
+
+Object.values(tablePlusBtns).forEach(btn => {
+    btn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!currentPlusTable) return;
+        const table = currentPlusTable;
+        const side = btn.dataset.side;
+        const numCols = table.rows[0] ? table.rows[0].cells.length : 1;
+        const numRows = table.rows.length;
+
+        if (side === 'top') {
+            const row = table.insertRow(0);
+            for (let i = 0; i < numCols; i++) {
+                const cell = row.insertCell();
+                cell.innerHTML = '&nbsp;';
+            }
+        } else if (side === 'bottom') {
+            const row = table.insertRow(-1);
+            for (let i = 0; i < numCols; i++) {
+                const cell = row.insertCell();
+                cell.innerHTML = '&nbsp;';
+            }
+        } else if (side === 'left') {
+            for (let r = 0; r < numRows; r++) {
+                const cell = table.rows[r].insertCell(0);
+                cell.innerHTML = '&nbsp;';
+            }
+        } else if (side === 'right') {
+            for (let r = 0; r < numRows; r++) {
+                const cell = table.rows[r].insertCell(-1);
+                cell.innerHTML = '&nbsp;';
+            }
+        }
+        positionPlusBtns(table);
+        saveState();
+    });
+});
+
+// Show/hide plus buttons based on cursor position in editor
+editor.addEventListener('mouseover', (e) => {
+    const table = e.target.closest('table');
+    if (table && editor.contains(table)) {
+        showTablePlusBtns(table);
+    }
+});
+
+editor.addEventListener('mouseleave', () => {
+    setTimeout(() => {
+        const hovered = document.querySelectorAll('.table-plus-btn:hover');
+        if (hovered.length === 0) hideTablePlusBtns();
+    }, 100);
+});
+
+// Keep plus buttons visible when hovering them
+Object.values(tablePlusBtns).forEach(btn => {
+    btn.addEventListener('mouseleave', () => {
+        setTimeout(() => {
+            if (!currentPlusTable) return;
+            const tableHovered = currentPlusTable.matches(':hover');
+            const anyBtnHovered = Object.values(tablePlusBtns).some(b => b.matches(':hover'));
+            if (!tableHovered && !anyBtnHovered) hideTablePlusBtns();
+        }, 100);
+    });
+});
+
+// TABLE BORDER RESIZING
+// ========================
+let tableResizing = false;
+let tableResizeType = null; // 'col' or 'row'
+let tableResizeCell = null;
+let tableResizeStart = 0;
+let tableResizeOrigSize = 0;
+
+const BORDER_THRESHOLD = 5;
+
+function getTableResizeTarget(e) {
+    const td = e.target.closest('td, th');
+    if (!td) return null;
+    const rect = td.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+
+    // Right border - column resize
+    if (Math.abs(x - rect.right) < BORDER_THRESHOLD) {
+        return { type: 'col', cell: td, edge: 'right' };
+    }
+    // Left border - column resize (previous column)
+    if (Math.abs(x - rect.left) < BORDER_THRESHOLD) {
+        const prev = td.previousElementSibling;
+        if (prev) return { type: 'col', cell: prev, edge: 'right' };
+    }
+    // Bottom border - row resize
+    if (Math.abs(y - rect.bottom) < BORDER_THRESHOLD) {
+        return { type: 'row', cell: td, edge: 'bottom' };
+    }
+    // Top border - row resize (previous row)
+    if (Math.abs(y - rect.top) < BORDER_THRESHOLD) {
+        const tr = td.parentElement.previousElementSibling;
+        if (tr) {
+            const idx = Array.from(td.parentElement.children).indexOf(td);
+            return { type: 'row', cell: tr.children[idx], edge: 'bottom' };
+        }
+    }
+    return null;
+}
+
+editor.addEventListener('mousemove', (e) => {
+    if (tableResizing) return;
+    const target = getTableResizeTarget(e);
+    if (target) {
+        editor.style.cursor = target.type === 'col' ? 'col-resize' : 'row-resize';
+    } else if (e.target.closest('td, th')) {
+        editor.style.cursor = '';
+    }
+});
+
+editor.addEventListener('mousedown', (e) => {
+    const target = getTableResizeTarget(e);
+    if (!target) return;
+
+    e.preventDefault();
+    tableResizing = true;
+    tableResizeType = target.type;
+    tableResizeCell = target.cell;
+
+    if (target.type === 'col') {
+        tableResizeStart = e.clientX;
+        tableResizeOrigSize = tableResizeCell.offsetWidth;
+        editor.style.cursor = 'col-resize';
+    } else {
+        tableResizeStart = e.clientY;
+        tableResizeOrigSize = tableResizeCell.parentElement.offsetHeight;
+        editor.style.cursor = 'row-resize';
+    }
+
+    const onMove = (ev) => {
+        if (!tableResizing) return;
+        if (tableResizeType === 'col') {
+            const diff = ev.clientX - tableResizeStart;
+            const newW = Math.max(30, tableResizeOrigSize + diff);
+            // Set width on all cells in this column
+            const colIdx = Array.from(tableResizeCell.parentElement.children).indexOf(tableResizeCell);
+            const table = tableResizeCell.closest('table');
+            for (const row of table.rows) {
+                if (row.cells[colIdx]) row.cells[colIdx].style.width = newW + 'px';
+            }
+        } else {
+            const diff = ev.clientY - tableResizeStart;
+            const newH = Math.max(24, tableResizeOrigSize + diff);
+            // Set height on all cells in this row
+            const tr = tableResizeCell.parentElement;
+            tr.style.height = newH + 'px';
+            for (const cell of tr.cells) {
+                cell.style.height = newH + 'px';
+            }
+        }
+    };
+
+    const onUp = () => {
+        tableResizing = false;
+        editor.style.cursor = '';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+    };
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+});
+
+// Word/char count
+editor.addEventListener('input', updateCounts);
+
+function solveExpression(input) {
+    try {
+        function cleanExpr(s) {
+            return s.replace(/×/g, '*').replace(/÷/g, '/').replace(/,/g, '.').replace(/\^/g, '**').replace(/\s/g, '');
+        }
+        function fmtResult(v) {
+            const r = Math.round(v * 10000) / 10000;
+            return r.toString().replace('.', ',');
+        }
+        // Add implicit multiplication: 2x -> 2*x, x( -> x*(, )x -> )*x, )( -> )*(
+        function addImplicitMul(s, v) {
+            return s
+                .replace(new RegExp('(\\d)(' + v + ')', 'g'), '$1*$2')
+                .replace(new RegExp('(' + v + ')(\\d)', 'g'), '$1*$2')
+                .replace(new RegExp('(' + v + ')\\(', 'g'), '$1*(')
+                .replace(new RegExp('\\)(' + v + ')', 'g'), ')*$1')
+                .replace(/\)\(/g, ')*(')
+                .replace(/(\d)\(/g, '$1*(');
+        }
+        function evalSafe(expr) {
+            if (!/^[\d+\-*/().** ]+$/.test(expr)) return NaN;
+            return Function('"use strict"; return (' + expr + ')')();
+        }
+
+        let raw = cleanExpr(input);
+
+        // Check if it's an equation with a variable: e.g. "2x+5=15"
+        const varMatch = raw.match(/[a-zA-Z]/g);
+        const uniqueVars = varMatch ? [...new Set(varMatch)] : [];
+
+        if (uniqueVars.length === 0) {
+            // Pure numeric expression
+            if (!/^[\d+\-*/().** ]+$/.test(raw)) return null;
+            const result = evalSafe(raw);
+            if (typeof result === 'number' && isFinite(result)) return fmtResult(result);
+            return null;
+        }
+
+        if (uniqueVars.length === 1) {
+            const v = uniqueVars[0];
+            // Check if it's an equation (contains =)
+            if (raw.includes('=')) {
+                const parts = raw.split('=');
+                if (parts.length !== 2) return null;
+                let left = addImplicitMul(parts[0], v);
+                let right = addImplicitMul(parts[1], v);
+                // Solve: left - right = 0, using linear approach f(x) = ax + b
+                function f(x) {
+                    const lv = evalSafe(left.replace(new RegExp(v, 'g'), '(' + x + ')'));
+                    const rv = evalSafe(right.replace(new RegExp(v, 'g'), '(' + x + ')'));
+                    return lv - rv;
+                }
+                const f0 = f(0), f1 = f(1);
+                const a = f1 - f0, b = f0;
+                if (Math.abs(a) < 1e-10) return null; // not linear or no solution
+                const solution = -b / a;
+                // Verify solution
+                if (Math.abs(f(solution)) < 1e-8) {
+                    return v + ' = ' + fmtResult(solution);
+                }
+                // Try Newton's method for non-linear
+                let x = 0;
+                for (let i = 0; i < 50; i++) {
+                    const fx = f(x);
+                    const dfx = (f(x + 0.0001) - fx) / 0.0001;
+                    if (Math.abs(dfx) < 1e-12) break;
+                    x = x - fx / dfx;
+                    if (Math.abs(f(x)) < 1e-8) return v + ' = ' + fmtResult(x);
+                }
+                return null;
+            } else {
+                // Expression with variable but no equation - just simplify/evaluate if possible
+                // Can't evaluate without knowing the variable value
+                return null;
+            }
+        }
+        return null;
+    } catch (err) { return null; }
+}
+
+editor.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        // Check if current line ends with "=" to auto-calculate
+        const sel = window.getSelection();
+        if (sel.rangeCount) {
+            const range = sel.getRangeAt(0);
+            const node = range.startContainer;
+            if (node.nodeType === Node.TEXT_NODE) {
+                const text = node.textContent.substring(0, range.startOffset);
+                const match = text.match(/(.+?)\s*=>\s*$/);
+                if (match) {
+                    let exprRaw = match[1].trim();
+                    // Detect unit suffix: e.g. "2 cm + 3 cm" -> unit is "cm"
+                    let unit = '';
+                    const unitMatch = exprRaw.match(/\b(\d[\d.,]*)\s*(cm|mm|m|km|kg|g|mg|l|dl|ml|kr|%|°|sek|min|timer|dage|år)\b/);
+                    if (unitMatch) {
+                        unit = unitMatch[2];
+                        // Strip all occurrences of the unit from expression
+                        exprRaw = exprRaw.replace(new RegExp('\\s*' + unit.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g'), '');
+                    }
+                    const solved = solveExpression(exprRaw.trim());
+                    if (solved !== null) {
+                        e.preventDefault();
+                        const eqIdx = text.lastIndexOf('=>');
+                        const before = text.substring(0, eqIdx);
+                        const after = node.textContent.substring(range.startOffset);
+                        const resultText = unit ? solved + ' ' + unit : solved;
+                        node.textContent = before + '= ' + resultText + after;
+                        const newPos = (before + '= ' + resultText).length;
+                        range.setStart(node, newPos);
+                        range.setEnd(node, newPos);
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                        saveState();
+                        return;
+                    }
+                }
+            }
+        }
+        const select = document.getElementById('fontSizeSelect');
+        if (select.value !== '3') {
+            setTimeout(() => {
+                document.execCommand('fontSize', false, '3');
+                select.value = '3';
+            }, 0);
+        }
+    }
+    // Tab to convert fraction
+    if (e.key === 'Tab') {
+        const sel = window.getSelection();
+        if (sel.rangeCount) {
+            const range = sel.getRangeAt(0);
+            const node = range.startContainer;
+            if (node.nodeType === Node.TEXT_NODE) {
+                const text = node.textContent.substring(0, range.startOffset);
+                const frMatch = text.match(/([\d.,]+)\s*\/\s*([\d.,]+)\s*$/);
+                if (frMatch) {
+                    e.preventDefault();
+                    const num = frMatch[1];
+                    const den = frMatch[2];
+                    const beforeFrac = text.substring(0, frMatch.index);
+                    const after = node.textContent.substring(range.startOffset);
+
+                    // Create fraction HTML
+                    const frac = document.createElement('span');
+                    frac.className = 'fraction';
+                    frac.contentEditable = 'false';
+                    frac.innerHTML = `<span class="num">${num}</span><span class="den">${den}</span>`;
+
+                    // Replace text with fraction element
+                    node.textContent = beforeFrac;
+                    const afterNode = document.createTextNode(after || '\u00A0');
+                    node.parentNode.insertBefore(frac, node.nextSibling);
+                    node.parentNode.insertBefore(afterNode, frac.nextSibling);
+
+                    // Place cursor after fraction
+                    const newRange = document.createRange();
+                    newRange.setStart(afterNode, 0);
+                    newRange.setEnd(afterNode, 0);
+                    sel.removeAllRanges();
+                    sel.addRange(newRange);
+
+                    removeFractionHint();
+                    saveState();
+                    return;
+                }
+            }
+        }
+    }
+});
+
+// Fraction hint
+let fractionHint = null;
+function removeFractionHint() {
+    if (fractionHint) { fractionHint.remove(); fractionHint = null; }
+}
+editor.addEventListener('input', () => {
+    removeFractionHint();
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    const node = range.startContainer;
+    if (node.nodeType !== Node.TEXT_NODE) return;
+    const text = node.textContent.substring(0, range.startOffset);
+    if (/([\d.,]+)\s*\/\s*([\d.,]+)\s*$/.test(text)) {
+        const rect = range.getBoundingClientRect();
+        const editorRect = editor.getBoundingClientRect();
+        fractionHint = document.createElement('div');
+        fractionHint.className = 'fraction-hint';
+        fractionHint.textContent = 'Tab → brøk';
+        document.body.appendChild(fractionHint);
+        fractionHint.style.left = (rect.left) + 'px';
+        fractionHint.style.top = (rect.top - 26) + 'px';
+    }
+});
+editor.addEventListener('blur', removeFractionHint);
+
+function updateCounts() {
+    const text = editor.innerText || '';
+    const words = text.trim().split(/\s+/).filter(w => w.length > 0);
+    document.getElementById('wordCount').textContent = words.length + ' ord';
+    document.getElementById('charCount').textContent = text.length + ' tegn';
+}
+
+// ========================
+// PANEL RESIZER
+// ========================
+const resizer = document.getElementById('resizer');
+const leftPanel = document.getElementById('leftPanel');
+let isResizing = false;
+
+resizer.addEventListener('mousedown', (e) => {
+    isResizing = true;
+    resizer.classList.add('active');
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    e.preventDefault();
+});
+
+function onMouseMove(e) {
+    if (!isResizing) return;
+    const containerWidth = document.querySelector('.main-container').offsetWidth;
+    const newWidth = (e.clientX / containerWidth) * 100;
+    if (newWidth > 20 && newWidth < 80) {
+        leftPanel.style.width = newWidth + '%';
+    }
+}
+
+function onMouseUp() {
+    isResizing = false;
+    resizer.classList.remove('active');
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+    resizeCanvas();
+}
+
+// ========================
+// TAB SWITCHING
+// ========================
+function switchTab(tab) {
+    document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tool-content').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    event.target.classList.add('active');
+    if (tab === 'geometry') {
+        setTimeout(resizeCanvas, 50);
+    }
+}
+
+// ========================
+// CALCULATOR
+// ========================
+let calcExpression = '';
+let calcHistoryItems = [];
+
+function calcInput(val) {
+    calcExpression += val;
+    document.getElementById('calcExpr').textContent = formatExpression(calcExpression);
+}
+
+function calcClear() {
+    calcExpression = '';
+    document.getElementById('calcExpr').textContent = '';
+    document.getElementById('calcResult').textContent = '0';
+}
+
+function calcBackspace() {
+    calcExpression = calcExpression.slice(0, -1);
+    document.getElementById('calcExpr').textContent = formatExpression(calcExpression);
+}
+
+function calcNegate() {
+    if (calcExpression.startsWith('-')) {
+        calcExpression = calcExpression.substring(1);
+    } else {
+        calcExpression = '-' + calcExpression;
+    }
+    document.getElementById('calcExpr').textContent = formatExpression(calcExpression);
+}
+
+function formatExpression(expr) {
+    return expr
+        .replace(/\*/g, '×')
+        .replace(/\//g, '÷')
+        .replace(/pi/g, 'π')
+        .replace(/sqrt/g, '√');
+}
+
+function calcEvaluate() {
+    if (!calcExpression) return;
+    try {
+        let expr = calcExpression
+            .replace(/pi/g, 'Math.PI')
+            .replace(/e(?![a-z])/g, 'Math.E')
+            .replace(/sin\(/g, 'Math.sin(')
+            .replace(/cos\(/g, 'Math.cos(')
+            .replace(/tan\(/g, 'Math.tan(')
+            .replace(/asin\(/g, 'Math.asin(')
+            .replace(/acos\(/g, 'Math.acos(')
+            .replace(/atan\(/g, 'Math.atan(')
+            .replace(/sqrt\(/g, 'Math.sqrt(')
+            .replace(/log\(/g, 'Math.log10(')
+            .replace(/ln\(/g, 'Math.log(')
+            .replace(/abs\(/g, 'Math.abs(')
+            .replace(/\^/g, '**');
+
+        let result = Function('"use strict"; return (' + expr + ')')();
+
+        if (typeof result === 'number') {
+            result = Math.round(result * 1e10) / 1e10;
+        }
+
+        const displayExpr = formatExpression(calcExpression);
+
+        calcHistoryItems.push({ expr: displayExpr, result: result });
+        updateCalcHistory();
+
+        document.getElementById('calcResult').textContent = result;
+        document.getElementById('calcExpr').textContent = displayExpr + ' =';
+        calcExpression = String(result);
+    } catch (e) {
+        document.getElementById('calcResult').textContent = 'Fejl';
+    }
+}
+
+function updateCalcHistory() {
+    const container = document.getElementById('calcHistory');
+    const last = calcHistoryItems[calcHistoryItems.length - 1];
+    container.innerHTML = last ? `<div class="calc-history-item"><span>${last.expr} = ${last.result}</span></div>` : '';
+    container.scrollTop = container.scrollHeight;
+
+    // Update clickable history list below
+    const list = document.getElementById('calcHistoryList');
+    if (!list) return;
+    if (calcHistoryItems.length === 0) { list.innerHTML = ''; return; }
+    list.innerHTML = '<div style="font-size:0.8rem;color:var(--text-light);font-weight:600;padding:6px 0 4px;border-bottom:1px solid var(--border);">Historik</div>' +
+        calcHistoryItems.slice().reverse().map((item, i) => {
+            const realIdx = calcHistoryItems.length - 1 - i;
+            return `<div class="calc-hist-entry" onclick="insertHistoryItem(${realIdx})" style="display:flex;align-items:center;padding:6px 8px;font-size:0.82rem;color:var(--text);cursor:pointer;border-bottom:1px solid #f1f5f9;border-radius:4px;gap:6px;">
+                <span style="flex:1;color:var(--text-light);">${item.expr} = <b>${item.result}</b></span>
+                <button onclick="insertHistoryToEditor(${realIdx}, event)" style="border:none;background:none;cursor:pointer;color:var(--primary);font-size:0.75rem;padding:2px 6px;border-radius:4px;white-space:nowrap;" onmouseover="this.style.background='#e0edff'" onmouseout="this.style.background='none'" title="Indsæt i dokument">⬅ Indsæt</button>
+            </div>`;
+        }).join('');
+    list.scrollTop = 0;
+}
+
+function insertHistoryItem(idx) {
+    const item = calcHistoryItems[idx];
+    if (!item) return;
+    // Load expression back into calculator
+    calcExpression = String(item.result);
+    document.getElementById('calcExpr').textContent = item.expr + ' =';
+    document.getElementById('calcResult').textContent = item.result;
+}
+
+function insertHistoryToEditor(idx, evt) {
+    evt.stopPropagation();
+    const item = calcHistoryItems[idx];
+    if (!item) return;
+    editor.focus();
+    document.execCommand('insertText', false, item.expr + ' = ' + item.result + ' ');
+    updateCounts();
+}
+
+function insertCalcToEditor() {
+    const expr = document.getElementById('calcExpr').textContent;
+    const result = document.getElementById('calcResult').textContent;
+    if (!expr || result === '0') return;
+
+    editor.focus();
+    document.execCommand('insertText', false, expr + ' ' + result + ' ');
+    updateCounts();
+}
+
+// Keyboard support for calculator
+document.addEventListener('keydown', (e) => {
+    if (document.activeElement === editor) return;
+    const activeTab = document.querySelector('.tool-content.active');
+    if (!activeTab || activeTab.id !== 'tab-calculator') return;
+
+    if (e.key >= '0' && e.key <= '9') calcInput(e.key);
+    else if (e.key === '+') calcInput('+');
+    else if (e.key === '-') calcInput('-');
+    else if (e.key === '*') calcInput('*');
+    else if (e.key === '/') calcInput('/');
+    else if (e.key === '.') calcInput('.');
+    else if (e.key === '(') calcInput('(');
+    else if (e.key === ')') calcInput(')');
+    else if (e.key === '^') calcInput('^');
+    else if (e.key === 'Enter') calcEvaluate();
+    else if (e.key === 'Backspace') calcBackspace();
+    else if (e.key === 'Escape') calcClear();
+});
+
+// ========================
+// FORMULA COLLECTION
+// ========================
+const formulas = {
+    'Areal': [
+        { name: 'Rektangel', formula: 'A = l × b', text: 'A = l × b' },
+        { name: 'Kvadrat', formula: 'A = s²', text: 'A = s²' },
+        { name: 'Trekant', formula: 'A = ½ × g × h', text: 'A = ½ × g × h' },
+        { name: 'Parallelogram', formula: 'A = g × h', text: 'A = g × h' },
+        { name: 'Trapez', formula: 'A = ½ × (a + b) × h', text: 'A = ½ × (a + b) × h' },
+        { name: 'Cirkel', formula: 'A = π × r²', text: 'A = π × r²' },
+    ],
+    'Omkreds': [
+        { name: 'Rektangel', formula: 'O = 2 × (l + b)', text: 'O = 2 × (l + b)' },
+        { name: 'Kvadrat', formula: 'O = 4 × s', text: 'O = 4 × s' },
+        { name: 'Cirkel', formula: 'O = 2 × π × r', text: 'O = 2 × π × r' },
+        { name: 'Trekant', formula: 'O = a + b + c', text: 'O = a + b + c' },
+    ],
+    'Rumfang': [
+        { name: 'Kasse (rektangulært prisme)', formula: 'V = l × b × h', text: 'V = l × b × h' },
+        { name: 'Terning', formula: 'V = s³', text: 'V = s³' },
+        { name: 'Cylinder', formula: 'V = π × r² × h', text: 'V = π × r² × h' },
+        { name: 'Kegle', formula: 'V = ⅓ × π × r² × h', text: 'V = ⅓ × π × r² × h' },
+        { name: 'Kugle', formula: 'V = ⁴⁄₃ × π × r³', text: 'V = ⁴⁄₃ × π × r³' },
+    ],
+    'Overfladeareal': [
+        { name: 'Kasse', formula: 'O = 2(lb + lh + bh)', text: 'O = 2(lb + lh + bh)' },
+        { name: 'Cylinder', formula: 'O = 2πr² + 2πrh', text: 'O = 2πr² + 2πrh' },
+        { name: 'Kugle', formula: 'O = 4 × π × r²', text: 'O = 4 × π × r²' },
+    ],
+    'Pythagoras': [
+        { name: 'Pythagorass sætning', formula: 'a² + b² = c²', text: 'a² + b² = c²' },
+        { name: 'Find katete', formula: 'a = √(c² − b²)', text: 'a = √(c² − b²)' },
+    ],
+    'Procent & Rente': [
+        { name: 'Procentdel', formula: 'del = procent/100 × hele', text: 'del = procent/100 × hele' },
+        { name: 'Procentvis ændring', formula: 'ændring = (ny − gammel)/gammel × 100%', text: 'ændring = (ny − gammel)/gammel × 100%' },
+        { name: 'Renters rente', formula: 'K = K₀ × (1 + r)ⁿ', text: 'K = K₀ × (1 + r)ⁿ' },
+    ],
+    'Lineære funktioner': [
+        { name: 'Linjens ligning', formula: 'y = a × x + b', text: 'y = a × x + b' },
+        { name: 'Hældning', formula: 'a = (y₂ − y₁) / (x₂ − x₁)', text: 'a = (y₂ − y₁) / (x₂ − x₁)' },
+        { name: 'Skæring med y-aksen', formula: 'b = y − a × x', text: 'b = y − a × x' },
+    ],
+    'Statistik': [
+        { name: 'Gennemsnit', formula: 'x̄ = Σx / n', text: 'x̄ = Σx / n' },
+        { name: 'Median', formula: 'Midterste værdi (sorteret)', text: 'Median = midterste værdi' },
+        { name: 'Typetal', formula: 'Hyppigste værdi', text: 'Typetal = hyppigste værdi' },
+        { name: 'Variationsbredde', formula: 'V = max − min', text: 'V = max − min' },
+    ],
+    'Trigonometri': [
+        { name: 'Sinus', formula: 'sin(v) = modstående / hypotenuse', text: 'sin(v) = modstående / hypotenuse' },
+        { name: 'Cosinus', formula: 'cos(v) = hosliggende / hypotenuse', text: 'cos(v) = hosliggende / hypotenuse' },
+        { name: 'Tangens', formula: 'tan(v) = modstående / hosliggende', text: 'tan(v) = modstående / hosliggende' },
+    ],
+};
+
+const categoryIcons = {
+    'Areal': '📐',
+    'Omkreds': '⭕',
+    'Rumfang': '📦',
+    'Overfladeareal': '🧊',
+    'Pythagoras': '📏',
+    'Procent & Rente': '💰',
+    'Lineære funktioner': '📈',
+    'Statistik': '📊',
+    'Trigonometri': '🔺',
+};
+
+function buildFormulas() {
+    const container = document.getElementById('formulaContainer');
+    let html = '';
+    for (const [category, items] of Object.entries(formulas)) {
+        const icon = categoryIcons[category] || '📋';
+        html += `<div class="formula-category collapsed">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">${icon} ${category}</h3>
+            <div class="formula-list">`;
+        for (const item of items) {
+            html += `<div class="formula-item">
+                <div>
+                    <div class="formula-name">${item.name}</div>
+                    <div class="formula-expr">${item.formula}</div>
+                </div>
+                <button class="formula-insert-btn" onclick="insertFormulaToEditor('${item.text.replace(/'/g, "\\'")}')">⬅ Indsæt</button>
+            </div>`;
+        }
+        html += '</div></div>';
+    }
+    container.innerHTML = html;
+}
+
+function insertFormulaToEditor(formulaText) {
+    editor.focus();
+    document.execCommand('insertText', false, formulaText + ' ');
+    updateCounts();
+}
+
+buildFormulas();
+
+document.getElementById('formulaSearch').addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+
+    // Toggle devtools
+    const exBtn = document.getElementById('exampleBtn');
+    const isDevtools = query.startsWith('devtools');
+    exBtn.style.display = (isDevtools || exampleActive) ? '' : 'none';
+    const searchQuery = isDevtools ? query.replace('devtools', '').trim() : query;
+
+    const categories = document.querySelectorAll('#formulaContainer .formula-category');
+    categories.forEach(cat => {
+        const items = cat.querySelectorAll('.formula-item');
+        let anyVisible = false;
+        items.forEach(item => {
+            const name = item.querySelector('.formula-name').textContent.toLowerCase();
+            const expr = item.querySelector('.formula-expr').textContent.toLowerCase();
+            const catName = cat.querySelector('h3').textContent.toLowerCase();
+            const match = !searchQuery || name.includes(searchQuery) || expr.includes(searchQuery) || catName.includes(searchQuery);
+            item.style.display = match ? '' : 'none';
+            if (match) anyVisible = true;
+        });
+        cat.style.display = anyVisible ? '' : 'none';
+        if (searchQuery && anyVisible) cat.classList.remove('collapsed');
+        else if (!searchQuery) cat.classList.add('collapsed');
+    });
+});
+
+// ========================
+// GEOMETRY & GRAPH CANVAS
+// ========================
+const canvas = document.getElementById('geoCanvas');
+const ctx = canvas.getContext('2d');
+let currentTool = 'select';
+let isDrawing = false;
+let startX, startY;
+let shapes = [];
+let undoStack = [];
+let showGrid = false;
+let showAxes = false;
+let graphs = [];
+let freehandPoints = [];
+
+function resizeCanvas() {
+    const container = canvas.parentElement;
+    canvas.width = container.clientWidth;
+    canvas.height = container.clientHeight;
+    redrawCanvas();
+}
+
+window.addEventListener('resize', resizeCanvas);
+setTimeout(resizeCanvas, 100);
+
+let currentRectTool = 'rect';
+
+function selectRectType(type) {
+    currentRectTool = type;
+    const icon = document.getElementById('rectBtnIcon');
+    if (type === 'square') {
+        icon.innerHTML = '<rect x="4" y="4" width="16" height="16" rx="1.5"/>';
+    } else if (type === 'diamond') {
+        icon.innerHTML = '<polygon points="12,3 21,12 12,21 3,12"/>';
+    } else {
+        icon.innerHTML = '<rect x="3" y="5" width="18" height="14" rx="1.5"/>';
+    }
+    document.getElementById('rectDropdown').style.display = 'none';
+    setGeoTool(type);
+}
+
+let currentCircleTool = 'circle';
+
+function selectCircleType(type) {
+    currentCircleTool = type;
+    const icon = document.getElementById('circleBtnIcon');
+    if (type === 'circle-dot') {
+        icon.innerHTML = '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/>';
+    } else {
+        icon.innerHTML = '<circle cx="12" cy="12" r="9"/>';
+    }
+    document.getElementById('circleDropdown').style.display = 'none';
+    setGeoTool(type);
+}
+
+let currentTriTool = 'triangle';
+
+function selectTriType(type) {
+    currentTriTool = type;
+    const icon = document.getElementById('triBtnIcon');
+    if (type === 'triangle-right') {
+        icon.innerHTML = '<polygon points="3,3 3,21 21,21"/>';
+    } else if (type === 'triangle-iso') {
+        icon.innerHTML = '<polygon points="12,3 4,21 20,21"/>';
+    } else if (type === 'triangle-right-iso') {
+        icon.innerHTML = '<polygon points="3,3 3,21 21,21"/>';
+    } else {
+        icon.innerHTML = '<polygon points="12,3 3,21 21,21"/>';
+    }
+    document.getElementById('triDropdown').style.display = 'none';
+    setGeoTool(type);
+}
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('#rectDropdown') && !e.target.closest('#geo-rect')) {
+        document.getElementById('rectDropdown').style.display = 'none';
+    }
+    if (!e.target.closest('#circleDropdown') && !e.target.closest('#geo-circle')) {
+        document.getElementById('circleDropdown').style.display = 'none';
+    }
+    if (!e.target.closest('#triDropdown') && !e.target.closest('#geo-triangle')) {
+        document.getElementById('triDropdown').style.display = 'none';
+    }
+});
+
+function setGeoTool(tool) {
+    currentTool = tool;
+    document.querySelectorAll('.geo-btn').forEach(b => b.classList.remove('active'));
+    // For square/diamond, highlight the rect button
+    if (tool === 'square' || tool === 'diamond') {
+        document.getElementById('geo-rect')?.classList.add('active');
+    } else if (tool === 'circle-dot') {
+        document.getElementById('geo-circle')?.classList.add('active');
+    } else if (tool.startsWith('triangle')) {
+        document.getElementById('geo-triangle')?.classList.add('active');
+    } else {
+        const btn = document.getElementById('geo-' + tool);
+        if (btn) btn.classList.add('active');
+    }
+
+    document.getElementById('graphInputArea').style.display = tool === 'graph' ? 'flex' : 'none';
+
+    // Default text tool to black
+    if (tool === 'text') {
+        setQuickColor('#000000', document.querySelector('.color-quick[onclick*="000000"]'));
+    }
+}
+
+function setQuickColor(color, btn) {
+    document.getElementById('geoColor').value = color;
+    document.querySelectorAll('.color-quick').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+}
+
+function setCustomColor(color) {
+    document.getElementById('geoColor').value = color;
+    document.querySelectorAll('.color-quick').forEach(b => b.classList.remove('active'));
+}
+
+function toggleGrid() {
+    showGrid = !showGrid;
+    document.getElementById('gridBtn').classList.toggle('active', showGrid);
+    redrawCanvas();
+}
+
+function toggleAxes() {
+    showAxes = !showAxes;
+    document.getElementById('axesBtn').classList.toggle('active', showAxes);
+    redrawCanvas();
+}
+
+function drawGrid() {
+    if (!showGrid) return;
+    const w = canvas.width;
+    const h = canvas.height;
+    const step = 10; // 5mm per grid square, 2 squares = 1cm
+    // Draw 5mm grid (lighter)
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 0.5;
+    for (let x = 0; x <= w; x += step) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+    }
+    for (let y = 0; y <= h; y += step) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+    }
+    // Draw 1cm grid (darker)
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 0.8;
+    for (let x = 0; x <= w; x += step * 2) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+    }
+    for (let y = 0; y <= h; y += step * 2) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+    }
+}
+
+function drawAxes() {
+    if (!showAxes) return;
+    const w = canvas.width;
+    const h = canvas.height;
+    const step = 20;
+    const cx = Math.floor(w / 2);
+    const cy = Math.floor(h / 2);
+
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx, 0);
+    ctx.lineTo(cx, h);
+    ctx.moveTo(0, cy);
+    ctx.lineTo(w, cy);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = '10px sans-serif';
+    for (let x = cx + step * 5; x < w; x += step * 5) {
+        const val = (x - cx) / step;
+        ctx.fillText(val, x - 5, cy + 14);
+    }
+    for (let x = cx - step * 5; x > 0; x -= step * 5) {
+        const val = (x - cx) / step;
+        ctx.fillText(val, x - 8, cy + 14);
+    }
+    for (let y = cy - step * 5; y > 0; y -= step * 5) {
+        const val = (cy - y) / step;
+        ctx.fillText(val, cx + 4, y + 4);
+    }
+    for (let y = cy + step * 5; y < h; y += step * 5) {
+        const val = (cy - y) / step;
+        ctx.fillText(val, cx + 4, y + 4);
+    }
+}
+
+function redrawCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawGrid();
+    drawAxes();
+
+    // Draw graphs
+    for (const g of graphs) {
+        drawGraphLine(g.fn, g.color);
+    }
+
+    // Draw shapes
+    for (const shape of shapes) {
+        drawShape(shape);
+    }
+    // Draw measurements if enabled
+    if (document.getElementById('geoMeasure')?.checked) {
+        for (const shape of shapes) {
+            drawMeasurements(shape);
+        }
+    }
+}
+
+const CM_SCALE = 20; // 20px = 1cm
+function fmtCm(px) { const v = +(px / CM_SCALE).toFixed(1); return v === Math.round(v) ? v.toFixed(0) : v.toFixed(1); }
+
+function drawMeasurements(shape) {
+    ctx.save();
+    ctx.font = '11px sans-serif';
+    ctx.fillStyle = '#333';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const cl = shape.customLabels || {};
+    const hl = shape._hiddenLabels || {};
+    // Returns label text, or null if hidden/deleted
+    function lbl(dim, auto) { if (hl[dim]) return null; if (dim in cl) return cl[dim] || null; return auto; }
+
+    switch (shape.type) {
+        case 'rect': {
+            const x = shape.w < 0 ? shape.x + shape.w : shape.x;
+            const y = shape.h < 0 ? shape.y + shape.h : shape.y;
+            const w = Math.abs(shape.w);
+            const h = Math.abs(shape.h);
+            const wt = lbl('w', 'b = ' + fmtCm(w) + ' cm');
+            if (wt) ctx.fillText(wt, x + w / 2, y + h + 14);
+            ctx.textAlign = 'right';
+            const ht = lbl('h', 'h = ' + fmtCm(h) + ' cm');
+            if (ht) ctx.fillText(ht, x - 8, y + h / 2);
+            break;
+        }
+        case 'circle': {
+            const rt = lbl('r', 'r = ' + fmtCm(shape.r) + ' cm');
+            if (rt) {
+                ctx.beginPath();
+                ctx.setLineDash([3, 3]);
+                ctx.strokeStyle = '#666';
+                ctx.lineWidth = 1;
+                ctx.moveTo(shape.cx, shape.cy);
+                ctx.lineTo(shape.cx + shape.r, shape.cy);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillText(rt, shape.cx + shape.r / 2, shape.cy - 10);
+            }
+            break;
+        }
+        case 'diamond': {
+            const wt = lbl('w', 'b = ' + fmtCm(shape.hw * 2) + ' cm');
+            if (wt) ctx.fillText(wt, shape.cx, shape.cy + shape.hh + 14);
+            ctx.textAlign = 'right';
+            const ht = lbl('h', 'h = ' + fmtCm(shape.hh * 2) + ' cm');
+            if (ht) ctx.fillText(ht, shape.cx - shape.hw - 8, shape.cy);
+            break;
+        }
+        case 'triangle': {
+            const sides = [
+                { x1: shape.x1, y1: shape.y1, x2: shape.x2, y2: shape.y2 },
+                { x1: shape.x2, y1: shape.y2, x2: shape.x3, y2: shape.y3 },
+                { x1: shape.x3, y1: shape.y3, x2: shape.x1, y2: shape.y1 },
+            ];
+            sides.forEach((s, si) => {
+                const len = Math.sqrt((s.x2 - s.x1) ** 2 + (s.y2 - s.y1) ** 2);
+                const t = lbl('side' + si, fmtCm(len) + ' cm');
+                if (!t) return;
+                const mx = (s.x1 + s.x2) / 2, my = (s.y1 + s.y2) / 2;
+                const dx = s.y2 - s.y1, dy = -(s.x2 - s.x1);
+                const d = Math.sqrt(dx * dx + dy * dy) || 1;
+                ctx.fillText(t, mx + dx / d * 14, my + dy / d * 14);
+            });
+            break;
+        }
+        case 'line': {
+            const len = Math.sqrt((shape.x2 - shape.x1) ** 2 + (shape.y2 - shape.y1) ** 2);
+            const t = lbl('len', fmtCm(len) + ' cm');
+            if (!t) break;
+            const mx = (shape.x1 + shape.x2) / 2, my = (shape.y1 + shape.y2) / 2;
+            const dx = shape.y2 - shape.y1, dy = -(shape.x2 - shape.x1);
+            const d = Math.sqrt(dx * dx + dy * dy) || 1;
+            ctx.fillText(t, mx + dx / d * 12, my + dy / d * 12);
+            break;
+        }
+    }
+    ctx.restore();
+}
+
+function getMeasurementLabels(shape, idx) {
+    const labels = [];
+    const cl = shape.customLabels || {};
+    function lt(dim, auto) { return (dim in cl) ? (cl[dim] || '') : auto; }
+    switch (shape.type) {
+        case 'rect': {
+            const x = shape.w < 0 ? shape.x + shape.w : shape.x;
+            const y = shape.h < 0 ? shape.y + shape.h : shape.y;
+            const w = Math.abs(shape.w), h = Math.abs(shape.h);
+            labels.push({ x: x + w / 2, y: y + h + 14, text: lt('w', 'b = ' + fmtCm(w) + ' cm'), dim: 'w', idx });
+            labels.push({ x: x - 8, y: y + h / 2, text: lt('h', 'h = ' + fmtCm(h) + ' cm'), dim: 'h', idx });
+            break;
+        }
+        case 'circle':
+            labels.push({ x: shape.cx + shape.r / 2, y: shape.cy - 10, text: lt('r', 'r = ' + fmtCm(shape.r) + ' cm'), dim: 'r', idx });
+            break;
+        case 'diamond':
+            labels.push({ x: shape.cx, y: shape.cy + shape.hh + 14, text: lt('w', 'b = ' + fmtCm(shape.hw * 2) + ' cm'), dim: 'w', idx });
+            labels.push({ x: shape.cx - shape.hw - 8, y: shape.cy, text: lt('h', 'h = ' + fmtCm(shape.hh * 2) + ' cm'), dim: 'h', idx });
+            break;
+        case 'triangle': {
+            const sides = [
+                { x1: shape.x1, y1: shape.y1, x2: shape.x2, y2: shape.y2 },
+                { x1: shape.x2, y1: shape.y2, x2: shape.x3, y2: shape.y3 },
+                { x1: shape.x3, y1: shape.y3, x2: shape.x1, y2: shape.y1 },
+            ];
+            sides.forEach((s, si) => {
+                const len = Math.sqrt((s.x2 - s.x1) ** 2 + (s.y2 - s.y1) ** 2);
+                const mx = (s.x1 + s.x2) / 2, my = (s.y1 + s.y2) / 2;
+                const dx = s.y2 - s.y1, dy = -(s.x2 - s.x1);
+                const d = Math.sqrt(dx * dx + dy * dy) || 1;
+                labels.push({ x: mx + dx / d * 14, y: my + dy / d * 14, text: lt('side' + si, fmtCm(len) + ' cm'), dim: 'side' + si, idx });
+            });
+            break;
+        }
+        case 'line': {
+            const len = Math.sqrt((shape.x2 - shape.x1) ** 2 + (shape.y2 - shape.y1) ** 2);
+            const mx = (shape.x1 + shape.x2) / 2, my = (shape.y1 + shape.y2) / 2;
+            const dx = shape.y2 - shape.y1, dy = -(shape.x2 - shape.x1);
+            const d = Math.sqrt(dx * dx + dy * dy) || 1;
+            labels.push({ x: mx + dx / d * 12, y: my + dy / d * 12, text: lt('len', fmtCm(len) + ' cm'), dim: 'len', idx });
+            break;
+        }
+    }
+    return labels;
+}
+
+function applyMeasurementEdit(shape, dim, newCm) {
+    const newPx = newCm * CM_SCALE;
+    switch (shape.type) {
+        case 'rect':
+            if (dim === 'w') shape.w = shape.w < 0 ? -newPx : newPx;
+            else if (dim === 'h') shape.h = shape.h < 0 ? -newPx : newPx;
+            break;
+        case 'circle':
+            if (dim === 'r') shape.r = newPx;
+            break;
+        case 'diamond':
+            if (dim === 'w') shape.hw = newPx / 2;
+            else if (dim === 'h') shape.hh = newPx / 2;
+            break;
+        case 'triangle': {
+            const sideIdx = parseInt(dim.replace('side', ''));
+            const pts = [{x:shape.x1,y:shape.y1},{x:shape.x2,y:shape.y2},{x:shape.x3,y:shape.y3}];
+            const a = pts[sideIdx], b = pts[(sideIdx + 1) % 3];
+            const oldLen = Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2) || 1;
+            const scale = newPx / oldLen;
+            const keys = [['x1','y1'],['x2','y2'],['x3','y3']];
+            const bk = keys[(sideIdx + 1) % 3];
+            shape[bk[0]] = a.x + (b.x - a.x) * scale;
+            shape[bk[1]] = a.y + (b.y - a.y) * scale;
+            break;
+        }
+        case 'line': {
+            const oldLen = Math.sqrt((shape.x2 - shape.x1) ** 2 + (shape.y2 - shape.y1) ** 2) || 1;
+            const scale = newPx / oldLen;
+            shape.x2 = shape.x1 + (shape.x2 - shape.x1) * scale;
+            shape.y2 = shape.y1 + (shape.y2 - shape.y1) * scale;
+            break;
+        }
+    }
+}
+
+let editingMeasurement = false;
+canvas.addEventListener('dblclick', (e) => {
+    if (!document.getElementById('geoMeasure')?.checked) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const hitRadius = 20;
+
+    for (let i = shapes.length - 1; i >= 0; i--) {
+        const labels = getMeasurementLabels(shapes[i], i);
+        for (const label of labels) {
+            if (Math.abs(mx - label.x) < hitRadius + 20 && Math.abs(my - label.y) < hitRadius) {
+                e.stopPropagation();
+                e.preventDefault();
+                editingMeasurement = true;
+                const container = canvas.parentElement;
+                const shape = shapes[label.idx];
+                const scaleOff = shape.noScale && shape.noScale[label.dim];
+
+                // Hide this label on canvas while editing
+                if (!shape._hiddenLabels) shape._hiddenLabels = {};
+                shape._hiddenLabels[label.dim] = true;
+                redrawCanvas();
+
+                const wrap = document.createElement('div');
+                wrap.className = 'measure-edit-wrap';
+                Object.assign(wrap.style, {
+                    position: 'absolute',
+                    left: (label.x) + 'px',
+                    top: (label.y) + 'px',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: '100',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    pointerEvents: 'auto',
+                });
+
+                const editable = document.createElement('span');
+                editable.contentEditable = 'true';
+                editable.textContent = label.text;
+                editable.className = 'measure-edit';
+                Object.assign(editable.style, {
+                    font: '11px sans-serif',
+                    color: '#333',
+                    whiteSpace: 'nowrap',
+                    outline: 'none',
+                    borderBottom: '1.5px solid #2563eb',
+                    background: 'rgba(255,255,255,0.9)',
+                    padding: '0 3px',
+                    caretColor: '#2563eb',
+                    minWidth: '20px',
+                    textAlign: 'center',
+                });
+
+                let autoScale = !scaleOff;
+                const scaleBtn = document.createElement('button');
+                scaleBtn.title = autoScale ? 'Tilpas størrelse er slået til' : 'Tilpas størrelse er slået fra';
+                Object.assign(scaleBtn.style, {
+                    width: '18px', height: '18px', padding: '0',
+                    border: '1px solid ' + (autoScale ? '#2563eb' : '#cbd5e1'),
+                    borderRadius: '4px', cursor: 'pointer',
+                    background: autoScale ? '#2563eb' : 'white',
+                    color: autoScale ? 'white' : '#94a3b8',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '11px', lineHeight: '1', flexShrink: '0',
+                });
+                scaleBtn.innerHTML = '⇔';
+                scaleBtn.addEventListener('mousedown', (ev) => { ev.preventDefault(); ev.stopPropagation(); });
+                scaleBtn.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    autoScale = !autoScale;
+                    scaleBtn.style.background = autoScale ? '#2563eb' : 'white';
+                    scaleBtn.style.border = '1px solid ' + (autoScale ? '#2563eb' : '#cbd5e1');
+                    scaleBtn.style.color = autoScale ? 'white' : '#94a3b8';
+                    scaleBtn.title = autoScale ? 'Tilpas størrelse er slået til' : 'Tilpas størrelse er slået fra';
+                    editable.focus();
+                });
+
+                wrap.appendChild(editable);
+                wrap.appendChild(scaleBtn);
+                container.appendChild(wrap);
+
+                // Focus after a short delay to avoid immediate blur
+                requestAnimationFrame(() => {
+                    editable.focus();
+                    const range = document.createRange();
+                    range.selectNodeContents(editable);
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+
+                    let finished = false;
+                    const finish = () => {
+                        if (finished) return;
+                        finished = true;
+                        editingMeasurement = false;
+                        const text = editable.textContent.trim();
+                        if (autoScale) {
+                            const numMatch = text.match(/([\d.]+)/);
+                            if (numMatch) {
+                                const val = parseFloat(numMatch[1]);
+                                if (val > 0 && !isNaN(val)) {
+                                    applyMeasurementEdit(shapes[label.idx], label.dim, val);
+                                }
+                            }
+                        }
+                        // Store custom label + scale preference
+                        if (!shape.customLabels) shape.customLabels = {};
+                        shape.customLabels[label.dim] = text !== '' ? text : '';
+                        if (!shape.noScale) shape.noScale = {};
+                        shape.noScale[label.dim] = !autoScale;
+                        delete shape._hiddenLabels[label.dim];
+                        wrap.remove();
+                        redrawCanvas();
+                    };
+                    editable.addEventListener('keydown', (ev) => {
+                        if (ev.key === 'Enter') { ev.preventDefault(); finish(); }
+                        if (ev.key === 'Escape') { finished = true; editingMeasurement = false; delete shape._hiddenLabels[label.dim]; wrap.remove(); redrawCanvas(); }
+                    });
+                    editable.addEventListener('blur', (ev) => {
+                        // Don't finish if focus moved to the scale button
+                        if (wrap.contains(ev.relatedTarget)) return;
+                        finish();
+                    });
+                });
+                return;
+            }
+        }
+    }
+});
+
+function drawShape(shape) {
+    ctx.strokeStyle = shape.color;
+    ctx.lineWidth = shape.width;
+    ctx.fillStyle = shape.color + '33';
+
+    switch (shape.type) {
+        case 'line':
+            ctx.beginPath();
+            ctx.moveTo(shape.x1, shape.y1);
+            ctx.lineTo(shape.x2, shape.y2);
+            ctx.stroke();
+            break;
+        case 'rect':
+            ctx.beginPath();
+            ctx.rect(shape.x, shape.y, shape.w, shape.h);
+            if (shape.fill) ctx.fill();
+            ctx.stroke();
+            break;
+        case 'circle':
+            ctx.beginPath();
+            ctx.arc(shape.cx, shape.cy, shape.r, 0, Math.PI * 2);
+            if (shape.fill) ctx.fill();
+            ctx.stroke();
+            if (shape.dotCenter) {
+                ctx.beginPath();
+                ctx.arc(shape.cx, shape.cy, 3, 0, Math.PI * 2);
+                ctx.fillStyle = shape.color;
+                ctx.fill();
+            }
+            break;
+        case 'diamond':
+            ctx.beginPath();
+            ctx.moveTo(shape.cx, shape.cy - shape.hh);
+            ctx.lineTo(shape.cx + shape.hw, shape.cy);
+            ctx.lineTo(shape.cx, shape.cy + shape.hh);
+            ctx.lineTo(shape.cx - shape.hw, shape.cy);
+            ctx.closePath();
+            if (shape.fill) ctx.fill();
+            ctx.stroke();
+            break;
+        case 'triangle':
+            ctx.beginPath();
+            ctx.moveTo(shape.x1, shape.y1);
+            ctx.lineTo(shape.x2, shape.y2);
+            ctx.lineTo(shape.x3, shape.y3);
+            ctx.closePath();
+            if (shape.fill) ctx.fill();
+            ctx.stroke();
+            break;
+        case 'freehand':
+            if (shape.points.length < 2) return;
+            ctx.beginPath();
+            ctx.moveTo(shape.points[0].x, shape.points[0].y);
+            for (let i = 1; i < shape.points.length; i++) {
+                ctx.lineTo(shape.points[i].x, shape.points[i].y);
+            }
+            ctx.stroke();
+            break;
+        case 'text':
+            ctx.font = (shape.fontSize || shape.width * 8) + 'px sans-serif';
+            ctx.fillStyle = shape.color;
+            ctx.fillText(shape.text, shape.x, shape.y);
+            break;
+    }
+}
+
+// Hit test - find shape at position
+function hitTestShape(x, y) {
+    const margin = 8;
+    for (let i = shapes.length - 1; i >= 0; i--) {
+        const s = shapes[i];
+        switch (s.type) {
+            case 'rect':
+                if (x >= s.x - margin && x <= s.x + s.w + margin && y >= s.y - margin && y <= s.y + s.h + margin) return i;
+                break;
+            case 'circle':
+                const dist = Math.sqrt((x - s.cx) ** 2 + (y - s.cy) ** 2);
+                if (dist <= s.r + margin) return i;
+                break;
+            case 'line':
+                const dx = s.x2 - s.x1, dy = s.y2 - s.y1;
+                const len = Math.sqrt(dx * dx + dy * dy);
+                if (len === 0) break;
+                const t = Math.max(0, Math.min(1, ((x - s.x1) * dx + (y - s.y1) * dy) / (len * len)));
+                const px = s.x1 + t * dx, py = s.y1 + t * dy;
+                if (Math.sqrt((x - px) ** 2 + (y - py) ** 2) < margin + 4) return i;
+                break;
+            case 'diamond':
+                if (x >= s.cx - s.hw - margin && x <= s.cx + s.hw + margin && y >= s.cy - s.hh - margin && y <= s.cy + s.hh + margin) return i;
+                break;
+            case 'triangle':
+                // Bounding box check
+                const minX = Math.min(s.x1, s.x2, s.x3), maxX = Math.max(s.x1, s.x2, s.x3);
+                const minY = Math.min(s.y1, s.y2, s.y3), maxY = Math.max(s.y1, s.y2, s.y3);
+                if (x >= minX - margin && x <= maxX + margin && y >= minY - margin && y <= maxY + margin) return i;
+                break;
+            case 'text':
+                ctx.font = (s.fontSize || s.width * 8) + 'px sans-serif';
+                const tw = ctx.measureText(s.text).width;
+                if (x >= s.x - margin && x <= s.x + tw + margin && y >= s.y - s.width * 8 - margin && y <= s.y + margin) return i;
+                break;
+            case 'freehand':
+                for (const p of s.points) {
+                    if (Math.sqrt((x - p.x) ** 2 + (y - p.y) ** 2) < margin + 4) return i;
+                }
+                break;
+        }
+    }
+    return -1;
+}
+
+function moveShape(shape, dx, dy) {
+    switch (shape.type) {
+        case 'rect': shape.x += dx; shape.y += dy; break;
+        case 'diamond': shape.cx += dx; shape.cy += dy; break;
+        case 'circle': shape.cx += dx; shape.cy += dy; break;
+        case 'line': shape.x1 += dx; shape.y1 += dy; shape.x2 += dx; shape.y2 += dy; break;
+        case 'triangle': shape.x1 += dx; shape.y1 += dy; shape.x2 += dx; shape.y2 += dy; shape.x3 += dx; shape.y3 += dy; break;
+        case 'text': shape.x += dx; shape.y += dy; break;
+        case 'freehand': shape.points.forEach(p => { p.x += dx; p.y += dy; }); break;
+    }
+}
+
+// Delete button on hover
+let deleteBtn = null;
+let dupBtn = null;
+let deleteBtnIdx = -1;
+
+function getShapeTopRight(idx) {
+    const s = shapes[idx];
+    switch (s.type) {
+        case 'rect': {
+            const b = getShapeBounds(s);
+            return { x: b.x + b.w, y: b.y };
+        }
+        case 'diamond': return { x: s.cx + s.hw, y: s.cy - s.hh };
+        case 'circle': return { x: s.cx + s.r * 0.7, y: s.cy - s.r * 0.7 };
+        case 'line': return { x: Math.max(s.x1, s.x2), y: Math.min(s.y1, s.y2) };
+        case 'triangle': return { x: Math.max(s.x1, s.x2, s.x3), y: Math.min(s.y1, s.y2, s.y3) };
+        case 'text':
+            ctx.font = (s.fontSize || s.width * 8) + 'px sans-serif';
+            return { x: s.x + ctx.measureText(s.text).width, y: s.y - s.width * 8 };
+        case 'freehand':
+            let maxX = -Infinity, minY = Infinity;
+            s.points.forEach(p => { if (p.x > maxX) maxX = p.x; if (p.y < minY) minY = p.y; });
+            return { x: maxX, y: minY };
+        default: return { x: 0, y: 0 };
+    }
+}
+
+function showDeleteBtn(idx) {
+    if (idx === deleteBtnIdx) return;
+    // Remove old
+    if (deleteBtn) { deleteBtn.remove(); deleteBtn = null; }
+    if (dupBtn) { dupBtn.remove(); dupBtn = null; }
+    deleteBtnIdx = -1;
+    if (idx < 0) return;
+
+    const pos = getShapeTopRight(idx);
+
+    // Duplicate button
+    dupBtn = document.createElement('button');
+    dupBtn.className = 'geo-delete-btn';
+    dupBtn.innerHTML = '⧉';
+    dupBtn.title = 'Dupliker';
+    dupBtn.style.left = (pos.x + 4) + 'px';
+    dupBtn.style.top = (pos.y - 32) + 'px';
+    dupBtn.addEventListener('mousedown', (ev) => {
+        ev.stopPropagation();
+        undoStack.push(JSON.parse(JSON.stringify(shapes)));
+        const copy = JSON.parse(JSON.stringify(shapes[idx]));
+        moveShape(copy, 20, 20);
+        shapes.push(copy);
+        redrawCanvas();
+        showDeleteBtn(shapes.length - 1);
+    });
+    canvas.parentElement.appendChild(dupBtn);
+
+    // Delete button
+    deleteBtn = document.createElement('button');
+    deleteBtn.className = 'geo-delete-btn';
+    deleteBtn.innerHTML = '🗑';
+    deleteBtn.title = 'Slet';
+    deleteBtn.style.left = (pos.x + 32) + 'px';
+    deleteBtn.style.top = (pos.y - 32) + 'px';
+    deleteBtn.addEventListener('mousedown', (ev) => {
+        ev.stopPropagation();
+        undoStack.push(JSON.parse(JSON.stringify(shapes)));
+        shapes.splice(idx, 1);
+        redrawCanvas();
+        if (deleteBtn) { deleteBtn.remove(); deleteBtn = null; }
+        if (dupBtn) { dupBtn.remove(); dupBtn = null; }
+        deleteBtnIdx = -1;
+    });
+    canvas.parentElement.appendChild(deleteBtn);
+    deleteBtnIdx = idx;
+}
+
+// Hide delete button when switching tools
+const origSetGeoTool = setGeoTool;
+setGeoTool = function(tool) {
+    if (deleteBtn) { deleteBtn.remove(); deleteBtn = null; }
+    if (dupBtn) { dupBtn.remove(); dupBtn = null; }
+    deleteBtnIdx = -1;
+    origSetGeoTool(tool);
+};
+
+// Bounding box for shapes
+function getShapeBounds(s) {
+    switch (s.type) {
+        case 'rect': {
+            const rx = s.w < 0 ? s.x + s.w : s.x;
+            const ry = s.h < 0 ? s.y + s.h : s.y;
+            return { x: rx, y: ry, w: Math.abs(s.w), h: Math.abs(s.h) };
+        }
+        case 'diamond': return { x: s.cx - s.hw, y: s.cy - s.hh, w: s.hw * 2, h: s.hh * 2 };
+        case 'circle': return { x: s.cx - s.r, y: s.cy - s.r, w: s.r * 2, h: s.r * 2 };
+        case 'line': {
+            const x = Math.min(s.x1, s.x2), y = Math.min(s.y1, s.y2);
+            return { x, y, w: Math.abs(s.x2 - s.x1), h: Math.abs(s.y2 - s.y1) };
+        }
+        case 'triangle': {
+            const x = Math.min(s.x1, s.x2, s.x3), y = Math.min(s.y1, s.y2, s.y3);
+            return { x, y, w: Math.max(s.x1, s.x2, s.x3) - x, h: Math.max(s.y1, s.y2, s.y3) - y };
+        }
+        case 'text': {
+            ctx.font = (s.fontSize || s.width * 8) + 'px sans-serif';
+            const tw = ctx.measureText(s.text).width;
+            return { x: s.x, y: s.y - s.width * 8, w: tw, h: s.width * 8 };
+        }
+        case 'freehand': {
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            s.points.forEach(p => { minX = Math.min(minX, p.x); minY = Math.min(minY, p.y); maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y); });
+            return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+        }
+        default: return { x: 0, y: 0, w: 0, h: 0 };
+    }
+}
+
+function resizeShape(shape, scaleX, scaleY, anchorX, anchorY) {
+    switch (shape.type) {
+        case 'rect':
+            shape.w *= scaleX;
+            shape.h *= scaleY;
+            break;
+        case 'diamond':
+            shape.hw *= scaleX;
+            shape.hh *= scaleY;
+            break;
+        case 'circle':
+            shape.r *= Math.max(scaleX, scaleY);
+            break;
+        case 'line':
+            shape.x2 = anchorX + (shape.x2 - anchorX) * scaleX;
+            shape.y2 = anchorY + (shape.y2 - anchorY) * scaleY;
+            break;
+        case 'triangle':
+            [['x1','y1'],['x2','y2'],['x3','y3']].forEach(([px,py]) => {
+                shape[px] = anchorX + (shape[px] - anchorX) * scaleX;
+                shape[py] = anchorY + (shape[py] - anchorY) * scaleY;
+            });
+            break;
+        case 'text':
+            shape.width = Math.max(1, Math.round(shape.width * Math.max(scaleX, scaleY)));
+            break;
+        case 'freehand':
+            shape.points.forEach(p => {
+                p.x = anchorX + (p.x - anchorX) * scaleX;
+                p.y = anchorY + (p.y - anchorY) * scaleY;
+            });
+            break;
+    }
+}
+
+// Draw resize handle
+function drawResizeHandle(idx) {
+    const bounds = getShapeBounds(shapes[idx]);
+    const hx = bounds.x + bounds.w;
+    const hy = bounds.y + bounds.h;
+    ctx.fillStyle = '#2563eb';
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 1.5;
+    ctx.fillRect(hx - 5, hy - 5, 10, 10);
+    ctx.strokeRect(hx - 5, hy - 5, 10, 10);
+}
+
+function hitResizeHandle(idx, mx, my) {
+    const bounds = getShapeBounds(shapes[idx]);
+    const hx = bounds.x + bounds.w;
+    const hy = bounds.y + bounds.h;
+    return Math.abs(mx - hx) < 8 && Math.abs(my - hy) < 8;
+}
+
+// Select, drag & resize
+let selectedShape = -1;
+let dragOffsetX = 0, dragOffsetY = 0, isDragging = false, isShapeResizing = false, dragStartX = 0, dragStartY = 0;
+
+canvas.addEventListener('mousedown', (e) => {
+    if (editingMeasurement) return;
+    if (currentTool === 'select') {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+
+        // Check resize handle first
+        if (selectedShape >= 0 && hitResizeHandle(selectedShape, mx, my)) {
+            isShapeResizing = true;
+            dragStartX = mx;
+            dragStartY = my;
+            undoStack.push(JSON.parse(JSON.stringify(shapes)));
+            canvas.style.cursor = 'nwse-resize';
+            return;
+        }
+
+        selectedShape = hitTestShape(mx, my);
+        showDeleteBtn(selectedShape);
+        redrawCanvas();
+        if (selectedShape >= 0) {
+            isDragging = true;
+            dragStartX = mx;
+            dragStartY = my;
+            undoStack.push(JSON.parse(JSON.stringify(shapes)));
+            canvas.style.cursor = 'move';
+            drawSelectionUI(selectedShape);
+        }
+        return;
+    }
+});
+
+function drawSelectionUI(idx) {
+    if (idx < 0 || idx >= shapes.length) return;
+    const bounds = getShapeBounds(shapes[idx]);
+    const pad = 6;
+    ctx.save();
+    ctx.strokeStyle = '#2563eb';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    ctx.rect(bounds.x - pad, bounds.y - pad, bounds.w + pad * 2, bounds.h + pad * 2);
+    ctx.stroke();
+    ctx.restore();
+    drawResizeHandle(idx);
+}
+
+function updateActionBtns() {
+    if (selectedShape >= 0) {
+        const pos = getShapeTopRight(selectedShape);
+        if (dupBtn) { dupBtn.style.left = (pos.x + 4) + 'px'; dupBtn.style.top = (pos.y - 32) + 'px'; }
+        if (deleteBtn) { deleteBtn.style.left = (pos.x + 32) + 'px'; deleteBtn.style.top = (pos.y - 32) + 'px'; }
+    }
+}
+
+canvas.addEventListener('mousemove', (e) => {
+    if (currentTool === 'select' && isShapeResizing && selectedShape >= 0) {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const bounds = getShapeBounds(shapes[selectedShape]);
+        const newW = bounds.w + (mx - dragStartX);
+        const newH = bounds.h + (my - dragStartY);
+        const scaleX = bounds.w > 0 ? newW / bounds.w : 1;
+        const scaleY = bounds.h > 0 ? newH / bounds.h : 1;
+        if (scaleX > 0.1 && scaleY > 0.1) {
+            resizeShape(shapes[selectedShape], scaleX, scaleY, bounds.x, bounds.y);
+            dragStartX = mx;
+            dragStartY = my;
+        }
+        redrawCanvas();
+        drawSelectionUI(selectedShape);
+        updateActionBtns();
+        return;
+    }
+
+    if (currentTool === 'select' && isDragging && selectedShape >= 0) {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const dx = mx - dragStartX;
+        const dy = my - dragStartY;
+        moveShape(shapes[selectedShape], dx, dy);
+        dragStartX = mx;
+        dragStartY = my;
+        redrawCanvas();
+        drawSelectionUI(selectedShape);
+        updateActionBtns();
+        return;
+    }
+
+    // Change cursor on hover
+    if (currentTool === 'select' && !isDragging && !isShapeResizing) {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        if (selectedShape >= 0 && hitResizeHandle(selectedShape, mx, my)) {
+            canvas.style.cursor = 'nwse-resize';
+        } else {
+            canvas.style.cursor = hitTestShape(mx, my) >= 0 ? 'move' : 'default';
+        }
+    }
+});
+
+canvas.addEventListener('mouseup', () => {
+    if (currentTool === 'select') {
+        isDragging = false;
+        isShapeResizing = false;
+        canvas.style.cursor = 'default';
+        if (selectedShape >= 0) {
+            redrawCanvas();
+            drawSelectionUI(selectedShape);
+        }
+    }
+});
+
+// Canvas mouse events - drawing tools
+canvas.addEventListener('mousedown', (e) => {
+    if (editingMeasurement) return;
+    if (currentTool === 'select' || currentTool === 'graph') return;
+    const rect = canvas.getBoundingClientRect();
+    startX = e.clientX - rect.left;
+    startY = e.clientY - rect.top;
+    isDrawing = true;
+
+    if (currentTool === 'freehand') {
+        freehandPoints = [{ x: startX, y: startY }];
+    }
+
+    if (currentTool === 'text') {
+        // Text tool: drag to define box, then type
+        const existing = document.querySelector('.geo-text-input');
+        if (existing) existing.remove();
+        // isDrawing stays true - we use mousemove/mouseup to define box size
+    }
+});
+
+canvas.addEventListener('mousemove', (e) => {
+    if (!isDrawing) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    if (currentTool === 'freehand') {
+        freehandPoints.push({ x: mx, y: my });
+        redrawCanvas();
+        // Draw current freehand
+        ctx.strokeStyle = document.getElementById('geoColor').value;
+        ctx.lineWidth = parseInt(document.getElementById('geoWidth').value);
+        ctx.beginPath();
+        ctx.moveTo(freehandPoints[0].x, freehandPoints[0].y);
+        for (let i = 1; i < freehandPoints.length; i++) {
+            ctx.lineTo(freehandPoints[i].x, freehandPoints[i].y);
+        }
+        ctx.stroke();
+        return;
+    }
+
+    // Preview shape
+    redrawCanvas();
+    ctx.strokeStyle = document.getElementById('geoColor').value;
+    ctx.lineWidth = parseInt(document.getElementById('geoWidth').value);
+    ctx.setLineDash([5, 5]);
+
+    switch (currentTool) {
+        case 'line':
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(mx, my);
+            ctx.stroke();
+            break;
+        case 'rect':
+            ctx.beginPath();
+            ctx.rect(startX, startY, mx - startX, my - startY);
+            ctx.stroke();
+            break;
+        case 'square': {
+            const sd = Math.sign(mx - startX) * Math.min(Math.abs(mx - startX), Math.abs(my - startY));
+            const sd2 = Math.sign(my - startY) * Math.abs(sd);
+            ctx.beginPath();
+            ctx.rect(startX, startY, sd, sd2);
+            ctx.stroke();
+            break;
+        }
+        case 'diamond': {
+            const dcx = (startX + mx) / 2, dcy = (startY + my) / 2;
+            const dhw = Math.abs(mx - startX) / 2, dhh = Math.abs(my - startY) / 2;
+            ctx.beginPath();
+            ctx.moveTo(dcx, dcy - dhh);
+            ctx.lineTo(dcx + dhw, dcy);
+            ctx.lineTo(dcx, dcy + dhh);
+            ctx.lineTo(dcx - dhw, dcy);
+            ctx.closePath();
+            ctx.stroke();
+            break;
+        }
+        case 'circle':
+        case 'circle-dot': {
+            const r = Math.sqrt((mx - startX) ** 2 + (my - startY) ** 2);
+            ctx.beginPath();
+            ctx.arc(startX, startY, r, 0, Math.PI * 2);
+            ctx.stroke();
+            if (currentTool === 'circle-dot') {
+                ctx.setLineDash([]);
+                ctx.beginPath();
+                ctx.arc(startX, startY, 3, 0, Math.PI * 2);
+                ctx.fillStyle = document.getElementById('geoColor').value;
+                ctx.fill();
+            }
+            break;
+        }
+        case 'triangle':
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(mx, my);
+            ctx.lineTo(startX - (mx - startX), my);
+            ctx.closePath();
+            ctx.stroke();
+            break;
+        case 'triangle-right':
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(startX, my);
+            ctx.lineTo(mx, my);
+            ctx.closePath();
+            ctx.stroke();
+            break;
+        case 'triangle-iso':
+            ctx.beginPath();
+            ctx.moveTo((startX + mx) / 2, startY);
+            ctx.lineTo(mx, my);
+            ctx.lineTo(startX, my);
+            ctx.closePath();
+            ctx.stroke();
+            break;
+        case 'triangle-right-iso': {
+            const tside = Math.min(Math.abs(mx - startX), Math.abs(my - startY));
+            const tsx = Math.sign(mx - startX), tsy = Math.sign(my - startY);
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(startX, startY + tside * tsy);
+            ctx.lineTo(startX + tside * tsx, startY + tside * tsy);
+            ctx.closePath();
+            ctx.stroke();
+            break;
+        }
+        case 'text':
+            ctx.beginPath();
+            ctx.rect(startX, startY, mx - startX, my - startY);
+            ctx.stroke();
+            // Show "T" preview
+            const previewH = Math.abs(my - startY);
+            if (previewH > 10) {
+                ctx.setLineDash([]);
+                ctx.fillStyle = document.getElementById('geoColor').value + '44';
+                ctx.font = (previewH * 0.7) + 'px sans-serif';
+                ctx.fillText('T', Math.min(startX, mx) + 6, Math.max(startY, my) - previewH * 0.15);
+            }
+            break;
+    }
+    ctx.setLineDash([]);
+
+    // Live measurements while drawing
+    if (document.getElementById('geoMeasure')?.checked) {
+        ctx.save();
+        ctx.font = '11px sans-serif';
+        ctx.fillStyle = '#333';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const tool = currentTool;
+
+        if (tool === 'rect' || tool === 'square' || tool === 'text') {
+            let dw = mx - startX, dh = my - startY;
+            if (tool === 'square') {
+                const s = Math.sign(dw) * Math.min(Math.abs(dw), Math.abs(dh));
+                dw = s; dh = Math.sign(dh) * Math.abs(s);
+            }
+            const bx = dw < 0 ? startX + dw : startX;
+            const by = dh < 0 ? startY + dh : startY;
+            const bw = Math.abs(dw), bh = Math.abs(dh);
+            ctx.fillText('b = ' + fmtCm(bw) + ' cm', bx + bw / 2, by + bh + 14);
+            ctx.textAlign = 'right';
+            ctx.fillText('h = ' + fmtCm(bh) + ' cm', bx - 8, by + bh / 2);
+        } else if (tool === 'diamond') {
+            const dcx = (startX + mx) / 2, dcy = (startY + my) / 2;
+            const dhw = Math.abs(mx - startX) / 2, dhh = Math.abs(my - startY) / 2;
+            ctx.fillText('b = ' + fmtCm(dhw * 2) + ' cm', dcx, dcy + dhh + 14);
+            ctx.textAlign = 'right';
+            ctx.fillText('h = ' + fmtCm(dhh * 2) + ' cm', dcx - dhw - 8, dcy);
+        } else if (tool === 'circle') {
+            const r = Math.sqrt((mx - startX) ** 2 + (my - startY) ** 2);
+            ctx.fillText('r = ' + fmtCm(r) + ' cm', startX + r / 2, startY - 10);
+        } else if (tool === 'line') {
+            const len = Math.sqrt((mx - startX) ** 2 + (my - startY) ** 2);
+            const midX = (startX + mx) / 2, midY = (startY + my) / 2;
+            const ndx = my - startY, ndy = -(mx - startX);
+            const nd = Math.sqrt(ndx * ndx + ndy * ndy) || 1;
+            ctx.fillText(fmtCm(len) + ' cm', midX + ndx / nd * 12, midY + ndy / nd * 12);
+        } else if (tool.startsWith('triangle')) {
+            let pts;
+            if (tool === 'triangle') pts = [{x:startX,y:startY},{x:mx,y:my},{x:startX-(mx-startX),y:my}];
+            else if (tool === 'triangle-right') pts = [{x:startX,y:startY},{x:startX,y:my},{x:mx,y:my}];
+            else if (tool === 'triangle-iso') pts = [{x:(startX+mx)/2,y:startY},{x:mx,y:my},{x:startX,y:my}];
+            else if (tool === 'triangle-right-iso') {
+                const ts = Math.min(Math.abs(mx-startX),Math.abs(my-startY));
+                const tsx = Math.sign(mx-startX), tsy = Math.sign(my-startY);
+                pts = [{x:startX,y:startY},{x:startX,y:startY+ts*tsy},{x:startX+ts*tsx,y:startY+ts*tsy}];
+            }
+            if (pts) {
+                for (let i = 0; i < 3; i++) {
+                    const a = pts[i], b = pts[(i+1)%3];
+                    const len = Math.sqrt((b.x-a.x)**2 + (b.y-a.y)**2);
+                    const midX = (a.x+b.x)/2, midY = (a.y+b.y)/2;
+                    const ndx = b.y-a.y, ndy = -(b.x-a.x);
+                    const nd = Math.sqrt(ndx*ndx+ndy*ndy) || 1;
+                    ctx.textAlign = 'center';
+                    ctx.fillText(fmtCm(len)+' cm', midX+ndx/nd*14, midY+ndy/nd*14);
+                }
+            }
+        }
+        ctx.restore();
+    }
+});
+
+canvas.addEventListener('mouseup', (e) => {
+    if (!isDrawing) return;
+    isDrawing = false;
+    const rect = canvas.getBoundingClientRect();
+    const endX = e.clientX - rect.left;
+    const endY = e.clientY - rect.top;
+    const color = document.getElementById('geoColor').value;
+    const width = parseInt(document.getElementById('geoWidth').value);
+    const fill = document.getElementById('geoFill').checked;
+
+    let shape = null;
+
+    switch (currentTool) {
+        case 'line':
+            shape = { type: 'line', x1: startX, y1: startY, x2: endX, y2: endY, color, width };
+            break;
+        case 'rect':
+            shape = { type: 'rect', x: startX, y: startY, w: endX - startX, h: endY - startY, color, width, fill };
+            break;
+        case 'square': {
+            const side = Math.sign(endX - startX) * Math.min(Math.abs(endX - startX), Math.abs(endY - startY));
+            const side2 = Math.sign(endY - startY) * Math.abs(side);
+            shape = { type: 'rect', x: startX, y: startY, w: side, h: side2, color, width, fill };
+            break;
+        }
+        case 'diamond': {
+            const dcx = (startX + endX) / 2, dcy = (startY + endY) / 2;
+            const dhw = Math.abs(endX - startX) / 2, dhh = Math.abs(endY - startY) / 2;
+            shape = { type: 'diamond', cx: dcx, cy: dcy, hw: dhw, hh: dhh, color, width, fill };
+            break;
+        }
+        case 'circle':
+        case 'circle-dot': {
+            const r = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
+            shape = { type: 'circle', cx: startX, cy: startY, r, color, width, fill, dotCenter: currentTool === 'circle-dot' };
+            break;
+        }
+        case 'triangle':
+            shape = {
+                type: 'triangle',
+                x1: startX, y1: startY,
+                x2: endX, y2: endY,
+                x3: startX - (endX - startX), y3: endY,
+                color, width, fill
+            };
+            break;
+        case 'triangle-right':
+            shape = {
+                type: 'triangle',
+                x1: startX, y1: startY,
+                x2: startX, y2: endY,
+                x3: endX, y3: endY,
+                color, width, fill
+            };
+            break;
+        case 'triangle-iso':
+            shape = {
+                type: 'triangle',
+                x1: (startX + endX) / 2, y1: startY,
+                x2: endX, y2: endY,
+                x3: startX, y3: endY,
+                color, width, fill
+            };
+            break;
+        case 'triangle-right-iso': {
+            const ts = Math.min(Math.abs(endX - startX), Math.abs(endY - startY));
+            const tsx = Math.sign(endX - startX), tsy = Math.sign(endY - startY);
+            shape = {
+                type: 'triangle',
+                x1: startX, y1: startY,
+                x2: startX, y2: startY + ts * tsy,
+                x3: startX + ts * tsx, y3: startY + ts * tsy,
+                color, width, fill
+            };
+            break;
+        }
+        case 'freehand':
+            shape = { type: 'freehand', points: [...freehandPoints], color, width };
+            freehandPoints = [];
+            break;
+        case 'text': {
+            const bx = Math.min(startX, endX);
+            const by = Math.min(startY, endY);
+            const bw = Math.abs(endX - startX);
+            const bh = Math.abs(endY - startY);
+            if (bw > 10 && bh > 10) {
+                // Create resizable text input
+                const existing = document.querySelector('.geo-text-input');
+                if (existing) existing.remove();
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'geo-text-input';
+                input.placeholder = 'Skriv her...';
+                const fontSize = bh * 0.7;
+                input.style.cssText = `
+                    position:absolute;
+                    left:${bx}px;
+                    top:${by}px;
+                    width:${bw}px;
+                    height:${bh}px;
+                    font-size:${fontSize}px;
+                    font-family:sans-serif;
+                    color:${color};
+                    background:rgba(255,255,255,0.95);
+                    border:2px solid ${color};
+                    border-radius:4px;
+                    padding:0 6px;
+                    outline:none;
+                    z-index:20;
+                    box-sizing:border-box;
+                `;
+                canvas.parentElement.appendChild(input);
+                setTimeout(() => input.focus(), 10);
+
+                let committed = false;
+                const commitText = () => {
+                    if (committed) return;
+                    committed = true;
+                    const text = input.value.trim();
+                    if (text) {
+                        // Calculate width factor from box height
+                        shapes.push({
+                            type: 'text',
+                            x: bx,
+                            y: by + bh * 0.8,
+                            text: text,
+                            color: color,
+                            width: 2,
+                            fontSize: fontSize
+                        });
+                        redrawCanvas();
+                    }
+                    if (input.parentElement) input.remove();
+                };
+
+                input.addEventListener('keydown', (ev) => {
+                    if (ev.key === 'Enter') { ev.preventDefault(); commitText(); setGeoTool('select'); }
+                    if (ev.key === 'Escape') { committed = true; input.remove(); }
+                });
+                input.addEventListener('blur', () => setTimeout(commitText, 100));
+            }
+            // Don't auto-switch to select for text - wait for input
+            return;
+        }
+    }
+
+    if (shape) {
+        undoStack.push([...shapes]);
+        shapes.push(shape);
+        redrawCanvas();
+        // Auto-switch to select after drawing a shape
+        setGeoTool('select');
+        selectedShape = shapes.length - 1;
+        showDeleteBtn(selectedShape);
+    }
+});
+
+// Cancel drawing if mouse leaves canvas
+canvas.addEventListener('mouseleave', () => {
+    if (isDrawing) {
+        isDrawing = false;
+        redrawCanvas();
+    }
+});
+
+// Fallback: reset drawing state on any document mouseup
+document.addEventListener('mouseup', () => {
+    if (isDrawing) {
+        isDrawing = false;
+        redrawCanvas();
+    }
+});
+
+function undoGeo() {
+    if (undoStack.length > 0) {
+        shapes = undoStack.pop();
+        redrawCanvas();
+    }
+}
+
+function clearCanvas() {
+    undoStack.push([...shapes]);
+    shapes = [];
+    graphs = [];
+    redrawCanvas();
+}
+
+// ========================
+// GRAPH DRAWING
+// ========================
+function parseGraphFunction(expr) {
+    const sanitized = expr
+        .replace(/\^/g, '**')
+        .replace(/sin/g, 'Math.sin')
+        .replace(/cos/g, 'Math.cos')
+        .replace(/tan/g, 'Math.tan')
+        .replace(/sqrt/g, 'Math.sqrt')
+        .replace(/abs/g, 'Math.abs')
+        .replace(/log/g, 'Math.log10')
+        .replace(/ln/g, 'Math.log')
+        .replace(/pi/g, 'Math.PI')
+        .replace(/e(?![a-zA-Z])/g, 'Math.E');
+
+    return function(x) {
+        try {
+            return Function('x', '"use strict"; return (' + sanitized + ')')(x);
+        } catch {
+            return NaN;
+        }
+    };
+}
+
+function drawGraphLine(fn, color) {
+    const w = canvas.width;
+    const h = canvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
+    const step = 20; // pixels per unit
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    let started = false;
+
+    for (let px = 0; px < w; px++) {
+        const x = (px - cx) / step;
+        const y = fn(x);
+        const py = cy - y * step;
+
+        if (isNaN(y) || !isFinite(y) || py < -1000 || py > h + 1000) {
+            started = false;
+            continue;
+        }
+
+        if (!started) {
+            ctx.moveTo(px, py);
+            started = true;
+        } else {
+            ctx.lineTo(px, py);
+        }
+    }
+    ctx.stroke();
+}
+
+function drawGraph() {
+    const expr = document.getElementById('graphFunc').value.trim();
+    if (!expr) return;
+    const fn = parseGraphFunction(expr);
+    const color = document.getElementById('geoColor').value;
+    graphs.push({ fn, color, expr });
+    redrawCanvas();
+}
+
+function clearGraphs() {
+    graphs = [];
+    redrawCanvas();
+}
+
+function randomGraph() {
+    const examples = [
+        '2*x+3', 'x^2', '-0.5*x^2+4', 'x^3/10', 'sin(x)*3',
+        'cos(x)*2', '3*sin(x)+x', 'sqrt(abs(x))*3', '1/x',
+        'x^2-2*x-3', '0.1*x^3-x', 'tan(x)', '2^x/5', 'abs(x)-3'
+    ];
+    const expr = examples[Math.floor(Math.random() * examples.length)];
+    document.getElementById('graphFunc').value = expr;
+    showAxes = true;
+    document.getElementById('axesBtn').classList.add('active');
+    showGrid = true;
+    document.getElementById('gridBtn').classList.add('active');
+    drawGraph();
+}
+
+function insertCanvasToEditor() {
+    const dataUrl = canvas.toDataURL('image/png');
+    const html = `<img class="inserted-geo" src="${dataUrl}" style="max-width:100%; height:auto;" alt="Tegning"><br>`;
+    editor.focus();
+    document.execCommand('insertHTML', false, html);
+    updateCounts();
+}
+
+// ========================
+// SNIP TOOL (Klippeværktøj)
+// ========================
+let snipStartX, snipStartY, snipOverlay = null;
+
+function startSnip(e) {
+    if (currentTool !== 'snip') return;
+    const rect = canvas.getBoundingClientRect();
+    snipStartX = e.clientX - rect.left;
+    snipStartY = e.clientY - rect.top;
+
+    // Create overlay
+    if (snipOverlay) snipOverlay.remove();
+    snipOverlay = document.createElement('div');
+    snipOverlay.className = 'snip-overlay';
+    canvas.parentElement.appendChild(snipOverlay);
+    canvas.parentElement.classList.add('snip-active');
+
+    const onMove = (ev) => {
+        const mx = ev.clientX - rect.left;
+        const my = ev.clientY - rect.top;
+        const x = Math.min(snipStartX, mx);
+        const y = Math.min(snipStartY, my);
+        const w = Math.abs(mx - snipStartX);
+        const h = Math.abs(my - snipStartY);
+        snipOverlay.style.left = x + 'px';
+        snipOverlay.style.top = y + 'px';
+        snipOverlay.style.width = w + 'px';
+        snipOverlay.style.height = h + 'px';
+    };
+
+    const onUp = (ev) => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        canvas.parentElement.classList.remove('snip-active');
+
+        const mx = ev.clientX - rect.left;
+        const my = ev.clientY - rect.top;
+        const x = Math.max(0, Math.min(snipStartX, mx));
+        const y = Math.max(0, Math.min(snipStartY, my));
+        const w = Math.abs(mx - snipStartX);
+        const h = Math.abs(my - snipStartY);
+
+        if (snipOverlay) snipOverlay.remove();
+        snipOverlay = null;
+
+        if (w < 5 || h < 5) return; // For lille udsnit
+
+        // Klip udsnittet fra canvas
+        const tmpCanvas = document.createElement('canvas');
+        tmpCanvas.width = w;
+        tmpCanvas.height = h;
+        const tmpCtx = tmpCanvas.getContext('2d');
+        tmpCtx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
+
+        const dataUrl = tmpCanvas.toDataURL('image/png');
+        const html = `<img src="${dataUrl}" style="max-width:100%; height:auto;" alt="Udsnit"><br>`;
+        editor.focus();
+        document.execCommand('insertHTML', false, html);
+        updateCounts();
+
+        // Skift tilbage til select
+        setGeoTool('select');
+    };
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+}
+
+// Hook snip into canvas mousedown (runs before the shape drawing handler)
+canvas.addEventListener('mousedown', (e) => {
+    if (editingMeasurement) return;
+    if (currentTool === 'snip') {
+        startSnip(e);
+        e.stopImmediatePropagation();
+    }
+}, true);
+
+// ========================
+// PERSISTENCE (localStorage)
+// ========================
+function saveState() {
+    try {
+        localStorage.setItem('mat-editor', editor.innerHTML);
+        localStorage.setItem('mat-tab', document.querySelector('.tool-tab.active')?.textContent || '');
+        localStorage.setItem('mat-shapes', JSON.stringify(shapes));
+        localStorage.setItem('mat-graphs', JSON.stringify(graphs.map(g => ({ expr: g.expr, color: g.color }))));
+        localStorage.setItem('mat-calcExpr', calcExpression);
+        localStorage.setItem('mat-calcResult', document.getElementById('calcResult').textContent);
+        localStorage.setItem('mat-calcHistory', JSON.stringify(calcHistoryItems));
+        localStorage.setItem('mat-showGrid', showGrid);
+        localStorage.setItem('mat-showAxes', showAxes);
+    } catch(e) {}
+}
+
+function loadState() {
+    try {
+        const editorContent = localStorage.getItem('mat-editor');
+        if (editorContent) { editor.innerHTML = editorContent; updateCounts(); }
+
+        const tab = localStorage.getItem('mat-tab');
+        if (tab) {
+            const tabs = document.querySelectorAll('.tool-tab');
+            tabs.forEach(t => {
+                if (t.textContent === tab) t.click();
+            });
+        }
+
+        const savedShapes = localStorage.getItem('mat-shapes');
+        if (savedShapes) { shapes.length = 0; shapes.push(...JSON.parse(savedShapes)); }
+
+        const savedGraphs = localStorage.getItem('mat-graphs');
+        if (savedGraphs) {
+            const gData = JSON.parse(savedGraphs);
+            gData.forEach(g => {
+                const fn = parseGraphFunction(g.expr);
+                graphs.push({ fn, color: g.color, expr: g.expr });
+            });
+        }
+
+        const savedCalcExpr = localStorage.getItem('mat-calcExpr');
+        if (savedCalcExpr) { calcExpression = savedCalcExpr; document.getElementById('calcExpr').textContent = formatExpression(calcExpression); }
+
+        const savedCalcResult = localStorage.getItem('mat-calcResult');
+        if (savedCalcResult) document.getElementById('calcResult').textContent = savedCalcResult;
+
+        const savedHistory = localStorage.getItem('mat-calcHistory');
+        if (savedHistory) { calcHistoryItems = JSON.parse(savedHistory); updateCalcHistory(); }
+
+        const savedGrid = localStorage.getItem('mat-showGrid');
+        if (savedGrid !== null) {
+            showGrid = savedGrid === 'true';
+            document.getElementById('gridBtn').classList.toggle('active', showGrid);
+        }
+        const savedAxes = localStorage.getItem('mat-showAxes');
+        if (savedAxes !== null) {
+            showAxes = savedAxes === 'true';
+            document.getElementById('axesBtn').classList.toggle('active', showAxes);
+        }
+    } catch(e) {}
+}
+
+// Save periodically and on changes
+editor.addEventListener('input', saveState);
+setInterval(saveState, 2000);
+window.addEventListener('beforeunload', saveState);
+
+// ========================
+// INIT
+// ========================
+loadState();
+resizeCanvas();
+// Detect example content loaded from localStorage
+if (editor.innerHTML.includes('Rabatter i SuperBilka')) {
+    exampleActive = true;
+    const exBtn = document.getElementById('exampleBtn');
+    exBtn.style.display = '';
+    exBtn.textContent = '✕ Fjern eksempel';
+}
+</script>
+</body>
+</html>
