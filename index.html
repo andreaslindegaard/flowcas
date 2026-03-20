@@ -198,33 +198,53 @@
             background: transparent;
         }
 
-        .table-plus-btn {
+        .cell-fill-handle {
             position: absolute;
-            width: 14px;
-            height: 14px;
-            background: transparent;
-            border: none;
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border: 1.5px solid white;
             border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            line-height: 1;
-            color: #cbd5e1;
-            z-index: 10;
-            opacity: 0;
-            transition: opacity 0.2s, color 0.15s, background 0.15s;
-            pointer-events: none;
-        }
-        .table-plus-btn.visible {
-            opacity: 1;
+            cursor: crosshair;
+            z-index: 20;
             pointer-events: auto;
         }
-        .table-plus-btn:hover {
-            background: #e2e8f0;
-            color: #64748b;
+
+        .cell-fill-preview {
+            background: rgba(37, 99, 235, 0.08) !important;
         }
+
+        .editor-area table.show-cell-refs td,
+        .editor-area table.show-cell-refs th {
+            position: relative;
+        }
+
+        .editor-area table.show-cell-refs td::before,
+        .editor-area table.show-cell-refs th::before {
+            content: attr(data-ref);
+            position: absolute;
+            top: 1px;
+            right: 2px;
+            font-size: 9px;
+            font-family: monospace;
+            color: #94a3b8;
+            pointer-events: none;
+            line-height: 1;
+        }
+
+        .editor-area table.show-cell-refs td[data-formula]::after {
+            content: 'ƒ';
+            position: absolute;
+            top: 1px;
+            left: 2px;
+            font-size: 9px;
+            font-style: italic;
+            color: var(--primary);
+            pointer-events: none;
+            line-height: 1;
+        }
+
+        /* table-plus-btn removed — use right-click context menu instead */
 
         /* Right panel - Tools */
         .right-panel {
@@ -295,9 +315,9 @@
         }
 
         .calc-expression {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #94a3b8;
-            min-height: 1.4em;
+            min-height: 1.2em;
             word-break: break-all;
         }
 
@@ -305,6 +325,7 @@
             font-size: 1.8rem;
             font-weight: 600;
             word-break: break-all;
+            min-height: 1.2em;
         }
 
         .calc-history {
@@ -630,6 +651,30 @@
             border-color: var(--danger);
         }
 
+        .geo-dup-btn {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: white;
+            color: #94a3b8;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 15;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.15s;
+            pointer-events: auto;
+        }
+
+        .geo-dup-btn:hover {
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
         .snip-overlay {
             position: absolute;
             border: 2px dashed var(--accent);
@@ -651,19 +696,66 @@
         /* Print styles */
         @media print {
             header, .right-panel, .resizer, .editor-toolbar, .status-bar { display: none !important; }
-            body { background: white !important; }
-            .main-container { display: block !important; }
-            .left-panel { width: 100% !important; flex: none !important; border: none !important; }
-            .editor-area { padding: 20px; border: none !important; box-shadow: none !important; min-height: auto !important; height: auto !important; overflow: visible !important; }
+            body { background: white !important; margin: 0 !important; padding: 0 !important; }
+            .main-container { display: block !important; height: auto !important; }
+            .left-panel { width: 100% !important; flex: none !important; border: none !important; overflow: visible !important; }
+            .editor-area { padding: 20mm; border: none !important; box-shadow: none !important; min-height: auto !important; height: auto !important; overflow: visible !important; font-size: 12pt; line-height: 1.6; }
+            .inserted-geo { max-width: 100% !important; page-break-inside: avoid; }
+            .img-resize-handle { display: none !important; }
+            .inserted-geo-wrap { outline: none !important; }
+            .fraction { display: inline-flex !important; }
         }
 
         /* Inserted content styling */
 
+        .inserted-geo-wrap {
+            display: inline-block;
+            position: relative;
+            max-width: 100%;
+            margin: 8px 0;
+        }
+
+        .inserted-geo-wrap:hover .img-resize-handle,
+        .inserted-geo-wrap.resizing .img-resize-handle {
+            opacity: 1;
+        }
+
         .inserted-geo {
             display: block;
-            margin: 8px 0;
+            max-width: 100%;
+            height: auto;
             border: 1px solid var(--border);
             border-radius: 4px;
+            cursor: default;
+        }
+
+        .inserted-geo-wrap:hover .inserted-geo {
+            outline: 2px solid var(--primary);
+        }
+
+        .img-resize-handle {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 16px;
+            height: 16px;
+            background: var(--primary);
+            border-radius: 2px;
+            cursor: nwse-resize;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 5;
+        }
+
+        .img-resize-handle::after {
+            content: '';
+            position: absolute;
+            bottom: 3px;
+            right: 3px;
+            width: 8px;
+            height: 8px;
+            border-right: 2px solid white;
+            border-bottom: 2px solid white;
         }
 
         /* Graph function input */
@@ -697,6 +789,66 @@
             background: var(--primary-hover);
         }
 
+        /* Graph tab styles */
+        .graph-tab {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            gap: 6px;
+        }
+        .graph-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 8px;
+            flex-wrap: wrap;
+        }
+        .graph-scale-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 8px;
+            flex-wrap: wrap;
+        }
+        .graph-func-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 8px;
+        }
+
+        /* Diagram tab styles */
+        .diagram-tab {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            gap: 6px;
+        }
+        .diagram-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px;
+            flex-wrap: wrap;
+        }
+        .diagram-data {
+            padding: 0 8px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+        .diagram-data input {
+            width: 100%;
+            padding: 3px 6px;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            font-size: 0.85rem;
+            box-sizing: border-box;
+        }
+        .diagram-data input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
         /* Status bar */
         .status-bar {
             padding: 4px 12px;
@@ -724,8 +876,27 @@
             <button class="toolbar-btn" onclick="execCmd('italic')" title="Kursiv"><i>K</i></button>
             <button class="toolbar-btn" onclick="execCmd('underline')" title="Understreg"><u>U</u></button>
             <div class="toolbar-separator"></div>
-            <button class="toolbar-btn" onclick="execCmd('insertUnorderedList')" title="Punktliste">• Liste</button>
-            <button class="toolbar-btn" onclick="execCmd('insertOrderedList')" title="Nummereret liste">1. Liste</button>
+            <div style="position:relative;display:inline-block;" onmouseenter="document.getElementById('listDropdown').style.display=''" onmouseleave="document.getElementById('listDropdown').style.display='none'">
+                <button class="toolbar-btn" id="listBtn" title="Liste"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="1.5" cy="2" r="1.5" fill="currentColor"/><line x1="5" y1="2" x2="14" y2="2" stroke="currentColor" stroke-width="1.5"/><circle cx="1.5" cy="7" r="1.5" fill="currentColor"/><line x1="5" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1.5"/><circle cx="1.5" cy="12" r="1.5" fill="currentColor"/><line x1="5" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="1.5"/></svg></button>
+                <div id="listDropdown" style="display:none;position:absolute;top:100%;left:0;z-index:50;background:white;border:1px solid var(--border);border-radius:var(--radius);padding:4px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                    <div style="display:flex;gap:2px;">
+                        <button class="toolbar-btn" onclick="execCmd('insertUnorderedList');setListIcon('ul')" title="Punktliste"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="1.5" cy="2" r="1.5" fill="currentColor"/><line x1="5" y1="2" x2="14" y2="2" stroke="currentColor" stroke-width="1.5"/><circle cx="1.5" cy="7" r="1.5" fill="currentColor"/><line x1="5" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1.5"/><circle cx="1.5" cy="12" r="1.5" fill="currentColor"/><line x1="5" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="1.5"/></svg></button>
+                        <button class="toolbar-btn" onclick="execCmd('insertOrderedList');setListIcon('ol')" title="Nummereret liste"><svg width="14" height="14" viewBox="0 0 14 14"><text x="0" y="4" font-size="5" fill="currentColor" font-family="sans-serif">1</text><line x1="5" y1="2" x2="14" y2="2" stroke="currentColor" stroke-width="1.5"/><text x="0" y="9" font-size="5" fill="currentColor" font-family="sans-serif">2</text><line x1="5" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1.5"/><text x="0" y="14" font-size="5" fill="currentColor" font-family="sans-serif">3</text><line x1="5" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="1.5"/></svg></button>
+                    </div>
+                </div>
+            </div>
+            <div class="toolbar-separator"></div>
+            <div style="position:relative;display:inline-block;" onmouseenter="document.getElementById('alignDropdown').style.display=''" onmouseleave="document.getElementById('alignDropdown').style.display='none'">
+                <button class="toolbar-btn" id="alignBtn" title="Tekstjustering"><svg width="14" height="14" viewBox="0 0 14 14"><line x1="0" y1="2" x2="14" y2="2" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="5.5" x2="10" y2="5.5" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="9" x2="14" y2="9" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="12.5" x2="8" y2="12.5" stroke="currentColor" stroke-width="1.5"/></svg></button>
+                <div id="alignDropdown" style="display:none;position:absolute;top:100%;left:0;z-index:50;background:white;border:1px solid var(--border);border-radius:var(--radius);padding:4px;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:none;">
+                    <div style="display:flex;gap:2px;">
+                        <button class="toolbar-btn" onclick="execCmd('justifyLeft');setAlignIcon('left')" title="Venstrestil"><svg width="14" height="14" viewBox="0 0 14 14"><line x1="0" y1="2" x2="14" y2="2" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="5.5" x2="10" y2="5.5" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="9" x2="14" y2="9" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="12.5" x2="8" y2="12.5" stroke="currentColor" stroke-width="1.5"/></svg></button>
+                        <button class="toolbar-btn" onclick="execCmd('justifyCenter');setAlignIcon('center')" title="Centrér"><svg width="14" height="14" viewBox="0 0 14 14"><line x1="0" y1="2" x2="14" y2="2" stroke="currentColor" stroke-width="1.5"/><line x1="2" y1="5.5" x2="12" y2="5.5" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="9" x2="14" y2="9" stroke="currentColor" stroke-width="1.5"/><line x1="3" y1="12.5" x2="11" y2="12.5" stroke="currentColor" stroke-width="1.5"/></svg></button>
+                        <button class="toolbar-btn" onclick="execCmd('justifyRight');setAlignIcon('right')" title="Højrestil"><svg width="14" height="14" viewBox="0 0 14 14"><line x1="0" y1="2" x2="14" y2="2" stroke="currentColor" stroke-width="1.5"/><line x1="4" y1="5.5" x2="14" y2="5.5" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="9" x2="14" y2="9" stroke="currentColor" stroke-width="1.5"/><line x1="6" y1="12.5" x2="14" y2="12.5" stroke="currentColor" stroke-width="1.5"/></svg></button>
+                        <button class="toolbar-btn" onclick="execCmd('justifyFull');setAlignIcon('full')" title="Lige margener"><svg width="14" height="14" viewBox="0 0 14 14"><line x1="0" y1="2" x2="14" y2="2" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="5.5" x2="14" y2="5.5" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="9" x2="14" y2="9" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="12.5" x2="14" y2="12.5" stroke="currentColor" stroke-width="1.5"/></svg></button>
+                    </div>
+                </div>
+            </div>
             <div class="toolbar-separator"></div>
             <select class="toolbar-btn" id="fontSizeSelect" onchange="execCmdVal('fontSize', this.value);">
                 <option value="3" selected>Normal</option>
@@ -748,15 +919,15 @@
             <button class="toolbar-btn" onclick="insertMathSymbol('≥')" title="Større end eller lig med">≥</button>
             <button class="toolbar-btn" onclick="insertMathSymbol('°')" title="Grader">°</button>
             <div class="toolbar-separator"></div>
-            <div style="position:relative;display:inline-block;">
-                <button class="toolbar-btn" onclick="toggleTablePicker()" title="Indsæt tabel">▦ Tabel</button>
-                <div id="tablePicker" style="display:none;position:absolute;top:100%;left:0;z-index:50;background:white;border:1px solid var(--border);border-radius:var(--radius);padding:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+            <div style="position:relative;display:inline-block;" onmouseenter="tablePicker.style.display=''" onmouseleave="tablePicker.style.display='none'">
+                <button class="toolbar-btn" title="Tabel">▦ Tabel</button>
+                <div id="tablePicker" style="display:none;position:absolute;top:100%;left:0;z-index:50;background:white;border:1px solid var(--border);border-radius:var(--radius);padding:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);min-width:180px;">
                     <div id="tablePickerLabel" style="font-size:0.8rem;color:var(--text-light);margin-bottom:4px;text-align:center;">Vælg størrelse</div>
                     <div id="tableGrid" style="display:grid;grid-template-columns:repeat(8,20px);gap:2px;"></div>
                 </div>
             </div>
             <button class="toolbar-btn" onclick="window.print()" title="Print">🖨 Print</button>
-            <button class="toolbar-btn" id="exampleBtn" onclick="toggleExample()" title="Eksempelvisning" style="display:none;">📋 Eksempelvisning</button>
+            <button class="toolbar-btn" id="exampleBtn" onclick="toggleExample()" title="Demo" style="display:none;">📋 Demo</button>
         </div>
         <div class="editor-area" id="editor" contenteditable="true" spellcheck="true"></div>
         <div class="status-bar">
@@ -773,14 +944,15 @@
         <div class="tool-tabs">
             <div class="tool-tab active" onclick="switchTab('calculator')">🧮 Lommeregner</div>
             <div class="tool-tab" onclick="switchTab('formulas')">📖 Formelsamling</div>
-            <div class="tool-tab" onclick="switchTab('geometry')">📐 Tegning & Grafer</div>
+            <div class="tool-tab" onclick="switchTab('geometry')">📐 Tegning</div>
+            <div class="tool-tab" onclick="switchTab('graph')">📈 Graf</div>
+            <div class="tool-tab" onclick="switchTab('diagram')">📊 Diagram</div>
         </div>
 
         <!-- Calculator Tab -->
         <div class="tool-content active" id="tab-calculator">
             <div class="calculator">
                 <div class="calc-display">
-                    <div class="calc-history" id="calcHistory"></div>
                     <div class="calc-expression" id="calcExpr"></div>
                     <div class="calc-result" id="calcResult">0</div>
                 </div>
@@ -881,6 +1053,7 @@
                             <div onclick="selectTriType('triangle-right-iso')" style="display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;border-radius:4px;font-size:0.85rem;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''"><svg viewBox="0 0 24 24" width="16" height="16"><polygon points="3,3 3,21 21,21" fill="none" stroke="#334155" stroke-width="1.8"/><rect x="3" y="17" width="4" height="4" fill="none" stroke="#334155" stroke-width="1"/></svg> Retvinklet ligebenet</div>
                         </div>
                     </div>
+                    <button class="geo-btn" onclick="setGeoTool('angle')" id="geo-angle" title="Vinkel"><svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="20" stroke-width="1.8"/><line x1="4" y1="20" x2="14" y2="4" stroke-width="1.8"/><path d="M9 20 A6 6 0 0 1 7.4 14.5" fill="none" stroke-width="1.5"/><text x="11" y="17" font-size="8" fill="currentColor">°</text></svg></button>
                     <button class="geo-btn" onclick="setGeoTool('freehand')" id="geo-freehand" title="Frihånd"><svg viewBox="0 0 24 24"><path d="M4 18c2-3 4-10 7-7s2 9 5 5 3-6 5-4" fill="none"/></svg></button>
                     <button class="geo-btn" onclick="setGeoTool('text')" id="geo-text" title="Tekst"><svg viewBox="0 0 24 24"><path d="M5 4h14M12 4v16"/><path d="M8 20h8" stroke-width="1.5"/></svg></button>
                     <button class="geo-btn" onclick="setGeoTool('graph')" id="geo-graph" title="Graf"><svg viewBox="0 0 24 24"><line x1="3" y1="21" x2="3" y2="3"/><line x1="3" y1="21" x2="21" y2="21"/><path d="M3 17c3-2 5-12 9-8s4 8 9 1" fill="none"/></svg></button>
@@ -924,6 +1097,114 @@
                 </button>
             </div>
         </div>
+
+        <!-- Graph Tab -->
+        <div class="tool-content" id="tab-graph">
+            <div class="graph-tab">
+                <div class="graph-toolbar">
+                    <button class="geo-btn active" onclick="setGraphTool('point')" id="gt-point" title="Sæt punkt">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>
+                    </button>
+                    <button class="geo-btn" onclick="setGraphTool('line')" id="gt-line" title="Tegn linje mellem punkter">
+                        <svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="4"/><circle cx="4" cy="20" r="2" fill="currentColor"/><circle cx="20" cy="4" r="2" fill="currentColor"/></svg>
+                    </button>
+                    <button class="geo-btn" onclick="setGraphTool('segment')" id="gt-segment" title="Tegn linjestykke">
+                        <svg viewBox="0 0 24 24"><line x1="4" y1="18" x2="20" y2="6"/></svg>
+                    </button>
+                    <button class="geo-btn" onclick="setGraphTool('move')" id="gt-move" title="Flyt punkt">
+                        <svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><polyline points="12,3 15,6"/><polyline points="12,3 9,6"/><polyline points="12,21 15,18"/><polyline points="12,21 9,18"/><polyline points="3,12 6,9"/><polyline points="3,12 6,15"/><polyline points="21,12 18,9"/><polyline points="21,12 18,15"/></svg>
+                    </button>
+                    <button class="geo-btn" onclick="setGraphTool('delete')" id="gt-delete" title="Slet punkt/linje">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                    <span style="border-left:1px solid var(--border);height:24px;margin:0 4px;"></span>
+                    <label style="font-size:0.8rem;color:var(--text-light);display:flex;align-items:center;gap:4px;">
+                        Farve:
+                        <input type="color" id="graphPointColor" value="#2563eb" style="width:20px;height:20px;padding:0;border:1px solid var(--border);border-radius:50%;cursor:pointer;">
+                    </label>
+                    <label style="font-size:0.8rem;color:var(--text-light);display:flex;align-items:center;gap:4px;">
+                        Vis koordinater
+                        <input type="checkbox" id="graphShowCoords" checked style="width:14px;height:14px;margin:0;accent-color:var(--primary);cursor:pointer;" onchange="redrawGraphCanvas()">
+                    </label>
+                    <button class="geo-btn" onclick="undoGraphAction()" title="Fortryd" style="margin-left:auto;">↩</button>
+                    <button class="geo-btn" onclick="clearGraphTab()" title="Ryd alt">🗑</button>
+                </div>
+
+                <div class="graph-scale-bar">
+                    <label style="font-size:0.8rem;color:var(--text-light);">Skala:</label>
+                    <label style="font-size:0.8rem;">X: 1 tern =</label>
+                    <input type="number" id="graphScaleX" value="1" min="0.1" step="0.5" style="width:55px;padding:3px 6px;border:1px solid var(--border);border-radius:var(--radius);font-size:0.85rem;text-align:center;" onchange="redrawGraphCanvas()">
+                    <label style="font-size:0.8rem;">Y: 1 tern =</label>
+                    <input type="number" id="graphScaleY" value="1" min="0.1" step="0.5" style="width:55px;padding:3px 6px;border:1px solid var(--border);border-radius:var(--radius);font-size:0.85rem;text-align:center;" onchange="redrawGraphCanvas()">
+                    <select id="graphScalePreset" style="padding:3px 6px;border:1px solid var(--border);border-radius:var(--radius);font-size:0.8rem;cursor:pointer;" onchange="applyGraphScalePreset(this.value)">
+                        <option value="">Forudindstillinger...</option>
+                        <option value="1,1">1:1</option>
+                        <option value="2,2">1 tern = 2</option>
+                        <option value="5,5">1 tern = 5</option>
+                        <option value="10,10">1 tern = 10</option>
+                        <option value="0.5,0.5">1 tern = 0,5</option>
+                        <option value="100,100">1 tern = 100</option>
+                        <option value="1000,1000">1 tern = 1000</option>
+                    </select>
+                </div>
+
+                <div class="graph-func-bar">
+                    <label style="font-size:0.85rem;white-space:nowrap;font-weight:600;">f(x) =</label>
+                    <input type="text" id="graphTabFunc" placeholder="f.eks. 2*x+3 eller x^2" style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:0.9rem;font-family:'Consolas',monospace;" onkeydown="if(event.key==='Enter')addGraphFunction()">
+                    <button onclick="addGraphFunction()" style="padding:6px 14px;background:var(--primary);color:white;border:none;border-radius:var(--radius);cursor:pointer;font-weight:600;font-size:0.85rem;">Tegn</button>
+                </div>
+
+                <div id="graphFuncList" style="font-size:0.8rem;padding:0 8px;display:flex;flex-wrap:wrap;gap:4px;"></div>
+                <div id="graphLineEqList" style="font-size:0.8rem;padding:0 8px;display:flex;flex-wrap:wrap;gap:4px;"></div>
+
+                <div class="canvas-container" style="flex:1;">
+                    <canvas id="graphCanvas"></canvas>
+                </div>
+
+                <button class="insert-btn" onclick="insertGraphToEditor()">
+                    ⬅ Indsæt graf i besvarelse
+                </button>
+            </div>
+        </div>
+
+        <!-- Diagram Tab -->
+        <div class="tool-content" id="tab-diagram">
+            <div class="diagram-tab">
+                <div class="diagram-toolbar">
+                    <label style="font-size:0.85rem;font-weight:600;">Type:</label>
+                    <select id="diagramType" onchange="redrawDiagram()" style="padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:0.85rem;cursor:pointer;">
+                        <option value="bar">Søjlediagram</option>
+                        <option value="hbar">Vandret søjlediagram</option>
+                        <option value="pie">Cirkeldiagram</option>
+                        <option value="line">Linjediagram</option>
+                    </select>
+                    <input type="text" id="diagramTitle" placeholder="Titel (valgfrit)" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:0.85rem;" oninput="redrawDiagram()">
+                </div>
+
+                <div class="diagram-data" id="diagramDataArea">
+                    <table id="diagramTable" style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left;padding:4px 6px;border-bottom:2px solid var(--border);font-weight:600;">Kategori</th>
+                                <th style="text-align:left;padding:4px 6px;border-bottom:2px solid var(--border);font-weight:600;">Værdi</th>
+                                <th style="text-align:center;padding:4px 6px;border-bottom:2px solid var(--border);font-weight:600;">Farve</th>
+                                <th style="width:30px;border-bottom:2px solid var(--border);"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="diagramRows"></tbody>
+                    </table>
+                    <button onclick="addDiagramRow()" style="margin-top:4px;padding:4px 12px;background:none;border:1px dashed var(--border);border-radius:var(--radius);cursor:pointer;font-size:0.8rem;color:var(--text-light);width:100%;">+ Tilføj række</button>
+                </div>
+
+                <div class="canvas-container" style="flex:1;min-height:200px;">
+                    <canvas id="diagramCanvas"></canvas>
+                </div>
+
+                <button class="insert-btn" onclick="insertDiagramToEditor()">
+                    ⬅ Indsæt diagram i besvarelse
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -948,6 +1229,26 @@ function execCmdVal(cmd, val) {
     editor.focus();
 }
 
+const alignSvgs = {
+    left: '<svg width="14" height="14" viewBox="0 0 14 14"><line x1="0" y1="2" x2="14" y2="2" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="5.5" x2="10" y2="5.5" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="9" x2="14" y2="9" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="12.5" x2="8" y2="12.5" stroke="currentColor" stroke-width="1.5"/></svg>',
+    center: '<svg width="14" height="14" viewBox="0 0 14 14"><line x1="0" y1="2" x2="14" y2="2" stroke="currentColor" stroke-width="1.5"/><line x1="2" y1="5.5" x2="12" y2="5.5" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="9" x2="14" y2="9" stroke="currentColor" stroke-width="1.5"/><line x1="3" y1="12.5" x2="11" y2="12.5" stroke="currentColor" stroke-width="1.5"/></svg>',
+    right: '<svg width="14" height="14" viewBox="0 0 14 14"><line x1="0" y1="2" x2="14" y2="2" stroke="currentColor" stroke-width="1.5"/><line x1="4" y1="5.5" x2="14" y2="5.5" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="9" x2="14" y2="9" stroke="currentColor" stroke-width="1.5"/><line x1="6" y1="12.5" x2="14" y2="12.5" stroke="currentColor" stroke-width="1.5"/></svg>',
+    full: '<svg width="14" height="14" viewBox="0 0 14 14"><line x1="0" y1="2" x2="14" y2="2" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="5.5" x2="14" y2="5.5" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="9" x2="14" y2="9" stroke="currentColor" stroke-width="1.5"/><line x1="0" y1="12.5" x2="14" y2="12.5" stroke="currentColor" stroke-width="1.5"/></svg>'
+};
+const listSvgs = {
+    ul: '<svg width="14" height="14" viewBox="0 0 14 14"><circle cx="1.5" cy="2" r="1.5" fill="currentColor"/><line x1="5" y1="2" x2="14" y2="2" stroke="currentColor" stroke-width="1.5"/><circle cx="1.5" cy="7" r="1.5" fill="currentColor"/><line x1="5" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1.5"/><circle cx="1.5" cy="12" r="1.5" fill="currentColor"/><line x1="5" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="1.5"/></svg>',
+    ol: '<svg width="14" height="14" viewBox="0 0 14 14"><text x="0" y="4" font-size="5" fill="currentColor" font-family="sans-serif">1</text><line x1="5" y1="2" x2="14" y2="2" stroke="currentColor" stroke-width="1.5"/><text x="0" y="9" font-size="5" fill="currentColor" font-family="sans-serif">2</text><line x1="5" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1.5"/><text x="0" y="14" font-size="5" fill="currentColor" font-family="sans-serif">3</text><line x1="5" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="1.5"/></svg>'
+};
+function setListIcon(type) {
+    document.getElementById('listBtn').innerHTML = listSvgs[type] || listSvgs.ul;
+    document.getElementById('listDropdown').style.display = 'none';
+}
+
+function setAlignIcon(type) {
+    document.getElementById('alignBtn').innerHTML = alignSvgs[type] || alignSvgs.left;
+    document.getElementById('alignDropdown').style.display = 'none';
+}
+
 function insertMathSymbol(symbol) {
     editor.focus();
     document.execCommand('insertText', false, symbol);
@@ -962,7 +1263,7 @@ function toggleExample() {
     // Detect if example content is showing (e.g. after page reload)
     if (!exampleActive && editor.innerHTML.includes('Rabatter i SuperBilka')) {
         editor.innerHTML = savedContent || '';
-        btn.textContent = '📋 Eksempelvisning';
+        btn.textContent = '📋 Demo';
         exampleActive = false;
         saveState();
         return;
@@ -1005,7 +1306,7 @@ function toggleExample() {
         exampleActive = true;
     } else {
         editor.innerHTML = savedContent;
-        btn.textContent = '📋 Eksempelvisning';
+        btn.textContent = '📋 Demo';
         exampleActive = false;
     }
     saveState();
@@ -1069,11 +1370,13 @@ function restoreSelection() {
 function insertTableWithSize(rows, cols) {
     tablePicker.style.display = 'none';
     const colWidth = Math.floor(100 / cols);
-    let html = '<table style="width:100%;table-layout:fixed;">';
+    const cls = showCellRefs ? ' class="show-cell-refs"' : '';
+    let html = `<table${cls} style="width:100%;table-layout:fixed;">`;
     for (let i = 0; i < rows; i++) {
         html += '<tr>';
         for (let j = 0; j < cols; j++) {
-            html += '<td>&nbsp;</td>';
+            const ref = showCellRefs ? ` data-ref="${getCellRef(j, i)}"` : '';
+            html += `<td${ref}>&nbsp;</td>`;
         }
         html += '</tr>';
     }
@@ -1112,8 +1415,24 @@ cellMenu.innerHTML = `
             <button data-border="none" title="Ingen" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#f1f5f9'" style="background:#f1f5f9;border:1px solid #cbd5e1;cursor:pointer;width:26px;height:26px;border-radius:4px;font-size:10px;display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="1" width="12" height="12" fill="none" stroke="#ccc" stroke-width="1" stroke-dasharray="2,2"/></svg></button>
         </div>
         <div style="border-top:1px solid #e2e8f0;margin:2px 0;"></div>
-        <button id="deleteRowBtn" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:0.8rem;color:#64748b;text-align:left;border-radius:4px;">Slet række</button>
-        <button id="deleteColBtn" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:0.8rem;color:#64748b;text-align:left;border-radius:4px;">Slet kolonne</button>
+        <button id="insertRowAboveBtn" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:0.8rem;color:#64748b;text-align:left;border-radius:4px;">↑ Indsæt række ovenover</button>
+        <button id="insertRowBelowBtn" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:0.8rem;color:#64748b;text-align:left;border-radius:4px;">↓ Indsæt række nedenunder</button>
+        <button id="insertColLeftBtn" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:0.8rem;color:#64748b;text-align:left;border-radius:4px;">← Indsæt kolonne til venstre</button>
+        <button id="insertColRightBtn" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:0.8rem;color:#64748b;text-align:left;border-radius:4px;">→ Indsæt kolonne til højre</button>
+        <div style="border-top:1px solid #e2e8f0;margin:2px 0;"></div>
+        <button id="deleteRowBtn" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:0.8rem;color:var(--danger);text-align:left;border-radius:4px;">🗑 Slet række</button>
+        <button id="deleteColBtn" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'" style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:0.8rem;color:var(--danger);text-align:left;border-radius:4px;">🗑 Slet kolonne</button>
+        <div style="border-top:1px solid #e2e8f0;margin:2px 0;"></div>
+        <div style="font-size:0.8rem;color:#64748b;padding:2px 8px;">Talformat</div>
+        <div style="display:flex;gap:3px;padding:2px 8px;flex-wrap:wrap;" id="cellFormatOptions">
+            <button data-format="" title="Ingen" onclick="setCellFormat('')" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#f1f5f9'" style="background:#f1f5f9;border:1px solid #cbd5e1;cursor:pointer;padding:2px 6px;border-radius:4px;font-size:11px;">Ingen</button>
+            <button data-format="kr" title="Kroner" onclick="setCellFormat('kr')" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#f1f5f9'" style="background:#f1f5f9;border:1px solid #cbd5e1;cursor:pointer;padding:2px 6px;border-radius:4px;font-size:11px;">kr.</button>
+            <button data-format="pct" title="Procent" onclick="setCellFormat('pct')" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#f1f5f9'" style="background:#f1f5f9;border:1px solid #cbd5e1;cursor:pointer;padding:2px 6px;border-radius:4px;font-size:11px;">%</button>
+        </div>
+        <div style="border-top:1px solid #e2e8f0;margin:2px 0;"></div>
+        <label style="display:flex;align-items:center;gap:6px;padding:4px 8px;font-size:0.8rem;color:#64748b;cursor:pointer;">
+            <input type="checkbox" id="showCellRefsCheck" onchange="toggleCellRefs()" style="cursor:pointer;"> Vis celle-ID
+        </label>
     </div>
 `;
 document.body.appendChild(cellMenu);
@@ -1151,6 +1470,8 @@ editor.addEventListener('mousedown', (e) => {
     cellDragMoved = false;
     cellDragStartCell = td;
     cellDragTable = td.closest('table');
+    // Select the clicked cell immediately
+    selectCell(td);
 });
 
 editor.addEventListener('mousemove', (e) => {
@@ -1184,11 +1505,12 @@ editor.addEventListener('mousemove', (e) => {
 document.addEventListener('mouseup', () => {
     if (cellDragTable) cellDragTable.classList.remove('cell-selecting');
     cellDragSelecting = false;
+    if (selectedCells.length > 0) showFillHandle();
 });
 
 // Also clear selection when clicking anywhere outside a table cell
 document.addEventListener('mousedown', (e) => {
-    if (!e.target.closest('td, th') && !e.target.closest('#cellContextMenu')) {
+    if (!e.target.closest('td, th') && !e.target.closest('#cellContextMenu') && !e.target.closest('.cell-fill-handle')) {
         clearCellSelection();
     }
 });
@@ -1208,6 +1530,7 @@ function deselectCell(td) {
 function clearCellSelection() {
     selectedCells.forEach(c => c.classList.remove('cell-selected'));
     selectedCells = [];
+    removeFillHandle();
 }
 
 cellColors.forEach(c => {
@@ -1247,6 +1570,8 @@ document.getElementById('deleteRowBtn').addEventListener('click', () => {
     const row = contextMenuCell.parentElement;
     if (table && table.rows.length > 1) {
         row.remove();
+        refreshCellRefs(table);
+        recalcTable(table);
     } else if (table) {
         table.remove();
     }
@@ -1264,12 +1589,78 @@ document.getElementById('deleteColBtn').addEventListener('click', () => {
         for (let r = 0; r < table.rows.length; r++) {
             if (table.rows[r].cells[colIdx]) table.rows[r].deleteCell(colIdx);
         }
+        refreshCellRefs(table);
+        recalcTable(table);
     } else if (table) {
         table.remove();
     }
     cellMenu.style.display = 'none';
     clearCellSelection();
     contextMenuCell = null;
+    saveState();
+});
+
+// Insert row/col
+function refreshCellRefs(table) {
+    if (!table.classList.contains('show-cell-refs')) return;
+    for (let r = 0; r < table.rows.length; r++) {
+        for (let c = 0; c < table.rows[r].cells.length; c++) {
+            table.rows[r].cells[c].dataset.ref = getCellRef(c, r);
+        }
+    }
+}
+
+document.getElementById('insertRowAboveBtn').addEventListener('click', () => {
+    if (!contextMenuCell) return;
+    const table = contextMenuCell.closest('table');
+    const rowIdx = contextMenuCell.parentElement.rowIndex;
+    const numCols = table.rows[0] ? table.rows[0].cells.length : 1;
+    const newRow = table.insertRow(rowIdx);
+    for (let c = 0; c < numCols; c++) newRow.insertCell().innerHTML = '&nbsp;';
+    cellMenu.style.display = 'none';
+    refreshCellRefs(table);
+    recalcTable(table);
+    saveState();
+});
+
+document.getElementById('insertRowBelowBtn').addEventListener('click', () => {
+    if (!contextMenuCell) return;
+    const table = contextMenuCell.closest('table');
+    const rowIdx = contextMenuCell.parentElement.rowIndex;
+    const numCols = table.rows[0] ? table.rows[0].cells.length : 1;
+    const newRow = table.insertRow(rowIdx + 1);
+    for (let c = 0; c < numCols; c++) newRow.insertCell().innerHTML = '&nbsp;';
+    cellMenu.style.display = 'none';
+    refreshCellRefs(table);
+    recalcTable(table);
+    saveState();
+});
+
+document.getElementById('insertColLeftBtn').addEventListener('click', () => {
+    if (!contextMenuCell) return;
+    const table = contextMenuCell.closest('table');
+    const colIdx = contextMenuCell.cellIndex;
+    for (let r = 0; r < table.rows.length; r++) {
+        const cell = table.rows[r].insertCell(colIdx);
+        cell.innerHTML = '&nbsp;';
+    }
+    cellMenu.style.display = 'none';
+    refreshCellRefs(table);
+    recalcTable(table);
+    saveState();
+});
+
+document.getElementById('insertColRightBtn').addEventListener('click', () => {
+    if (!contextMenuCell) return;
+    const table = contextMenuCell.closest('table');
+    const colIdx = contextMenuCell.cellIndex;
+    for (let r = 0; r < table.rows.length; r++) {
+        const cell = table.rows[r].insertCell(colIdx + 1);
+        cell.innerHTML = '&nbsp;';
+    }
+    cellMenu.style.display = 'none';
+    refreshCellRefs(table);
+    recalcTable(table);
     saveState();
 });
 
@@ -1397,127 +1788,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// TABLE PLUS BUTTONS (add row/column)
-// ========================
-const tablePlusBtns = {};
-['top', 'bottom', 'left', 'right'].forEach(side => {
-    const btn = document.createElement('div');
-    btn.className = 'table-plus-btn';
-    btn.contentEditable = 'false';
-    btn.innerHTML = '+';
-    btn.dataset.side = side;
-    tablePlusBtns[side] = btn;
-});
-
-let currentPlusTable = null;
-
-function showTablePlusBtns(table) {
-    if (currentPlusTable === table) {
-        positionPlusBtns(table);
-        return;
-    }
-    hideTablePlusBtns();
-    currentPlusTable = table;
-    Object.values(tablePlusBtns).forEach(btn => {
-        table.parentElement.appendChild(btn);
-        requestAnimationFrame(() => btn.classList.add('visible'));
-    });
-    positionPlusBtns(table);
-}
-
-function positionPlusBtns(table) {
-    const w = table.offsetWidth;
-    const h = table.offsetHeight;
-    const t = table.offsetTop;
-    const l = table.offsetLeft;
-    // Top: centered above table
-    tablePlusBtns.top.style.left = (l + w / 2 - 7) + 'px';
-    tablePlusBtns.top.style.top = (t - 18) + 'px';
-    // Bottom: centered below table
-    tablePlusBtns.bottom.style.left = (l + w / 2 - 7) + 'px';
-    tablePlusBtns.bottom.style.top = (t + h + 2) + 'px';
-    // Left: centered left of table
-    tablePlusBtns.left.style.left = (l - 18) + 'px';
-    tablePlusBtns.left.style.top = (t + h / 2 - 7) + 'px';
-    // Right: centered right of table
-    tablePlusBtns.right.style.left = (l + w + 2) + 'px';
-    tablePlusBtns.right.style.top = (t + h / 2 - 7) + 'px';
-}
-
-function hideTablePlusBtns() {
-    if (!currentPlusTable) return;
-    Object.values(tablePlusBtns).forEach(btn => {
-        btn.classList.remove('visible');
-        if (btn.parentElement) btn.parentElement.removeChild(btn);
-    });
-    currentPlusTable = null;
-}
-
-Object.values(tablePlusBtns).forEach(btn => {
-    btn.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!currentPlusTable) return;
-        const table = currentPlusTable;
-        const side = btn.dataset.side;
-        const numCols = table.rows[0] ? table.rows[0].cells.length : 1;
-        const numRows = table.rows.length;
-
-        if (side === 'top') {
-            const row = table.insertRow(0);
-            for (let i = 0; i < numCols; i++) {
-                const cell = row.insertCell();
-                cell.innerHTML = '&nbsp;';
-            }
-        } else if (side === 'bottom') {
-            const row = table.insertRow(-1);
-            for (let i = 0; i < numCols; i++) {
-                const cell = row.insertCell();
-                cell.innerHTML = '&nbsp;';
-            }
-        } else if (side === 'left') {
-            for (let r = 0; r < numRows; r++) {
-                const cell = table.rows[r].insertCell(0);
-                cell.innerHTML = '&nbsp;';
-            }
-        } else if (side === 'right') {
-            for (let r = 0; r < numRows; r++) {
-                const cell = table.rows[r].insertCell(-1);
-                cell.innerHTML = '&nbsp;';
-            }
-        }
-        positionPlusBtns(table);
-        saveState();
-    });
-});
-
-// Show/hide plus buttons based on cursor position in editor
-editor.addEventListener('mouseover', (e) => {
-    const table = e.target.closest('table');
-    if (table && editor.contains(table)) {
-        showTablePlusBtns(table);
-    }
-});
-
-editor.addEventListener('mouseleave', () => {
-    setTimeout(() => {
-        const hovered = document.querySelectorAll('.table-plus-btn:hover');
-        if (hovered.length === 0) hideTablePlusBtns();
-    }, 100);
-});
-
-// Keep plus buttons visible when hovering them
-Object.values(tablePlusBtns).forEach(btn => {
-    btn.addEventListener('mouseleave', () => {
-        setTimeout(() => {
-            if (!currentPlusTable) return;
-            const tableHovered = currentPlusTable.matches(':hover');
-            const anyBtnHovered = Object.values(tablePlusBtns).some(b => b.matches(':hover'));
-            if (!tableHovered && !anyBtnHovered) hideTablePlusBtns();
-        }, 100);
-    });
-});
-
 // TABLE BORDER RESIZING
 // ========================
 let tableResizing = false;
@@ -1624,6 +1894,524 @@ editor.addEventListener('mousedown', (e) => {
 
 // Word/char count
 editor.addEventListener('input', updateCounts);
+
+// ========================
+// TABLE FORMULA ENGINE
+// ========================
+function getCellRef(col, row) {
+    // col: 0-based -> A, B, C...; row: 0-based -> 1, 2, 3...
+    return String.fromCharCode(65 + col) + (row + 1);
+}
+
+function parseCellRef(ref) {
+    const m = ref.match(/^([A-Z])(\d+)$/i);
+    if (!m) return null;
+    return { col: m[1].toUpperCase().charCodeAt(0) - 65, row: parseInt(m[2]) - 1 };
+}
+
+function getCellValue(table, col, row) {
+    const td = table.rows[row]?.cells[col];
+    if (!td) return 0;
+    // If cell has a formula, read the displayed result (already evaluated)
+    const raw = td.innerText.trim();
+    if (raw === '' || raw === '\u00a0') return 0;
+    // Strip formatting suffixes (kr., %) before parsing
+    const cleaned = raw.replace(/\s*kr\.?\s*$/i, '').replace(/\s*%\s*$/i, '').trim();
+    const n = parseFloat(cleaned.replace(',', '.'));
+    return isNaN(n) ? 0 : n;
+}
+
+function getCellRawText(td) {
+    return (td.innerText || '').trim().replace(/\u00a0/g, '');
+}
+
+function evaluateFormula(formula, table) {
+    let expr = formula.replace(/^=/, '').trim();
+
+    // Handle SUM(A1:A5) style ranges
+    expr = expr.replace(/SUM\(([A-Z]\d+):([A-Z]\d+)\)/gi, (_, start, end) => {
+        const s = parseCellRef(start), e = parseCellRef(end);
+        if (!s || !e) return '0';
+        let sum = 0;
+        for (let r = Math.min(s.row, e.row); r <= Math.max(s.row, e.row); r++) {
+            for (let c = Math.min(s.col, e.col); c <= Math.max(s.col, e.col); c++) {
+                sum += getCellValue(table, c, r);
+            }
+        }
+        return sum.toString();
+    });
+
+    // Handle AVG/GENNEMSNIT(A1:A5)
+    expr = expr.replace(/(AVG|GENNEMSNIT|AVERAGE)\(([A-Z]\d+):([A-Z]\d+)\)/gi, (_, fn, start, end) => {
+        const s = parseCellRef(start), e = parseCellRef(end);
+        if (!s || !e) return '0';
+        let sum = 0, count = 0;
+        for (let r = Math.min(s.row, e.row); r <= Math.max(s.row, e.row); r++) {
+            for (let c = Math.min(s.col, e.col); c <= Math.max(s.col, e.col); c++) {
+                sum += getCellValue(table, c, r);
+                count++;
+            }
+        }
+        return count > 0 ? (sum / count).toString() : '0';
+    });
+
+    // Handle MIN(A1:A5)
+    expr = expr.replace(/MIN\(([A-Z]\d+):([A-Z]\d+)\)/gi, (_, start, end) => {
+        const s = parseCellRef(start), e = parseCellRef(end);
+        if (!s || !e) return '0';
+        let min = Infinity;
+        for (let r = Math.min(s.row, e.row); r <= Math.max(s.row, e.row); r++) {
+            for (let c = Math.min(s.col, e.col); c <= Math.max(s.col, e.col); c++) {
+                min = Math.min(min, getCellValue(table, c, r));
+            }
+        }
+        return min === Infinity ? '0' : min.toString();
+    });
+
+    // Handle MAX(A1:A5)
+    expr = expr.replace(/MAX\(([A-Z]\d+):([A-Z]\d+)\)/gi, (_, start, end) => {
+        const s = parseCellRef(start), e = parseCellRef(end);
+        if (!s || !e) return '0';
+        let max = -Infinity;
+        for (let r = Math.min(s.row, e.row); r <= Math.max(s.row, e.row); r++) {
+            for (let c = Math.min(s.col, e.col); c <= Math.max(s.col, e.col); c++) {
+                max = Math.max(max, getCellValue(table, c, r));
+            }
+        }
+        return max === -Infinity ? '0' : max.toString();
+    });
+
+    // Handle COUNT(A1:A5)
+    expr = expr.replace(/COUNT\(([A-Z]\d+):([A-Z]\d+)\)/gi, (_, start, end) => {
+        const s = parseCellRef(start), e = parseCellRef(end);
+        if (!s || !e) return '0';
+        let count = 0;
+        for (let r = Math.min(s.row, e.row); r <= Math.max(s.row, e.row); r++) {
+            for (let c = Math.min(s.col, e.col); c <= Math.max(s.col, e.col); c++) {
+                const v = getCellValue(table, c, r);
+                if (v !== 0 || (table.rows[r]?.cells[c]?.innerText || '').trim() === '0') count++;
+            }
+        }
+        return count.toString();
+    });
+
+    // Replace cell references (A1, B2, etc.) with values
+    expr = expr.replace(/\b([A-Z])(\d+)\b/gi, (_, col, row) => {
+        const c = col.toUpperCase().charCodeAt(0) - 65;
+        const r = parseInt(row) - 1;
+        return getCellValue(table, c, r).toString();
+    });
+
+    // Evaluate
+    try {
+        expr = expr.replace(/,/g, '.').replace(/×/g, '*').replace(/÷/g, '/').replace(/\^/g, '**');
+        const result = Function('"use strict"; return (' + expr + ')')();
+        if (typeof result === 'number' && isFinite(result)) {
+            return Math.round(result * 10000) / 10000;
+        }
+        return '#FEJL';
+    } catch {
+        return '#FEJL';
+    }
+}
+
+function recalcTable(table) {
+    // Multiple passes to resolve dependencies between formula cells
+    for (let pass = 0; pass < 3; pass++) {
+        const cells = table.querySelectorAll('td, th');
+        cells.forEach(td => {
+            // Skip the cell currently being edited
+            if (td === currentFormulaCell) return;
+            const formula = td.dataset.formula;
+            if (formula && formula.startsWith('=')) {
+                const result = evaluateFormula(formula, table);
+                let display;
+                if (typeof result === 'number' && td.dataset.format) {
+                    if (td.dataset.format === 'kr') {
+                        display = (Math.round(result * 100) / 100).toString().replace('.', ',') + ' kr.';
+                    } else if (td.dataset.format === 'pct') {
+                        display = (Math.round(result * 10) / 10).toString().replace('.', ',') + '%';
+                    } else {
+                        display = result.toString().replace('.', ',');
+                    }
+                } else {
+                    display = typeof result === 'number' ? result.toString().replace('.', ',') : result;
+                }
+                td.innerText = display;
+            } else if (!formula && td.dataset.format) {
+                // Apply formatting to plain number cells too
+                const raw = td.innerText.trim().replace(/\s*kr\.?\s*$/i, '').replace(/\s*%\s*$/i, '').trim();
+                const n = parseFloat(raw.replace(',', '.'));
+                if (!isNaN(n)) {
+                    let display = n.toString().replace('.', ',');
+                    if (td.dataset.format === 'kr') display += ' kr.';
+                    else if (td.dataset.format === 'pct') display += '%';
+                    td.innerText = display;
+                }
+            }
+        });
+    }
+}
+
+function recalcAllTables() {
+    editor.querySelectorAll('table').forEach(recalcTable);
+}
+
+// Formula bar shown above table when editing a formula cell
+let formulaBar = document.createElement('div');
+formulaBar.style.cssText = 'display:none;position:absolute;background:#f8fafc;border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:12px;font-family:monospace;color:#64748b;z-index:50;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,0.1);';
+document.body.appendChild(formulaBar);
+
+let showCellRefs = false;
+
+function toggleCellRefs() {
+    const check = document.getElementById('showCellRefsCheck');
+    showCellRefs = check.checked;
+    editor.querySelectorAll('table').forEach(table => {
+        if (showCellRefs) {
+            table.classList.add('show-cell-refs');
+            // Add data-ref to all cells
+            for (let r = 0; r < table.rows.length; r++) {
+                for (let c = 0; c < table.rows[r].cells.length; c++) {
+                    table.rows[r].cells[c].dataset.ref = getCellRef(c, r);
+                }
+            }
+        } else {
+            table.classList.remove('show-cell-refs');
+        }
+    });
+}
+
+function setCellFormat(fmt) {
+    const cells = selectedCells.length > 0 ? selectedCells : (contextMenuCell ? [contextMenuCell] : []);
+    cells.forEach(td => {
+        if (fmt) {
+            td.dataset.format = fmt;
+        } else {
+            delete td.dataset.format;
+            // Strip existing format suffix from displayed text
+            const raw = td.innerText.trim();
+            const cleaned = raw.replace(/\s*kr\.?\s*$/i, '').replace(/\s*%\s*$/i, '').trim();
+            if (cleaned !== raw) td.innerText = cleaned;
+        }
+    });
+    // Recalc to apply formatting
+    const table = cells[0]?.closest('table');
+    if (table) recalcTable(table);
+    cellMenu.style.display = 'none';
+    saveState();
+}
+
+let currentFormulaCell = null;
+
+function getActiveTableCell() {
+    const sel = window.getSelection();
+    if (!sel || !sel.anchorNode) return null;
+    const node = sel.anchorNode;
+    const el = node.nodeType === 3 ? node.parentElement : node;
+    const td = el?.closest?.('td, th');
+    if (td && editor.contains(td)) return td;
+    return null;
+}
+
+function commitFormulaCell(td) {
+    if (!td) return;
+    const table = td.closest('table');
+    if (!table || !editor.contains(table)) return;
+
+    const text = getCellRawText(td);
+    if (text.startsWith('=')) {
+        td.dataset.formula = text;
+        const result = evaluateFormula(text, table);
+        td.innerText = typeof result === 'number' ? result.toString().replace('.', ',') : result;
+        recalcTable(table);
+    } else {
+        if (td.dataset.formula) delete td.dataset.formula;
+        recalcTable(table);
+    }
+}
+
+editor.addEventListener('click', (e) => {
+    const td = e.target.closest('td, th');
+
+    // If we had a previous formula cell and now clicking elsewhere, commit it
+    if (currentFormulaCell && currentFormulaCell !== td) {
+        commitFormulaCell(currentFormulaCell);
+        formulaBar.style.display = 'none';
+        currentFormulaCell = null;
+    }
+
+    if (!td) return;
+    const table = td.closest('table');
+    if (!table || !editor.contains(table)) return;
+
+    currentFormulaCell = td;
+    const rect = td.getBoundingClientRect();
+
+    // If cell has formula, show formula bar and restore formula text for editing
+    if (td.dataset.formula) {
+        formulaBar.textContent = td.dataset.formula;
+        formulaBar.style.display = '';
+        formulaBar.style.left = rect.left + 'px';
+        formulaBar.style.top = (rect.top - 26) + 'px';
+        // Only replace text if it's showing the result (not already the formula)
+        if (td.innerText.trim() !== td.dataset.formula) {
+            td.innerText = td.dataset.formula;
+        }
+        // Place cursor at end of cell
+        requestAnimationFrame(() => {
+            const sel = window.getSelection();
+            const range = document.createRange();
+            if (td.childNodes.length > 0) {
+                const textNode = td.childNodes[0];
+                range.setStart(textNode, textNode.length);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+        });
+    } else {
+        formulaBar.style.display = 'none';
+    }
+});
+
+// When clicking outside editor, commit any pending formula
+document.addEventListener('click', (e) => {
+    if (!editor.contains(e.target) && currentFormulaCell) {
+        commitFormulaCell(currentFormulaCell);
+        formulaBar.style.display = 'none';
+        currentFormulaCell = null;
+    }
+});
+
+// When editing a cell, recalc table so dependent formulas update
+editor.addEventListener('input', (e) => {
+    const td = getActiveTableCell();
+    if (!td) return;
+    const table = td.closest('table');
+    if (!table) return;
+    // Update formula bar if editing a formula cell
+    if (td === currentFormulaCell) {
+        const text = getCellRawText(td);
+        if (text.startsWith('=')) {
+            formulaBar.textContent = text;
+        }
+    }
+    recalcTable(table);
+});
+
+// Delete content of selected cells with Backspace/Delete
+document.addEventListener('keydown', (e) => {
+    if ((e.key === 'Backspace' || e.key === 'Delete') && selectedCells.length > 1) {
+        e.preventDefault();
+        selectedCells.forEach(td => {
+            delete td.dataset.formula;
+            td.innerHTML = '&nbsp;';
+        });
+        const table = selectedCells[0]?.closest('table');
+        if (table) recalcTable(table);
+        saveState();
+    }
+});
+
+// Recalc on Enter/Tab in table cell
+editor.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === 'Tab') {
+        const td = getActiveTableCell();
+        if (td) {
+            const text = getCellRawText(td);
+            if (text.startsWith('=')) {
+                e.preventDefault();
+                commitFormulaCell(td);
+                        formulaBar.style.display = 'none';
+                currentFormulaCell = null;
+                // Move to next cell
+                const table = td.closest('table');
+                if (e.key === 'Enter') {
+                    const nextRow = table?.rows[td.parentElement.rowIndex + 1];
+                    const nextCell = nextRow?.cells[td.cellIndex];
+                    if (nextCell) { nextCell.focus(); currentFormulaCell = nextCell; }
+                } else {
+                    const nextCell = td.parentElement.cells[td.cellIndex + 1];
+                    if (nextCell) { nextCell.focus(); currentFormulaCell = nextCell; }
+                }
+                return;
+            }
+        }
+    }
+});
+
+// ========================
+// CELL FILL HANDLE (drag to copy formulas)
+// ========================
+let fillHandle = null;
+let fillDragging = false;
+let fillSourceCells = [];
+let fillTable = null;
+let fillStartRow = -1;
+let fillStartCol = -1;
+let fillEndRow = -1;
+let fillEndCol = -1;
+
+function adjustCellRef(formula, rowOffset, colOffset) {
+    // Adjust cell references like A1, B2 by offset
+    return formula.replace(/\b([A-Z])(\d+)\b/gi, (match, col, row) => {
+        const newCol = String.fromCharCode(col.toUpperCase().charCodeAt(0) + colOffset);
+        const newRow = parseInt(row) + rowOffset;
+        if (newCol < 'A' || newCol > 'Z' || newRow < 1) return match;
+        return newCol + newRow;
+    });
+}
+
+function showFillHandle() {
+    removeFillHandle();
+    if (selectedCells.length === 0) return;
+
+    // Find bottom-right cell of selection
+    let maxR = -1, maxC = -1, brCell = null;
+    const table = selectedCells[0].closest('table');
+    if (!table || !editor.contains(table)) return;
+
+    selectedCells.forEach(c => {
+        const r = c.parentElement.rowIndex;
+        const col = c.cellIndex;
+        if (r > maxR || (r === maxR && col > maxC)) {
+            maxR = r; maxC = col; brCell = c;
+        }
+    });
+
+    if (!brCell) return;
+
+    fillHandle = document.createElement('div');
+    fillHandle.className = 'cell-fill-handle';
+    fillHandle.contentEditable = 'false';
+    // Position fixed relative to viewport
+    const cellRect = brCell.getBoundingClientRect();
+    fillHandle.style.position = 'fixed';
+    fillHandle.style.left = (cellRect.right - 4) + 'px';
+    fillHandle.style.top = (cellRect.bottom - 4) + 'px';
+    document.body.appendChild(fillHandle);
+
+    // Store reference to update position on scroll
+    fillHandle._brCell = brCell;
+
+    fillHandle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        window.getSelection()?.removeAllRanges();
+        fillDragging = true;
+        fillTable = table;
+        fillStartRow = maxR;
+        fillStartCol = maxC;
+        fillEndRow = maxR;
+        fillEndCol = maxC;
+        fillSourceCells = [...selectedCells];
+    });
+}
+
+function removeFillHandle() {
+    document.querySelectorAll('.cell-fill-handle').forEach(el => el.remove());
+    fillHandle = null;
+}
+
+document.addEventListener('mousemove', (e) => {
+    if (!fillDragging || !fillTable) return;
+    e.preventDefault();
+
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const td = el?.closest?.('td, th');
+    if (!td || td.closest('table') !== fillTable) return;
+
+    // Clear preview
+    fillTable.querySelectorAll('.cell-fill-preview').forEach(c => c.classList.remove('cell-fill-preview'));
+
+    fillEndRow = td.parentElement.rowIndex;
+    fillEndCol = td.cellIndex;
+
+    // Source range
+    const srcRows = fillSourceCells.map(c => c.parentElement.rowIndex);
+    const srcCols = fillSourceCells.map(c => c.cellIndex);
+    const srcMinR = Math.min(...srcRows), srcMaxR = Math.max(...srcRows);
+    const srcMinC = Math.min(...srcCols), srcMaxC = Math.max(...srcCols);
+
+    // Fill area: extend source columns to new rows (or source rows to new columns)
+    const targetMinR = Math.min(srcMinR, fillEndRow);
+    const targetMaxR = Math.max(srcMaxR, fillEndRow);
+    const targetMinC = Math.min(srcMinC, fillEndCol);
+    const targetMaxC = Math.max(srcMaxC, fillEndCol);
+
+    for (let r = targetMinR; r <= targetMaxR; r++) {
+        for (let c = targetMinC; c <= targetMaxC; c++) {
+            const cell = fillTable.rows[r]?.cells[c];
+            if (cell && !fillSourceCells.includes(cell)) {
+                cell.classList.add('cell-fill-preview');
+            }
+        }
+    }
+});
+
+document.addEventListener('mouseup', (e) => {
+    if (!fillDragging) return;
+    fillDragging = false;
+
+    // Clear preview
+    if (fillTable) fillTable.querySelectorAll('.cell-fill-preview').forEach(c => c.classList.remove('cell-fill-preview'));
+
+    if (!fillTable || fillSourceCells.length === 0) return;
+
+    // Source range
+    const srcRows = fillSourceCells.map(c => c.parentElement.rowIndex);
+    const srcCols = fillSourceCells.map(c => c.cellIndex);
+    const srcMinR = Math.min(...srcRows), srcMaxR = Math.max(...srcRows);
+    const srcMinC = Math.min(...srcCols), srcMaxC = Math.max(...srcCols);
+    const srcH = srcMaxR - srcMinR + 1;
+    const srcW = srcMaxC - srcMinC + 1;
+
+    // Fill area: extend source columns to new rows (or source rows to new columns)
+    const targetMinR = Math.min(srcMinR, fillEndRow);
+    const targetMaxR = Math.max(srcMaxR, fillEndRow);
+    const targetMinC = Math.min(srcMinC, fillEndCol);
+    const targetMaxC = Math.max(srcMaxC, fillEndCol);
+
+    // Fill target cells
+    for (let r = targetMinR; r <= targetMaxR; r++) {
+        for (let c = targetMinC; c <= targetMaxC; c++) {
+            const targetCell = fillTable.rows[r]?.cells[c];
+            if (!targetCell || fillSourceCells.includes(targetCell)) continue;
+
+            // Find corresponding source cell (cycling through source pattern)
+            const srcR = srcMinR + ((r - srcMinR) % srcH + srcH) % srcH;
+            const srcC = srcMinC + ((c - srcMinC) % srcW + srcW) % srcW;
+            const srcCell = fillTable.rows[srcR]?.cells[srcC];
+            if (!srcCell) continue;
+
+            const rowOffset = r - srcR;
+            const colOffset = c - srcC;
+
+            if (srcCell.dataset.formula) {
+                const newFormula = adjustCellRef(srcCell.dataset.formula, rowOffset, colOffset);
+                targetCell.dataset.formula = newFormula;
+                if (srcCell.dataset.format) targetCell.dataset.format = srcCell.dataset.format;
+            }
+            // Skip plain value cells — only copy formulas
+        }
+    }
+
+    recalcTable(fillTable);
+    if (showCellRefs) refreshCellRefs(fillTable);
+    saveState();
+    fillTable = null;
+    fillSourceCells = [];
+});
+
+// Reposition fill handle on scroll
+editor.addEventListener('scroll', () => {
+    if (fillHandle && fillHandle._brCell) {
+        const r = fillHandle._brCell.getBoundingClientRect();
+        fillHandle.style.left = (r.right - 4) + 'px';
+        fillHandle.style.top = (r.bottom - 4) + 'px';
+    }
+});
 
 function solveExpression(input) {
     try {
@@ -1830,6 +2618,41 @@ function updateCounts() {
 }
 
 // ========================
+// IMAGE RESIZE IN EDITOR
+// ========================
+(function() {
+    let resizing = null;
+    editor.addEventListener('mousedown', (e) => {
+        const handle = e.target.closest('.img-resize-handle');
+        if (!handle) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const wrap = handle.closest('.inserted-geo-wrap');
+        const img = wrap.querySelector('.inserted-geo');
+        if (!img) return;
+        const startX = e.clientX;
+        const startW = img.offsetWidth;
+        const ratio = img.naturalHeight / img.naturalWidth;
+        wrap.classList.add('resizing');
+        resizing = { img, wrap, startX, startW, ratio };
+    });
+    document.addEventListener('mousemove', (e) => {
+        if (!resizing) return;
+        e.preventDefault();
+        const dx = e.clientX - resizing.startX;
+        const newW = Math.max(50, resizing.startW + dx);
+        resizing.img.style.width = newW + 'px';
+        resizing.img.style.height = Math.round(newW * resizing.ratio) + 'px';
+    });
+    document.addEventListener('mouseup', () => {
+        if (!resizing) return;
+        resizing.wrap.classList.remove('resizing');
+        resizing = null;
+        saveState();
+    });
+})();
+
+// ========================
 // PANEL RESIZER
 // ========================
 const resizer = document.getElementById('resizer');
@@ -1872,6 +2695,12 @@ function switchTab(tab) {
     if (tab === 'geometry') {
         setTimeout(resizeCanvas, 50);
     }
+    if (tab === 'graph') {
+        setTimeout(resizeGraphCanvas, 50);
+    }
+    if (tab === 'diagram') {
+        setTimeout(resizeDiagramCanvas, 50);
+    }
 }
 
 // ========================
@@ -1879,30 +2708,59 @@ function switchTab(tab) {
 // ========================
 let calcExpression = '';
 let calcHistoryItems = [];
+let calcShowingResult = false;
+
+function calcUpdateDisplay() {
+    const exprEl = document.getElementById('calcExpr');
+    const resultEl = document.getElementById('calcResult');
+    if (calcShowingResult) {
+        // After pressing =: expression in small area, result in big area
+        // Already set by calcEvaluate
+    } else {
+        // While typing: expression in big area, small area empty
+        exprEl.textContent = '';
+        resultEl.textContent = formatExpression(calcExpression) || '0';
+    }
+}
 
 function calcInput(val) {
+    if (calcShowingResult) {
+        // If last char of result is a number and new input is a number, start fresh
+        const isOp = ['+', '-', '*', '/', '^', '%', '('].includes(val) || val.endsWith('(');
+        if (!isOp) {
+            calcExpression = '';
+        }
+        calcShowingResult = false;
+    }
     calcExpression += val;
-    document.getElementById('calcExpr').textContent = formatExpression(calcExpression);
+    calcUpdateDisplay();
 }
 
 function calcClear() {
     calcExpression = '';
+    calcShowingResult = false;
     document.getElementById('calcExpr').textContent = '';
     document.getElementById('calcResult').textContent = '0';
 }
 
 function calcBackspace() {
+    if (calcShowingResult) {
+        calcShowingResult = false;
+    }
     calcExpression = calcExpression.slice(0, -1);
-    document.getElementById('calcExpr').textContent = formatExpression(calcExpression);
+    calcUpdateDisplay();
 }
 
 function calcNegate() {
+    if (calcShowingResult) {
+        calcShowingResult = false;
+    }
     if (calcExpression.startsWith('-')) {
         calcExpression = calcExpression.substring(1);
     } else {
         calcExpression = '-' + calcExpression;
     }
-    document.getElementById('calcExpr').textContent = formatExpression(calcExpression);
+    calcUpdateDisplay();
 }
 
 function formatExpression(expr) {
@@ -1939,28 +2797,24 @@ function calcEvaluate() {
 
         const displayExpr = formatExpression(calcExpression);
 
-        calcHistoryItems.push({ expr: displayExpr, result: result });
+        calcHistoryItems.push({ expr: displayExpr, result: result, raw: calcExpression });
         updateCalcHistory();
 
-        document.getElementById('calcResult').textContent = result;
         document.getElementById('calcExpr').textContent = displayExpr + ' =';
+        document.getElementById('calcResult').textContent = result;
         calcExpression = String(result);
+        calcShowingResult = true;
     } catch (e) {
         document.getElementById('calcResult').textContent = 'Fejl';
     }
 }
 
 function updateCalcHistory() {
-    const container = document.getElementById('calcHistory');
-    const last = calcHistoryItems[calcHistoryItems.length - 1];
-    container.innerHTML = last ? `<div class="calc-history-item"><span>${last.expr} = ${last.result}</span></div>` : '';
-    container.scrollTop = container.scrollHeight;
-
     // Update clickable history list below
     const list = document.getElementById('calcHistoryList');
     if (!list) return;
     if (calcHistoryItems.length === 0) { list.innerHTML = ''; return; }
-    list.innerHTML = '<div style="font-size:0.8rem;color:var(--text-light);font-weight:600;padding:6px 0 4px;border-bottom:1px solid var(--border);">Historik</div>' +
+    list.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0 4px;border-bottom:1px solid var(--border);"><span style="font-size:0.8rem;color:var(--text-light);font-weight:600;">Historik</span><button onclick="clearCalcHistory()" style="border:none;background:none;cursor:pointer;color:var(--danger);font-size:0.75rem;padding:2px 6px;border-radius:4px;" onmouseover="this.style.background=\'#fee2e2\'" onmouseout="this.style.background=\'none\'" title="Ryd historik">🗑 Ryd</button></div>' +
         calcHistoryItems.slice().reverse().map((item, i) => {
             const realIdx = calcHistoryItems.length - 1 - i;
             return `<div class="calc-hist-entry" onclick="insertHistoryItem(${realIdx})" style="display:flex;align-items:center;padding:6px 8px;font-size:0.82rem;color:var(--text);cursor:pointer;border-bottom:1px solid #f1f5f9;border-radius:4px;gap:6px;">
@@ -1971,13 +2825,19 @@ function updateCalcHistory() {
     list.scrollTop = 0;
 }
 
+function clearCalcHistory() {
+    calcHistoryItems = [];
+    updateCalcHistory();
+    saveState();
+}
+
 function insertHistoryItem(idx) {
     const item = calcHistoryItems[idx];
     if (!item) return;
-    // Load expression back into calculator
-    calcExpression = String(item.result);
-    document.getElementById('calcExpr').textContent = item.expr + ' =';
-    document.getElementById('calcResult').textContent = item.result;
+    // Restore raw expression so user can continue editing
+    calcExpression = item.raw || String(item.result);
+    calcShowingResult = false;
+    calcUpdateDisplay();
 }
 
 function insertHistoryToEditor(idx, evt) {
@@ -2159,6 +3019,37 @@ let showGrid = false;
 let showAxes = false;
 let graphs = [];
 let freehandPoints = [];
+let anglePoints = []; // For angle tool: [arm1, vertex, arm2]
+const ANGLE_SNAP_DEGREES = [0, 30, 45, 60, 90, 120, 135, 150, 180];
+const ANGLE_SNAP_THRESHOLD = 0.5; // degrees tolerance
+
+function snapAnglePoint(vertex, arm1, rawPoint) {
+    // Calculate raw angle between arm1→vertex and vertex→rawPoint
+    const a1 = Math.atan2(arm1.y - vertex.y, arm1.x - vertex.x);
+    const a2raw = Math.atan2(rawPoint.y - vertex.y, rawPoint.x - vertex.x);
+    let diff = a2raw - a1;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    const rawDeg = Math.abs(diff) * 180 / Math.PI;
+    const sign = diff < 0 ? -1 : 1;
+
+    // Check if near a snap angle
+    for (const snapDeg of ANGLE_SNAP_DEGREES) {
+        if (Math.abs(rawDeg - snapDeg) <= ANGLE_SNAP_THRESHOLD) {
+            // Snap: compute new point at the snapped angle
+            const snappedRad = snapDeg * Math.PI / 180 * sign;
+            const dist = Math.sqrt((rawPoint.x - vertex.x) ** 2 + (rawPoint.y - vertex.y) ** 2);
+            const newAngle = a1 + snappedRad;
+            return {
+                x: vertex.x + Math.cos(newAngle) * dist,
+                y: vertex.y + Math.sin(newAngle) * dist,
+                snapped: true,
+                snapDeg: snapDeg
+            };
+        }
+    }
+    return { x: rawPoint.x, y: rawPoint.y, snapped: false, snapDeg: null };
+}
 
 function resizeCanvas() {
     const container = canvas.parentElement;
@@ -2669,10 +3560,24 @@ canvas.addEventListener('dblclick', (e) => {
     }
 });
 
+function getShapeCenter(shape) {
+    const b = getShapeBounds(shape);
+    return { x: b.x + b.w / 2, y: b.y + b.h / 2 };
+}
+
 function drawShape(shape) {
+    ctx.save();
     ctx.strokeStyle = shape.color;
     ctx.lineWidth = shape.width;
     ctx.fillStyle = shape.color + '33';
+
+    // Apply rotation if set
+    if (shape.rotation) {
+        const c = getShapeCenter(shape);
+        ctx.translate(c.x, c.y);
+        ctx.rotate(shape.rotation);
+        ctx.translate(-c.x, -c.y);
+    }
 
     switch (shape.type) {
         case 'line':
@@ -2719,7 +3624,7 @@ function drawShape(shape) {
             ctx.stroke();
             break;
         case 'freehand':
-            if (shape.points.length < 2) return;
+            if (shape.points.length < 2) { ctx.restore(); return; }
             ctx.beginPath();
             ctx.moveTo(shape.points[0].x, shape.points[0].y);
             for (let i = 1; i < shape.points.length; i++) {
@@ -2732,14 +3637,79 @@ function drawShape(shape) {
             ctx.fillStyle = shape.color;
             ctx.fillText(shape.text, shape.x, shape.y);
             break;
+        case 'angle': {
+            // Draw two arms from vertex
+            ctx.beginPath();
+            ctx.moveTo(shape.x1, shape.y1);
+            ctx.lineTo(shape.vx, shape.vy);
+            ctx.lineTo(shape.x2, shape.y2);
+            ctx.stroke();
+
+            // Calculate angles for arc
+            const aA1 = Math.atan2(shape.y1 - shape.vy, shape.x1 - shape.vx);
+            const aA2 = Math.atan2(shape.y2 - shape.vy, shape.x2 - shape.vx);
+
+            // Determine arc direction (always draw the smaller angle)
+            let aDiff = aA2 - aA1;
+            while (aDiff < -Math.PI) aDiff += Math.PI * 2;
+            while (aDiff > Math.PI) aDiff -= Math.PI * 2;
+            const arcCCW = aDiff < 0;
+
+            // Draw arc
+            const arcR = Math.min(30,
+                Math.sqrt((shape.x1 - shape.vx) ** 2 + (shape.y1 - shape.vy) ** 2) * 0.3,
+                Math.sqrt((shape.x2 - shape.vx) ** 2 + (shape.y2 - shape.vy) ** 2) * 0.3
+            );
+            ctx.beginPath();
+            ctx.arc(shape.vx, shape.vy, arcR, aA1, aA2, arcCCW);
+            ctx.stroke();
+
+            // Right angle marker (small square) if ~90°
+            if (Math.abs(shape.degrees - 90) < 1.5) {
+                const sq = arcR * 0.6;
+                const dir1x = Math.cos(aA1), dir1y = Math.sin(aA1);
+                const dir2x = Math.cos(aA2), dir2y = Math.sin(aA2);
+                ctx.beginPath();
+                ctx.moveTo(shape.vx + dir1x * sq, shape.vy + dir1y * sq);
+                ctx.lineTo(shape.vx + dir1x * sq + dir2x * sq, shape.vy + dir1y * sq + dir2y * sq);
+                ctx.lineTo(shape.vx + dir2x * sq, shape.vy + dir2y * sq);
+                ctx.stroke();
+            }
+
+            // Draw degree label
+            const midAngle = aA1 + aDiff / 2;
+            const labelR = arcR + 16;
+            const labelX = shape.vx + Math.cos(midAngle) * labelR;
+            const labelY = shape.vy + Math.sin(midAngle) * labelR;
+            ctx.font = '12px sans-serif';
+            ctx.fillStyle = shape.color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const degText = shape.degrees === Math.round(shape.degrees) ? shape.degrees.toFixed(0) : shape.degrees.toFixed(1);
+            ctx.fillText(degText + '°', labelX, labelY);
+            break;
+        }
     }
+    ctx.restore();
+}
+
+// Un-rotate a point relative to a shape's center (for hit testing rotated shapes)
+function unrotatePoint(x, y, shape) {
+    if (!shape.rotation) return { x, y };
+    const c = getShapeCenter(shape);
+    const cos = Math.cos(-shape.rotation);
+    const sin = Math.sin(-shape.rotation);
+    const dx = x - c.x, dy = y - c.y;
+    return { x: c.x + dx * cos - dy * sin, y: c.y + dx * sin + dy * cos };
 }
 
 // Hit test - find shape at position
-function hitTestShape(x, y) {
+function hitTestShape(ox, oy) {
     const margin = 8;
     for (let i = shapes.length - 1; i >= 0; i--) {
         const s = shapes[i];
+        // Un-rotate mouse coords if shape is rotated
+        const { x, y } = unrotatePoint(ox, oy, s);
         switch (s.type) {
             case 'rect':
                 if (x >= s.x - margin && x <= s.x + s.w + margin && y >= s.y - margin && y <= s.y + s.h + margin) return i;
@@ -2775,6 +3745,24 @@ function hitTestShape(x, y) {
                     if (Math.sqrt((x - p.x) ** 2 + (y - p.y) ** 2) < margin + 4) return i;
                 }
                 break;
+            case 'angle': {
+                // Hit test both arms
+                const arms = [
+                    { x1: s.vx, y1: s.vy, x2: s.x1, y2: s.y1 },
+                    { x1: s.vx, y1: s.vy, x2: s.x2, y2: s.y2 }
+                ];
+                for (const arm of arms) {
+                    const adx = arm.x2 - arm.x1, ady = arm.y2 - arm.y1;
+                    const alen = Math.sqrt(adx * adx + ady * ady);
+                    if (alen === 0) continue;
+                    const t = Math.max(0, Math.min(1, ((x - arm.x1) * adx + (y - arm.y1) * ady) / (alen * alen)));
+                    const px = arm.x1 + t * adx, py = arm.y1 + t * ady;
+                    if (Math.sqrt((x - px) ** 2 + (y - py) ** 2) < margin + 4) return i;
+                }
+                // Hit test vertex
+                if (Math.sqrt((x - s.vx) ** 2 + (y - s.vy) ** 2) < margin + 6) return i;
+                break;
+            }
         }
     }
     return -1;
@@ -2789,6 +3777,7 @@ function moveShape(shape, dx, dy) {
         case 'triangle': shape.x1 += dx; shape.y1 += dy; shape.x2 += dx; shape.y2 += dy; shape.x3 += dx; shape.y3 += dy; break;
         case 'text': shape.x += dx; shape.y += dy; break;
         case 'freehand': shape.points.forEach(p => { p.x += dx; p.y += dy; }); break;
+        case 'angle': shape.vx += dx; shape.vy += dy; shape.x1 += dx; shape.y1 += dy; shape.x2 += dx; shape.y2 += dy; break;
     }
 }
 
@@ -2815,6 +3804,8 @@ function getShapeTopRight(idx) {
             let maxX = -Infinity, minY = Infinity;
             s.points.forEach(p => { if (p.x > maxX) maxX = p.x; if (p.y < minY) minY = p.y; });
             return { x: maxX, y: minY };
+        case 'angle':
+            return { x: Math.max(s.vx, s.x1, s.x2), y: Math.min(s.vy, s.y1, s.y2) };
         default: return { x: 0, y: 0 };
     }
 }
@@ -2831,8 +3822,8 @@ function showDeleteBtn(idx) {
 
     // Duplicate button
     dupBtn = document.createElement('button');
-    dupBtn.className = 'geo-delete-btn';
-    dupBtn.innerHTML = '⧉';
+    dupBtn.className = 'geo-dup-btn';
+    dupBtn.innerHTML = '<svg viewBox="0 0 16 16" width="14" height="14" style="vertical-align:middle;"><rect x="1" y="4" width="8" height="8" rx="1" fill="#e2e8f0" stroke="#64748b" stroke-width="1.5"/><rect x="5" y="1" width="8" height="8" rx="1" fill="white" stroke="#64748b" stroke-width="1.5"/></svg>';
     dupBtn.title = 'Dupliker';
     dupBtn.style.left = (pos.x + 4) + 'px';
     dupBtn.style.top = (pos.y - 32) + 'px';
@@ -2873,6 +3864,7 @@ setGeoTool = function(tool) {
     if (deleteBtn) { deleteBtn.remove(); deleteBtn = null; }
     if (dupBtn) { dupBtn.remove(); dupBtn = null; }
     deleteBtnIdx = -1;
+    anglePoints = []; // Reset angle points when switching tools
     origSetGeoTool(tool);
 };
 
@@ -2903,6 +3895,10 @@ function getShapeBounds(s) {
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
             s.points.forEach(p => { minX = Math.min(minX, p.x); minY = Math.min(minY, p.y); maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y); });
             return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+        }
+        case 'angle': {
+            const ax = Math.min(s.vx, s.x1, s.x2), ay = Math.min(s.vy, s.y1, s.y2);
+            return { x: ax, y: ay, w: Math.max(s.vx, s.x1, s.x2) - ax, h: Math.max(s.vy, s.y1, s.y2) - ay };
         }
         default: return { x: 0, y: 0, w: 0, h: 0 };
     }
@@ -2940,6 +3936,14 @@ function resizeShape(shape, scaleX, scaleY, anchorX, anchorY) {
                 p.y = anchorY + (p.y - anchorY) * scaleY;
             });
             break;
+        case 'angle':
+            shape.vx = anchorX + (shape.vx - anchorX) * scaleX;
+            shape.vy = anchorY + (shape.vy - anchorY) * scaleY;
+            shape.x1 = anchorX + (shape.x1 - anchorX) * scaleX;
+            shape.y1 = anchorY + (shape.y1 - anchorY) * scaleY;
+            shape.x2 = anchorX + (shape.x2 - anchorX) * scaleX;
+            shape.y2 = anchorY + (shape.y2 - anchorY) * scaleY;
+            break;
     }
 }
 
@@ -2956,15 +3960,27 @@ function drawResizeHandle(idx) {
 }
 
 function hitResizeHandle(idx, mx, my) {
-    const bounds = getShapeBounds(shapes[idx]);
-    const hx = bounds.x + bounds.w;
-    const hy = bounds.y + bounds.h;
-    return Math.abs(mx - hx) < 8 && Math.abs(my - hy) < 8;
+    const shape = shapes[idx];
+    const bounds = getShapeBounds(shape);
+    // Local coords of resize handle
+    const lx = bounds.x + bounds.w;
+    const ly = bounds.y + bounds.h;
+    // Rotate to world coords
+    if (shape.rotation) {
+        const c = getShapeCenter(shape);
+        const cos = Math.cos(shape.rotation);
+        const sin = Math.sin(shape.rotation);
+        const dx = lx - c.x, dy = ly - c.y;
+        const wx = c.x + dx * cos - dy * sin;
+        const wy = c.y + dx * sin + dy * cos;
+        return Math.abs(mx - wx) < 8 && Math.abs(my - wy) < 8;
+    }
+    return Math.abs(mx - lx) < 8 && Math.abs(my - ly) < 8;
 }
 
-// Select, drag & resize
+// Select, drag, resize & rotate
 let selectedShape = -1;
-let dragOffsetX = 0, dragOffsetY = 0, isDragging = false, isShapeResizing = false, dragStartX = 0, dragStartY = 0;
+let dragOffsetX = 0, dragOffsetY = 0, isDragging = false, isShapeResizing = false, isRotating = false, dragStartX = 0, dragStartY = 0, rotateStartAngle = 0;
 
 canvas.addEventListener('mousedown', (e) => {
     if (editingMeasurement) return;
@@ -2973,7 +3989,17 @@ canvas.addEventListener('mousedown', (e) => {
         const mx = e.clientX - rect.left;
         const my = e.clientY - rect.top;
 
-        // Check resize handle first
+        // Check rotation handle first
+        if (selectedShape >= 0 && hitRotateHandle(selectedShape, mx, my)) {
+            isRotating = true;
+            const c = getShapeCenter(shapes[selectedShape]);
+            rotateStartAngle = Math.atan2(my - c.y, mx - c.x) - (shapes[selectedShape].rotation || 0);
+            undoStack.push(JSON.parse(JSON.stringify(shapes)));
+            canvas.style.cursor = 'grabbing';
+            return;
+        }
+
+        // Check resize handle
         if (selectedShape >= 0 && hitResizeHandle(selectedShape, mx, my)) {
             isShapeResizing = true;
             dragStartX = mx;
@@ -3000,17 +4026,95 @@ canvas.addEventListener('mousedown', (e) => {
 
 function drawSelectionUI(idx) {
     if (idx < 0 || idx >= shapes.length) return;
-    const bounds = getShapeBounds(shapes[idx]);
+    const shape = shapes[idx];
+    const bounds = getShapeBounds(shape);
     const pad = 6;
     ctx.save();
-    ctx.strokeStyle = '#2563eb';
+
+    // Apply rotation to selection UI too
+    if (shape.rotation) {
+        const c = getShapeCenter(shape);
+        ctx.translate(c.x, c.y);
+        ctx.rotate(shape.rotation);
+        ctx.translate(-c.x, -c.y);
+    }
+
+    const snapColor = shape._rotSnapped ? '#10b981' : '#2563eb';
+
+    ctx.strokeStyle = snapColor;
     ctx.lineWidth = 1.5;
     ctx.setLineDash([5, 4]);
     ctx.beginPath();
     ctx.rect(bounds.x - pad, bounds.y - pad, bounds.w + pad * 2, bounds.h + pad * 2);
     ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Resize handle (bottom-right)
+    const hx = bounds.x + bounds.w;
+    const hy = bounds.y + bounds.h;
+    ctx.fillStyle = snapColor;
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 1.5;
+    ctx.fillRect(hx - 5, hy - 5, 10, 10);
+    ctx.strokeRect(hx - 5, hy - 5, 10, 10);
+
+    // Rotation handle (top-center, above shape)
+    const rhx = bounds.x + bounds.w / 2;
+    const rhy = bounds.y - pad - 24;
+    // Line from top-center to rotation handle
+    ctx.strokeStyle = snapColor;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(rhx, bounds.y - pad);
+    ctx.lineTo(rhx, rhy + 7);
+    ctx.stroke();
+    // Circle handle
+    ctx.beginPath();
+    ctx.arc(rhx, rhy, 7, 0, Math.PI * 2);
+    ctx.fillStyle = snapColor;
+    ctx.fill();
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    // Arrow icon inside
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(rhx, rhy, 3.5, -Math.PI * 0.8, Math.PI * 0.5);
+    ctx.stroke();
+    // Arrowhead
+    const ax = rhx + 3.5 * Math.cos(Math.PI * 0.5);
+    const ay = rhy + 3.5 * Math.sin(Math.PI * 0.5);
+    ctx.beginPath();
+    ctx.moveTo(ax - 2, ay - 2);
+    ctx.lineTo(ax, ay);
+    ctx.lineTo(ax + 2, ay - 2);
+    ctx.stroke();
+
     ctx.restore();
-    drawResizeHandle(idx);
+}
+
+function getRotateHandlePos(idx) {
+    const shape = shapes[idx];
+    const bounds = getShapeBounds(shape);
+    const pad = 6;
+    // Position in local (un-rotated) coords
+    const lx = bounds.x + bounds.w / 2;
+    const ly = bounds.y - pad - 24;
+    // Rotate to world coords if shape is rotated
+    if (shape.rotation) {
+        const c = getShapeCenter(shape);
+        const cos = Math.cos(shape.rotation);
+        const sin = Math.sin(shape.rotation);
+        const dx = lx - c.x, dy = ly - c.y;
+        return { x: c.x + dx * cos - dy * sin, y: c.y + dx * sin + dy * cos };
+    }
+    return { x: lx, y: ly };
+}
+
+function hitRotateHandle(idx, mx, my) {
+    const pos = getRotateHandlePos(idx);
+    return Math.sqrt((mx - pos.x) ** 2 + (my - pos.y) ** 2) < 12;
 }
 
 function updateActionBtns() {
@@ -3022,6 +4126,58 @@ function updateActionBtns() {
 }
 
 canvas.addEventListener('mousemove', (e) => {
+    // Handle rotation
+    if (currentTool === 'select' && isRotating && selectedShape >= 0) {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const c = getShapeCenter(shapes[selectedShape]);
+        let newAngle = Math.atan2(my - c.y, mx - c.x) - rotateStartAngle;
+
+        // Snap rotation to 0, 45, 90, 135, 180, etc. within 0.5°
+        const ROTATE_SNAP_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315, 360];
+        const ROTATE_SNAP_THRESHOLD = 0.5;
+        let degAngle = ((newAngle * 180 / Math.PI) % 360 + 360) % 360;
+        let rotSnapped = false;
+        for (const sa of ROTATE_SNAP_ANGLES) {
+            const diff = Math.abs(degAngle - sa);
+            if (diff <= ROTATE_SNAP_THRESHOLD || diff >= 360 - ROTATE_SNAP_THRESHOLD) {
+                newAngle = (sa % 360) * Math.PI / 180;
+                rotSnapped = true;
+                break;
+            }
+        }
+
+        shapes[selectedShape].rotation = newAngle;
+        shapes[selectedShape]._rotSnapped = rotSnapped;
+        redrawCanvas();
+        drawSelectionUI(selectedShape);
+
+        // Show snap indicator
+        if (rotSnapped) {
+            const rp = getRotateHandlePos(selectedShape);
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(rp.x, rp.y, 12, 0, Math.PI * 2);
+            ctx.fillStyle = '#10b98144';
+            ctx.fill();
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            // Show snapped degree
+            const snapDeg = Math.round(((newAngle * 180 / Math.PI) % 360 + 360) % 360);
+            ctx.font = 'bold 11px sans-serif';
+            ctx.fillStyle = '#10b981';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(snapDeg + '°', rp.x, rp.y - 14);
+            ctx.restore();
+        }
+
+        updateActionBtns();
+        return;
+    }
+
     if (currentTool === 'select' && isShapeResizing && selectedShape >= 0) {
         const rect = canvas.getBoundingClientRect();
         const mx = e.clientX - rect.left;
@@ -3058,11 +4214,13 @@ canvas.addEventListener('mousemove', (e) => {
     }
 
     // Change cursor on hover
-    if (currentTool === 'select' && !isDragging && !isShapeResizing) {
+    if (currentTool === 'select' && !isDragging && !isShapeResizing && !isRotating) {
         const rect = canvas.getBoundingClientRect();
         const mx = e.clientX - rect.left;
         const my = e.clientY - rect.top;
-        if (selectedShape >= 0 && hitResizeHandle(selectedShape, mx, my)) {
+        if (selectedShape >= 0 && hitRotateHandle(selectedShape, mx, my)) {
+            canvas.style.cursor = 'grab';
+        } else if (selectedShape >= 0 && hitResizeHandle(selectedShape, mx, my)) {
             canvas.style.cursor = 'nwse-resize';
         } else {
             canvas.style.cursor = hitTestShape(mx, my) >= 0 ? 'move' : 'default';
@@ -3072,8 +4230,12 @@ canvas.addEventListener('mousemove', (e) => {
 
 canvas.addEventListener('mouseup', () => {
     if (currentTool === 'select') {
+        if (isRotating && selectedShape >= 0) {
+            delete shapes[selectedShape]._rotSnapped;
+        }
         isDragging = false;
         isShapeResizing = false;
+        isRotating = false;
         canvas.style.cursor = 'default';
         if (selectedShape >= 0) {
             redrawCanvas();
@@ -3086,6 +4248,81 @@ canvas.addEventListener('mouseup', () => {
 canvas.addEventListener('mousedown', (e) => {
     if (editingMeasurement) return;
     if (currentTool === 'select' || currentTool === 'graph') return;
+
+    // Angle tool: click-based (3 points)
+    if (currentTool === 'angle') {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        anglePoints.push({ x: mx, y: my });
+
+        if (anglePoints.length < 3) {
+            // Preview: redraw with current points
+            redrawCanvas();
+            const color = document.getElementById('geoColor').value;
+            const width = parseInt(document.getElementById('geoWidth').value);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.setLineDash([5, 5]);
+
+            // Draw existing arm(s)
+            if (anglePoints.length >= 1) {
+                // Draw dots for placed points
+                anglePoints.forEach(p => {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+                });
+            }
+            if (anglePoints.length === 2) {
+                // Draw first arm (vertex to first point)
+                ctx.beginPath();
+                ctx.moveTo(anglePoints[1].x, anglePoints[1].y);
+                ctx.lineTo(anglePoints[0].x, anglePoints[0].y);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+        }
+
+        if (anglePoints.length === 3) {
+            // Complete: create angle shape with snapping
+            const [p1, vertex, rawP3] = anglePoints;
+            const snap = snapAnglePoint(vertex, p1, rawP3);
+            const p3 = { x: snap.x, y: snap.y };
+            const color = document.getElementById('geoColor').value;
+            const width = parseInt(document.getElementById('geoWidth').value);
+
+            // Calculate angle
+            const a1 = Math.atan2(p1.y - vertex.y, p1.x - vertex.x);
+            const a2 = Math.atan2(p3.y - vertex.y, p3.x - vertex.x);
+            let angle = a2 - a1;
+            // Normalize to [0, 2π)
+            while (angle < 0) angle += Math.PI * 2;
+            // Use the smaller angle
+            if (angle > Math.PI) angle = Math.PI * 2 - angle;
+            const degrees = snap.snapped ? snap.snapDeg : +(angle * 180 / Math.PI).toFixed(1);
+
+            const shape = {
+                type: 'angle',
+                vx: vertex.x, vy: vertex.y,
+                x1: p1.x, y1: p1.y,
+                x2: p3.x, y2: p3.y,
+                degrees: degrees,
+                color, width
+            };
+
+            undoStack.push([...shapes]);
+            shapes.push(shape);
+            anglePoints = [];
+            redrawCanvas();
+            setGeoTool('select');
+            selectedShape = shapes.length - 1;
+            showDeleteBtn(selectedShape);
+        }
+        return;
+    }
+
     const rect = canvas.getBoundingClientRect();
     startX = e.clientX - rect.left;
     startY = e.clientY - rect.top;
@@ -3101,6 +4338,95 @@ canvas.addEventListener('mousedown', (e) => {
         if (existing) existing.remove();
         // isDrawing stays true - we use mousemove/mouseup to define box size
     }
+});
+
+// Angle tool preview on mousemove
+canvas.addEventListener('mousemove', (e) => {
+    if (currentTool !== 'angle' || anglePoints.length === 0) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const color = document.getElementById('geoColor').value;
+    const width = parseInt(document.getElementById('geoWidth').value);
+
+    redrawCanvas();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.setLineDash([5, 5]);
+
+    // Draw placed points
+    anglePoints.forEach(p => {
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.setLineDash([5, 5]);
+    });
+
+    if (anglePoints.length === 1) {
+        // Preview line from first point to mouse (will be arm1 → vertex)
+        ctx.beginPath();
+        ctx.moveTo(anglePoints[0].x, anglePoints[0].y);
+        ctx.lineTo(mx, my);
+        ctx.stroke();
+    } else if (anglePoints.length === 2) {
+        // Snap the preview point
+        const vertex = anglePoints[1];
+        const snap = snapAnglePoint(vertex, anglePoints[0], { x: mx, y: my });
+        const sx = snap.x, sy = snap.y;
+
+        // Draw first arm and preview second arm
+        ctx.beginPath();
+        ctx.moveTo(anglePoints[0].x, anglePoints[0].y);
+        ctx.lineTo(vertex.x, vertex.y);
+        ctx.lineTo(sx, sy);
+        if (snap.snapped) {
+            ctx.setLineDash([]);
+            ctx.strokeStyle = '#10b981'; // Green when snapped
+        }
+        ctx.stroke();
+
+        // Preview angle arc and degrees
+        const a1 = Math.atan2(anglePoints[0].y - vertex.y, anglePoints[0].x - vertex.x);
+        const a2 = Math.atan2(sy - vertex.y, sx - vertex.x);
+        let aDiff = a2 - a1;
+        while (aDiff < -Math.PI) aDiff += Math.PI * 2;
+        while (aDiff > Math.PI) aDiff -= Math.PI * 2;
+        const arcCCW = aDiff < 0;
+        const deg = snap.snapped ? snap.snapDeg : +(Math.abs(aDiff) * 180 / Math.PI).toFixed(1);
+        const arcR = Math.min(25,
+            Math.sqrt((anglePoints[0].x - vertex.x) ** 2 + (anglePoints[0].y - vertex.y) ** 2) * 0.3,
+            Math.sqrt((sx - vertex.x) ** 2 + (sy - vertex.y) ** 2) * 0.3
+        );
+        ctx.strokeStyle = snap.snapped ? '#10b981' : color;
+        ctx.beginPath();
+        ctx.arc(vertex.x, vertex.y, arcR, a1, a2, arcCCW);
+        ctx.stroke();
+
+        // Degree label
+        ctx.setLineDash([]);
+        const midAngle = a1 + aDiff / 2;
+        const labelR = arcR + 16;
+        ctx.font = snap.snapped ? 'bold 13px sans-serif' : '12px sans-serif';
+        ctx.fillStyle = snap.snapped ? '#10b981' : color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const degText = typeof deg === 'number' && deg === Math.round(deg) ? deg.toFixed(0) : String(deg);
+        ctx.fillText(degText + '°', vertex.x + Math.cos(midAngle) * labelR, vertex.y + Math.sin(midAngle) * labelR);
+
+        // Snap indicator dot on the snapped point
+        if (snap.snapped) {
+            ctx.beginPath();
+            ctx.arc(sx, sy, 6, 0, Math.PI * 2);
+            ctx.fillStyle = '#10b98133';
+            ctx.fill();
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+    }
+    ctx.setLineDash([]);
 });
 
 canvas.addEventListener('mousemove', (e) => {
@@ -3563,12 +4889,16 @@ function randomGraph() {
     drawGraph();
 }
 
-function insertCanvasToEditor() {
-    const dataUrl = canvas.toDataURL('image/png');
-    const html = `<img class="inserted-geo" src="${dataUrl}" style="max-width:100%; height:auto;" alt="Tegning"><br>`;
+function insertResizableImage(dataUrl, alt) {
+    const html = `<span class="inserted-geo-wrap" contenteditable="false"><img class="inserted-geo" src="${dataUrl}" alt="${alt}"><span class="img-resize-handle"></span></span><br>`;
     editor.focus();
     document.execCommand('insertHTML', false, html);
     updateCounts();
+}
+
+function insertCanvasToEditor() {
+    const dataUrl = canvas.toDataURL('image/png');
+    insertResizableImage(dataUrl, 'Tegning');
 }
 
 // ========================
@@ -3650,10 +4980,977 @@ canvas.addEventListener('mousedown', (e) => {
 }, true);
 
 // ========================
+// GRAPH TAB
+// ========================
+const graphCanvas = document.getElementById('graphCanvas');
+const gCtx = graphCanvas.getContext('2d');
+let graphPoints = [];      // {x, y, color} in graph coordinates
+let graphLines = [];       // {p1Idx, p2Idx, color} indices into graphPoints
+let graphFunctions = [];   // {expr, fn, color}
+let graphTool = 'point';
+let graphLineStart = null; // index of first point for line tool
+let graphDragIdx = -1;
+let graphLineColor = null;  // color for current line chain
+let graphUndoStack = [];
+
+function resizeGraphCanvas() {
+    const container = graphCanvas.parentElement;
+    if (!container) return;
+    graphCanvas.width = container.clientWidth;
+    graphCanvas.height = container.clientHeight;
+    redrawGraphCanvas();
+}
+
+function getGraphScale() {
+    const sx = parseFloat(document.getElementById('graphScaleX').value) || 1;
+    const sy = parseFloat(document.getElementById('graphScaleY').value) || 1;
+    return { sx, sy };
+}
+
+function getGraphOrigin() {
+    return { ox: Math.floor(graphCanvas.width / 2), oy: Math.floor(graphCanvas.height / 2) };
+}
+
+const GRAPH_CELL = 30; // pixels per grid cell
+
+function graphToPixel(gx, gy) {
+    const { ox, oy } = getGraphOrigin();
+    const { sx, sy } = getGraphScale();
+    return { px: ox + (gx / sx) * GRAPH_CELL, py: oy - (gy / sy) * GRAPH_CELL };
+}
+
+function pixelToGraph(px, py) {
+    const { ox, oy } = getGraphOrigin();
+    const { sx, sy } = getGraphScale();
+    return { gx: ((px - ox) / GRAPH_CELL) * sx, gy: ((oy - py) / GRAPH_CELL) * sy };
+}
+
+function snapToGrid(gx, gy) {
+    const { sx, sy } = getGraphScale();
+    return { gx: Math.round(gx / sx) * sx, gy: Math.round(gy / sy) * sy };
+}
+
+function fmtGraphVal(v) {
+    const r = Math.round(v * 1000) / 1000;
+    if (r === Math.round(r)) return r.toFixed(0);
+    return r.toString().replace('.', ',');
+}
+
+function getLineEquation(x1, y1, x2, y2) {
+    if (x1 === x2) {
+        // Vertical line: x = constant
+        return 'x = ' + fmtGraphVal(x1);
+    }
+    const a = (y2 - y1) / (x2 - x1);
+    const b = y1 - a * x1;
+    const aRound = Math.round(a * 10000) / 10000;
+    const bRound = Math.round(b * 10000) / 10000;
+
+    let eq = 'y = ';
+    if (aRound === 0) {
+        eq += fmtGraphVal(bRound);
+    } else if (aRound === 1) {
+        eq += 'x';
+    } else if (aRound === -1) {
+        eq += '-x';
+    } else {
+        eq += fmtGraphVal(aRound) + 'x';
+    }
+
+    if (aRound !== 0) {
+        if (bRound > 0) eq += ' + ' + fmtGraphVal(bRound);
+        else if (bRound < 0) eq += ' - ' + fmtGraphVal(Math.abs(bRound));
+    }
+
+    return eq;
+}
+
+const graphColorPalette = ['#2563eb', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#6366f1', '#14b8a6'];
+let graphColorIndex = 0;
+
+function nextGraphColor() {
+    const c = graphColorPalette[graphColorIndex % graphColorPalette.length];
+    graphColorIndex++;
+    return c;
+}
+
+function changeGraphItemColor(type, idx) {
+    const input = document.createElement('input');
+    input.type = 'color';
+    input.value = type === 'func' ? graphFunctions[idx].color : graphLines[idx].color;
+    input.style.position = 'absolute';
+    input.style.opacity = '0';
+    document.body.appendChild(input);
+    input.addEventListener('input', () => {
+        if (type === 'func') {
+            graphFunctions[idx].color = input.value;
+        } else {
+            graphLines[idx].color = input.value;
+        }
+        updateGraphFuncList();
+        updateLineEquations();
+        redrawGraphCanvas();
+    });
+    input.addEventListener('change', () => { input.remove(); });
+    input.addEventListener('blur', () => { input.remove(); });
+    input.click();
+}
+
+function redrawGraphCanvas() {
+    const w = graphCanvas.width, h = graphCanvas.height;
+    gCtx.clearRect(0, 0, w, h);
+    const { ox, oy } = getGraphOrigin();
+    const { sx, sy } = getGraphScale();
+
+    // Draw grid
+    gCtx.strokeStyle = '#e2e8f0';
+    gCtx.lineWidth = 0.5;
+    for (let px = ox % GRAPH_CELL; px < w; px += GRAPH_CELL) {
+        gCtx.beginPath(); gCtx.moveTo(px, 0); gCtx.lineTo(px, h); gCtx.stroke();
+    }
+    for (let py = oy % GRAPH_CELL; py < h; py += GRAPH_CELL) {
+        gCtx.beginPath(); gCtx.moveTo(0, py); gCtx.lineTo(w, py); gCtx.stroke();
+    }
+
+    // Draw axes
+    gCtx.strokeStyle = '#334155';
+    gCtx.lineWidth = 2;
+    gCtx.beginPath();
+    gCtx.moveTo(ox, 0); gCtx.lineTo(ox, h);
+    gCtx.moveTo(0, oy); gCtx.lineTo(w, oy);
+    gCtx.stroke();
+
+    // Arrow heads
+    gCtx.fillStyle = '#334155';
+    // Y arrow (top)
+    gCtx.beginPath(); gCtx.moveTo(ox, 0); gCtx.lineTo(ox - 5, 10); gCtx.lineTo(ox + 5, 10); gCtx.fill();
+    // X arrow (right)
+    gCtx.beginPath(); gCtx.moveTo(w, oy); gCtx.lineTo(w - 10, oy - 5); gCtx.lineTo(w - 10, oy + 5); gCtx.fill();
+
+    // Axis labels (tick marks + numbers)
+    gCtx.fillStyle = '#64748b';
+    gCtx.font = '11px sans-serif';
+    gCtx.textAlign = 'center';
+    gCtx.textBaseline = 'top';
+
+    // Determine label interval: show every N grid lines to avoid clutter
+    const labelEvery = GRAPH_CELL < 25 ? 2 : 1;
+
+    // X axis labels
+    let count = 0;
+    for (let px = ox + GRAPH_CELL; px < w - 10; px += GRAPH_CELL) {
+        count++;
+        gCtx.beginPath(); gCtx.moveTo(px, oy - 3); gCtx.lineTo(px, oy + 3); gCtx.strokeStyle = '#334155'; gCtx.lineWidth = 1; gCtx.stroke();
+        if (count % labelEvery === 0) {
+            const val = fmtGraphVal(count * sx);
+            gCtx.fillText(val, px, oy + 6);
+        }
+    }
+    count = 0;
+    for (let px = ox - GRAPH_CELL; px > 10; px -= GRAPH_CELL) {
+        count++;
+        gCtx.beginPath(); gCtx.moveTo(px, oy - 3); gCtx.lineTo(px, oy + 3); gCtx.strokeStyle = '#334155'; gCtx.lineWidth = 1; gCtx.stroke();
+        if (count % labelEvery === 0) {
+            const val = fmtGraphVal(-count * sx);
+            gCtx.fillText(val, px, oy + 6);
+        }
+    }
+
+    // Y axis labels
+    gCtx.textAlign = 'right';
+    gCtx.textBaseline = 'middle';
+    count = 0;
+    for (let py = oy - GRAPH_CELL; py > 10; py -= GRAPH_CELL) {
+        count++;
+        gCtx.beginPath(); gCtx.moveTo(ox - 3, py); gCtx.lineTo(ox + 3, py); gCtx.strokeStyle = '#334155'; gCtx.lineWidth = 1; gCtx.stroke();
+        if (count % labelEvery === 0) {
+            const val = fmtGraphVal(count * sy);
+            gCtx.fillText(val, ox - 7, py);
+        }
+    }
+    count = 0;
+    for (let py = oy + GRAPH_CELL; py < h - 10; py += GRAPH_CELL) {
+        count++;
+        gCtx.beginPath(); gCtx.moveTo(ox - 3, py); gCtx.lineTo(ox + 3, py); gCtx.strokeStyle = '#334155'; gCtx.lineWidth = 1; gCtx.stroke();
+        if (count % labelEvery === 0) {
+            const val = fmtGraphVal(-count * sy);
+            gCtx.fillText(val, ox - 7, py);
+        }
+    }
+
+    // Origin label
+    gCtx.textAlign = 'right';
+    gCtx.textBaseline = 'top';
+    gCtx.fillText('0', ox - 6, oy + 6);
+
+    // Axis names
+    gCtx.fillStyle = '#334155';
+    gCtx.font = 'bold 13px sans-serif';
+    gCtx.textAlign = 'left';
+    gCtx.textBaseline = 'top';
+    gCtx.fillText('x', w - 18, oy + 8);
+    gCtx.textAlign = 'right';
+    gCtx.textBaseline = 'bottom';
+    gCtx.fillText('y', ox - 10, 16);
+
+    // Draw functions
+    for (const gf of graphFunctions) {
+        drawGraphTabFunction(gf.fn, gf.color);
+    }
+
+    // Draw lines
+    gCtx.lineWidth = 2;
+    for (const line of graphLines) {
+        const p1 = graphPoints[line.p1Idx];
+        const p2 = graphPoints[line.p2Idx];
+        if (!p1 || !p2) continue;
+        const pp1 = graphToPixel(p1.x, p1.y);
+        const pp2 = graphToPixel(p2.x, p2.y);
+        gCtx.strokeStyle = line.color;
+        gCtx.beginPath();
+        gCtx.moveTo(pp1.px, pp1.py);
+        gCtx.lineTo(pp2.px, pp2.py);
+        gCtx.stroke();
+    }
+
+    // Update line equations list above canvas
+    updateLineEquations();
+
+    // Draw points
+    const showCoords = document.getElementById('graphShowCoords').checked;
+    for (let i = 0; i < graphPoints.length; i++) {
+        const p = graphPoints[i];
+        if (p._deleted) continue;
+        const { px, py } = graphToPixel(p.x, p.y);
+        gCtx.fillStyle = p.color;
+        gCtx.beginPath();
+        gCtx.arc(px, py, 5, 0, Math.PI * 2);
+        gCtx.fill();
+        gCtx.strokeStyle = '#fff';
+        gCtx.lineWidth = 1.5;
+        gCtx.stroke();
+
+        if (showCoords) {
+            gCtx.fillStyle = '#334155';
+            gCtx.font = '11px sans-serif';
+            gCtx.textAlign = 'left';
+            gCtx.textBaseline = 'bottom';
+            const label = `(${fmtGraphVal(p.x)}, ${fmtGraphVal(p.y)})`;
+            gCtx.fillText(label, px + 8, py - 4);
+        }
+    }
+
+    // Highlight selected line start point
+    if (graphTool === 'line' && graphLineStart !== null) {
+        const p = graphPoints[graphLineStart];
+        if (p && !p._deleted) {
+            const { px, py } = graphToPixel(p.x, p.y);
+            gCtx.strokeStyle = '#ef4444';
+            gCtx.lineWidth = 2;
+            gCtx.beginPath();
+            gCtx.arc(px, py, 8, 0, Math.PI * 2);
+            gCtx.stroke();
+        }
+    }
+}
+
+function drawGraphTabFunction(fn, color) {
+    const w = graphCanvas.width, h = graphCanvas.height;
+    const { ox, oy } = getGraphOrigin();
+    const { sx, sy } = getGraphScale();
+
+    gCtx.strokeStyle = color;
+    gCtx.lineWidth = 2.5;
+    gCtx.beginPath();
+    let started = false;
+
+    for (let px = 0; px < w; px++) {
+        const gx = ((px - ox) / GRAPH_CELL) * sx;
+        const gy = fn(gx);
+        const py = oy - (gy / sy) * GRAPH_CELL;
+
+        if (isNaN(gy) || !isFinite(gy) || py < -1000 || py > h + 1000) {
+            started = false;
+            continue;
+        }
+        if (!started) { gCtx.moveTo(px, py); started = true; }
+        else { gCtx.lineTo(px, py); }
+    }
+    gCtx.stroke();
+}
+
+function setGraphTool(tool) {
+    graphTool = tool;
+    graphLineStart = null;
+    graphLineColor = null;
+    ['point', 'line', 'segment', 'move', 'delete'].forEach(t => {
+        const btn = document.getElementById('gt-' + t);
+        if (btn) btn.classList.toggle('active', t === tool);
+    });
+    graphCanvas.style.cursor = tool === 'move' ? 'grab' : (tool === 'delete' ? 'crosshair' : 'crosshair');
+}
+
+function saveGraphUndo() {
+    graphUndoStack.push({
+        points: JSON.parse(JSON.stringify(graphPoints)),
+        lines: JSON.parse(JSON.stringify(graphLines)),
+        functions: graphFunctions.map(f => ({ expr: f.expr, color: f.color }))
+    });
+    if (graphUndoStack.length > 30) graphUndoStack.shift();
+}
+
+function undoGraphAction() {
+    if (graphUndoStack.length === 0) return;
+    const state = graphUndoStack.pop();
+    graphPoints = state.points;
+    graphLines = state.lines;
+    graphFunctions = state.functions.map(f => ({ expr: f.expr, fn: parseGraphFunction(f.expr), color: f.color }));
+    updateGraphFuncList();
+    redrawGraphCanvas();
+}
+
+function clearGraphTab() {
+    saveGraphUndo();
+    graphPoints = [];
+    graphLines = [];
+    graphFunctions = [];
+    graphLineStart = null;
+    updateGraphFuncList();
+    redrawGraphCanvas();
+}
+
+function findNearestPoint(mx, my, maxDist) {
+    let best = -1, bestD = maxDist || 15;
+    for (let i = 0; i < graphPoints.length; i++) {
+        if (graphPoints[i]._deleted) continue;
+        const { px, py } = graphToPixel(graphPoints[i].x, graphPoints[i].y);
+        const d = Math.hypot(px - mx, py - my);
+        if (d < bestD) { bestD = d; best = i; }
+    }
+    return best;
+}
+
+// Mouse handling for graph canvas
+graphCanvas.addEventListener('mousedown', (e) => {
+    const rect = graphCanvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const { gx, gy } = pixelToGraph(mx, my);
+    const snapped = snapToGrid(gx, gy);
+    const color = document.getElementById('graphPointColor').value;
+
+    if (graphTool === 'point') {
+        saveGraphUndo();
+        graphPoints.push({ x: snapped.gx, y: snapped.gy, color });
+        redrawGraphCanvas();
+    } else if (graphTool === 'line' || graphTool === 'segment') {
+        const near = findNearestPoint(mx, my, 15);
+        if (graphLineStart === null) {
+            graphLineColor = nextGraphColor();
+            if (near >= 0) {
+                graphLineStart = near;
+            } else {
+                // Create new point and start line
+                saveGraphUndo();
+                graphPoints.push({ x: snapped.gx, y: snapped.gy, color: graphLineColor });
+                graphLineStart = graphPoints.length - 1;
+            }
+            redrawGraphCanvas();
+        } else {
+            let endIdx = near;
+            if (endIdx < 0) {
+                saveGraphUndo();
+                graphPoints.push({ x: snapped.gx, y: snapped.gy, color: graphLineColor });
+                endIdx = graphPoints.length - 1;
+            } else {
+                saveGraphUndo();
+            }
+            if (endIdx !== graphLineStart) {
+                graphLines.push({ p1Idx: graphLineStart, p2Idx: endIdx, color: graphLineColor });
+            }
+            if (graphTool === 'line') {
+                graphLineStart = endIdx;
+            } else {
+                graphLineStart = null;
+                graphLineColor = null;
+            }
+            redrawGraphCanvas();
+        }
+    } else if (graphTool === 'move') {
+        graphDragIdx = findNearestPoint(mx, my, 15);
+        if (graphDragIdx >= 0) {
+            saveGraphUndo();
+            graphCanvas.style.cursor = 'grabbing';
+        }
+    } else if (graphTool === 'delete') {
+        // Try to delete a point first
+        const near = findNearestPoint(mx, my, 15);
+        if (near >= 0) {
+            saveGraphUndo();
+            graphPoints[near]._deleted = true;
+            // Remove lines connected to this point
+            graphLines = graphLines.filter(l => l.p1Idx !== near && l.p2Idx !== near);
+            redrawGraphCanvas();
+            return;
+        }
+        // Try to delete a line
+        for (let i = graphLines.length - 1; i >= 0; i--) {
+            const l = graphLines[i];
+            const p1 = graphPoints[l.p1Idx];
+            const p2 = graphPoints[l.p2Idx];
+            if (!p1 || !p2) continue;
+            const pp1 = graphToPixel(p1.x, p1.y);
+            const pp2 = graphToPixel(p2.x, p2.y);
+            const dist = distToSegment(mx, my, pp1.px, pp1.py, pp2.px, pp2.py);
+            if (dist < 8) {
+                saveGraphUndo();
+                graphLines.splice(i, 1);
+                redrawGraphCanvas();
+                return;
+            }
+        }
+    }
+});
+
+graphCanvas.addEventListener('mousemove', (e) => {
+    if (graphTool === 'move' && graphDragIdx >= 0) {
+        const rect = graphCanvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const { gx, gy } = pixelToGraph(mx, my);
+        const snapped = snapToGrid(gx, gy);
+        graphPoints[graphDragIdx].x = snapped.gx;
+        graphPoints[graphDragIdx].y = snapped.gy;
+        redrawGraphCanvas();
+    }
+});
+
+graphCanvas.addEventListener('mouseup', () => {
+    if (graphTool === 'move') {
+        graphDragIdx = -1;
+        graphCanvas.style.cursor = 'grab';
+    }
+});
+
+// Backspace/Delete to remove last point or undo last action
+document.addEventListener('keydown', (e) => {
+    // Only act when graph tab is active and focus is not in an input
+    const graphTab = document.getElementById('tab-graph');
+    if (!graphTab || !graphTab.classList.contains('active')) return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+        e.preventDefault();
+        // Find last non-deleted point
+        for (let i = graphPoints.length - 1; i >= 0; i--) {
+            if (!graphPoints[i]._deleted) {
+                saveGraphUndo();
+                graphPoints[i]._deleted = true;
+                // Remove lines connected to this point
+                graphLines = graphLines.filter(l => l.p1Idx !== i && l.p2Idx !== i);
+                // Reset line chain if this was the start point
+                if (graphLineStart === i) {
+                    graphLineStart = null;
+                    graphLineColor = null;
+                }
+                redrawGraphCanvas();
+                break;
+            }
+        }
+    } else if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        undoGraphAction();
+    }
+});
+
+function distToSegment(px, py, x1, y1, x2, y2) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len2 = dx * dx + dy * dy;
+    if (len2 === 0) return Math.hypot(px - x1, py - y1);
+    let t = ((px - x1) * dx + (py - y1) * dy) / len2;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+}
+
+function applyGraphScalePreset(val) {
+    if (!val) return;
+    const parts = val.split(',');
+    document.getElementById('graphScaleX').value = parts[0];
+    document.getElementById('graphScaleY').value = parts[1];
+    document.getElementById('graphScalePreset').value = '';
+    redrawGraphCanvas();
+}
+
+function addGraphFunction() {
+    const input = document.getElementById('graphTabFunc');
+    const expr = input.value.trim();
+    if (!expr) return;
+    try {
+        const fn = parseGraphFunction(expr);
+        // Test it
+        fn(0); fn(1);
+        const color = nextGraphColor();
+        saveGraphUndo();
+        graphFunctions.push({ expr, fn, color });
+        input.value = '';
+        updateGraphFuncList();
+        redrawGraphCanvas();
+    } catch(e) {
+        input.style.borderColor = '#ef4444';
+        setTimeout(() => input.style.borderColor = '', 1000);
+    }
+}
+
+function removeGraphLine(idx) {
+    saveGraphUndo();
+    graphLines.splice(idx, 1);
+    updateLineEquations();
+    redrawGraphCanvas();
+}
+
+function removeGraphLineGroup(indices) {
+    saveGraphUndo();
+    // Remove from highest index first to avoid shifting
+    indices.sort((a, b) => b - a);
+    for (const idx of indices) {
+        graphLines.splice(idx, 1);
+    }
+    updateLineEquations();
+    redrawGraphCanvas();
+}
+
+function removeGraphFunction(idx) {
+    saveGraphUndo();
+    graphFunctions.splice(idx, 1);
+    updateGraphFuncList();
+    redrawGraphCanvas();
+}
+
+function updateLineEquations() {
+    const container = document.getElementById('graphLineEqList');
+    // Group lines by color and equation to avoid duplicates from chained segments
+    const seen = new Map(); // key: "color|eq" -> { eq, color, indices: [] }
+    for (let i = 0; i < graphLines.length; i++) {
+        const line = graphLines[i];
+        const p1 = graphPoints[line.p1Idx];
+        const p2 = graphPoints[line.p2Idx];
+        if (!p1 || !p2 || p1._deleted || p2._deleted) continue;
+        const eq = getLineEquation(p1.x, p1.y, p2.x, p2.y);
+        if (!eq) continue;
+        const key = line.color + '|' + eq;
+        if (seen.has(key)) {
+            seen.get(key).indices.push(i);
+        } else {
+            seen.set(key, { eq, color: line.color, indices: [i] });
+        }
+    }
+    const groups = [...seen.values()];
+    container.innerHTML = groups.map(g =>
+        `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:#f1f5f9;border-radius:12px;font-family:Consolas,monospace;">
+            <span ondblclick="changeGraphItemColor('line',${g.indices[0]})" style="width:12px;height:12px;border-radius:50%;background:${g.color};display:inline-block;cursor:pointer;border:2px solid transparent;" title="Dobbeltklik for at ændre farve"></span>
+            ${g.eq}
+            <button onclick="removeGraphLineGroup([${g.indices.join(',')}])" style="background:none;border:none;cursor:pointer;color:#ef4444;font-weight:bold;padding:0 2px;">×</button>
+        </span>`
+    ).join('');
+}
+
+function updateGraphFuncList() {
+    const container = document.getElementById('graphFuncList');
+    container.innerHTML = graphFunctions.map((f, i) =>
+        `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:#f1f5f9;border-radius:12px;font-family:Consolas,monospace;">
+            <span ondblclick="changeGraphItemColor('func',${i})" style="width:12px;height:12px;border-radius:50%;background:${f.color};display:inline-block;cursor:pointer;border:2px solid transparent;" title="Dobbeltklik for at ændre farve"></span>
+            f(x) = ${f.expr}
+            <button onclick="removeGraphFunction(${i})" style="background:none;border:none;cursor:pointer;color:#ef4444;font-weight:bold;padding:0 2px;">×</button>
+        </span>`
+    ).join('');
+}
+
+function insertGraphToEditor() {
+    const dataUrl = graphCanvas.toDataURL('image/png');
+    insertResizableImage(dataUrl, 'Graf');
+}
+
+// Resize observer for graph canvas
+new ResizeObserver(() => resizeGraphCanvas()).observe(graphCanvas.parentElement || document.body);
+
+// ========================
+// DIAGRAM TAB
+// ========================
+const diagramCanvas = document.getElementById('diagramCanvas');
+const dCtx = diagramCanvas.getContext('2d');
+const diagramColors = ['#2563eb','#ef4444','#10b981','#f59e0b','#8b5cf6','#ec4899','#06b6d4','#f97316','#6366f1','#14b8a6'];
+let diagramData = [
+    { label: '', value: '', color: diagramColors[0] },
+    { label: '', value: '', color: diagramColors[1] },
+    { label: '', value: '', color: diagramColors[2] }
+];
+
+function resizeDiagramCanvas() {
+    const container = diagramCanvas.parentElement;
+    if (!container) return;
+    diagramCanvas.width = container.clientWidth;
+    diagramCanvas.height = container.clientHeight;
+    redrawDiagram();
+}
+
+function renderDiagramRows() {
+    const tbody = document.getElementById('diagramRows');
+    tbody.innerHTML = diagramData.map((d, i) =>
+        `<tr>
+            <td style="padding:3px 4px;"><input type="text" value="${d.label}" placeholder="Kategori ${i+1}" oninput="diagramData[${i}].label=this.value;redrawDiagram()"></td>
+            <td style="padding:3px 4px;"><input type="number" value="${d.value}" placeholder="0" oninput="diagramData[${i}].value=this.value;redrawDiagram()"></td>
+            <td style="padding:3px 4px;text-align:center;"><input type="color" value="${d.color}" style="width:24px;height:24px;padding:0;border:1px solid var(--border);border-radius:50%;cursor:pointer;" oninput="diagramData[${i}].color=this.value;redrawDiagram()"></td>
+            <td style="padding:3px 4px;text-align:center;"><button onclick="removeDiagramRow(${i})" style="background:none;border:none;cursor:pointer;color:var(--danger);font-weight:bold;font-size:1rem;padding:0 4px;" title="Fjern">×</button></td>
+        </tr>`
+    ).join('');
+}
+
+function addDiagramRow() {
+    const ci = diagramData.length % diagramColors.length;
+    diagramData.push({ label: '', value: '', color: diagramColors[ci] });
+    renderDiagramRows();
+    redrawDiagram();
+}
+
+function removeDiagramRow(idx) {
+    if (diagramData.length <= 1) return;
+    diagramData.splice(idx, 1);
+    renderDiagramRows();
+    redrawDiagram();
+}
+
+function redrawDiagram() {
+    const w = diagramCanvas.width, h = diagramCanvas.height;
+    dCtx.clearRect(0, 0, w, h);
+    if (w === 0 || h === 0) return;
+
+    const type = document.getElementById('diagramType').value;
+    const title = document.getElementById('diagramTitle').value.trim();
+    const entries = diagramData.filter(d => d.value !== '' && !isNaN(parseFloat(d.value)));
+    if (entries.length === 0) {
+        dCtx.fillStyle = '#94a3b8';
+        dCtx.font = '14px sans-serif';
+        dCtx.textAlign = 'center';
+        dCtx.fillText('Indtast data for at se diagram', w/2, h/2);
+        return;
+    }
+
+    const values = entries.map(e => parseFloat(e.value));
+    const labels = entries.map((e, i) => e.label || 'Kategori ' + (i+1));
+    const colors = entries.map(e => e.color);
+
+    // Title — centered over pie chart center for pie, otherwise canvas center
+    let topOffset = 10;
+    if (title) {
+        dCtx.fillStyle = '#1e293b';
+        dCtx.font = 'bold 15px sans-serif';
+        dCtx.textAlign = 'center';
+        const titleX = (type === 'pie') ? w * 0.4 : w / 2;
+        dCtx.fillText(title, titleX, 22);
+        topOffset = 35;
+    }
+
+    if (type === 'bar') drawBarChart(values, labels, colors, topOffset);
+    else if (type === 'hbar') drawHBarChart(values, labels, colors, topOffset);
+    else if (type === 'pie') drawPieChart(values, labels, colors, topOffset);
+    else if (type === 'line') drawLineChart(values, labels, colors, topOffset);
+}
+
+function niceScale(maxVal) {
+    if (maxVal <= 0) return { niceMax: 1, step: 0.2, steps: 5 };
+    const rough = maxVal / 5;
+    const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+    const residual = rough / mag;
+    let niceStep;
+    if (residual <= 1) niceStep = 1 * mag;
+    else if (residual <= 2) niceStep = 2 * mag;
+    else if (residual <= 5) niceStep = 5 * mag;
+    else niceStep = 10 * mag;
+    const niceMax = Math.ceil(maxVal / niceStep) * niceStep;
+    const steps = Math.round(niceMax / niceStep);
+    return { niceMax, step: niceStep, steps };
+}
+
+function drawBarChart(values, labels, colors, top) {
+    const w = diagramCanvas.width, h = diagramCanvas.height;
+    const padding = { left: 50, right: 20, bottom: 40, top: top };
+    const chartW = w - padding.left - padding.right;
+    const chartH = h - padding.top - padding.bottom;
+    const rawMax = Math.max(...values, 0.001);
+    const { niceMax, steps } = niceScale(rawMax);
+    const barW = Math.min(60, (chartW / values.length) * 0.7);
+    const gap = (chartW - barW * values.length) / (values.length + 1);
+
+    // Y axis
+    dCtx.strokeStyle = '#cbd5e1';
+    dCtx.lineWidth = 1;
+    dCtx.beginPath();
+    dCtx.moveTo(padding.left, padding.top);
+    dCtx.lineTo(padding.left, h - padding.bottom);
+    dCtx.lineTo(w - padding.right, h - padding.bottom);
+    dCtx.stroke();
+
+    // Grid lines and Y labels
+    dCtx.fillStyle = '#64748b';
+    dCtx.font = '11px sans-serif';
+    dCtx.textAlign = 'right';
+    dCtx.textBaseline = 'middle';
+    for (let i = 0; i <= steps; i++) {
+        const y = h - padding.bottom - (i / steps) * chartH;
+        const val = (niceMax * i / steps);
+        dCtx.fillText(fmtDiagramVal(val), padding.left - 8, y);
+        if (i > 0) {
+            dCtx.strokeStyle = '#e2e8f0';
+            dCtx.beginPath();
+            dCtx.moveTo(padding.left, y);
+            dCtx.lineTo(w - padding.right, y);
+            dCtx.stroke();
+        }
+    }
+
+    // Bars
+    for (let i = 0; i < values.length; i++) {
+        const x = padding.left + gap + i * (barW + gap);
+        const barH = (values[i] / niceMax) * chartH;
+        const y = h - padding.bottom - barH;
+
+        dCtx.fillStyle = colors[i];
+        dCtx.beginPath();
+        dCtx.roundRect(x, y, barW, barH, [4, 4, 0, 0]);
+        dCtx.fill();
+
+        // Value on top
+        dCtx.fillStyle = '#334155';
+        dCtx.font = 'bold 11px sans-serif';
+        dCtx.textAlign = 'center';
+        dCtx.textBaseline = 'bottom';
+        dCtx.fillText(fmtDiagramVal(values[i]), x + barW/2, y - 4);
+
+        // Label below
+        dCtx.fillStyle = '#64748b';
+        dCtx.font = '11px sans-serif';
+        dCtx.textBaseline = 'top';
+        dCtx.fillText(labels[i], x + barW/2, h - padding.bottom + 6);
+    }
+}
+
+function drawHBarChart(values, labels, colors, top) {
+    const w = diagramCanvas.width, h = diagramCanvas.height;
+    const maxLabel = labels.reduce((a, b) => a.length > b.length ? a : b, '');
+    dCtx.font = '11px sans-serif';
+    const labelW = Math.min(100, dCtx.measureText(maxLabel).width + 10);
+    const padding = { left: labelW + 10, right: 40, bottom: 20, top: top };
+    const chartW = w - padding.left - padding.right;
+    const chartH = h - padding.top - padding.bottom;
+    const rawMax = Math.max(...values, 0.001);
+    const { niceMax } = niceScale(rawMax);
+    const barH = Math.min(35, (chartH / values.length) * 0.7);
+    const gap = (chartH - barH * values.length) / (values.length + 1);
+
+    for (let i = 0; i < values.length; i++) {
+        const y = padding.top + gap + i * (barH + gap);
+        const barW = (values[i] / niceMax) * chartW;
+
+        dCtx.fillStyle = colors[i];
+        dCtx.beginPath();
+        dCtx.roundRect(padding.left, y, barW, barH, [0, 4, 4, 0]);
+        dCtx.fill();
+
+        // Label
+        dCtx.fillStyle = '#334155';
+        dCtx.font = '11px sans-serif';
+        dCtx.textAlign = 'right';
+        dCtx.textBaseline = 'middle';
+        dCtx.fillText(labels[i], padding.left - 6, y + barH/2);
+
+        // Value
+        dCtx.fillStyle = '#334155';
+        dCtx.font = 'bold 11px sans-serif';
+        dCtx.textAlign = 'left';
+        dCtx.fillText(fmtDiagramVal(values[i]), padding.left + barW + 6, y + barH/2);
+    }
+}
+
+function drawPieChart(values, labels, colors, top) {
+    const w = diagramCanvas.width, h = diagramCanvas.height;
+    const total = values.reduce((a, b) => a + b, 0);
+    if (total === 0) return;
+    const cx = w * 0.4;
+    const cy = (h + top) / 2;
+    const r = Math.min(cx - 20, cy - top - 10, (h - top) / 2 - 20);
+
+    let angle = -Math.PI / 2;
+    for (let i = 0; i < values.length; i++) {
+        const slice = (values[i] / total) * Math.PI * 2;
+        dCtx.fillStyle = colors[i];
+        dCtx.beginPath();
+        dCtx.moveTo(cx, cy);
+        dCtx.arc(cx, cy, r, angle, angle + slice);
+        dCtx.closePath();
+        dCtx.fill();
+        dCtx.strokeStyle = '#fff';
+        dCtx.lineWidth = 2;
+        dCtx.stroke();
+
+        // Percentage label on slice
+        if (slice > 0.15) {
+            const midAngle = angle + slice / 2;
+            const lx = cx + Math.cos(midAngle) * r * 0.65;
+            const ly = cy + Math.sin(midAngle) * r * 0.65;
+            dCtx.fillStyle = '#fff';
+            dCtx.font = 'bold 12px sans-serif';
+            dCtx.textAlign = 'center';
+            dCtx.textBaseline = 'middle';
+            dCtx.fillText(Math.round(values[i] / total * 100) + '%', lx, ly);
+        }
+        angle += slice;
+    }
+
+    // Legend to the right
+    const legendX = w * 0.7;
+    let legendY = top + 10;
+    for (let i = 0; i < values.length; i++) {
+        dCtx.fillStyle = colors[i];
+        dCtx.fillRect(legendX, legendY, 12, 12);
+        dCtx.fillStyle = '#334155';
+        dCtx.font = '11px sans-serif';
+        dCtx.textAlign = 'left';
+        dCtx.textBaseline = 'middle';
+        dCtx.fillText(labels[i] + ' (' + fmtDiagramVal(values[i]) + ')', legendX + 18, legendY + 6);
+        legendY += 20;
+    }
+}
+
+function drawLineChart(values, labels, colors, top) {
+    const w = diagramCanvas.width, h = diagramCanvas.height;
+    const padding = { left: 50, right: 20, bottom: 40, top: top };
+    const chartW = w - padding.left - padding.right;
+    const chartH = h - padding.top - padding.bottom;
+    const rawMax = Math.max(...values, 0.001);
+    const minVal = Math.min(...values, 0);
+    const rawRange = rawMax - minVal || 1;
+    const { niceMax, steps } = niceScale(rawRange);
+    const niceMin = minVal < 0 ? -niceScale(-minVal).niceMax : 0;
+    const range = niceMax + Math.abs(niceMin) || 1;
+    const stepX = chartW / Math.max(values.length - 1, 1);
+
+    // Axes
+    dCtx.strokeStyle = '#cbd5e1';
+    dCtx.lineWidth = 1;
+    dCtx.beginPath();
+    dCtx.moveTo(padding.left, padding.top);
+    dCtx.lineTo(padding.left, h - padding.bottom);
+    dCtx.lineTo(w - padding.right, h - padding.bottom);
+    dCtx.stroke();
+
+    // Grid and Y labels
+    dCtx.fillStyle = '#64748b';
+    dCtx.font = '11px sans-serif';
+    dCtx.textAlign = 'right';
+    dCtx.textBaseline = 'middle';
+    for (let i = 0; i <= steps; i++) {
+        const y = h - padding.bottom - (i / steps) * chartH;
+        const val = niceMin + (range * i / steps);
+        dCtx.fillText(fmtDiagramVal(val), padding.left - 8, y);
+        if (i > 0) {
+            dCtx.strokeStyle = '#e2e8f0';
+            dCtx.beginPath();
+            dCtx.moveTo(padding.left, y);
+            dCtx.lineTo(w - padding.right, y);
+            dCtx.stroke();
+        }
+    }
+
+    // Line
+    dCtx.strokeStyle = colors[0];
+    dCtx.lineWidth = 2.5;
+    dCtx.beginPath();
+    const points = [];
+    for (let i = 0; i < values.length; i++) {
+        const x = padding.left + i * stepX;
+        const y = h - padding.bottom - ((values[i] - niceMin) / range) * chartH;
+        points.push({ x, y });
+        if (i === 0) dCtx.moveTo(x, y);
+        else dCtx.lineTo(x, y);
+    }
+    dCtx.stroke();
+
+    // Area fill
+    dCtx.globalAlpha = 0.1;
+    dCtx.fillStyle = colors[0];
+    dCtx.beginPath();
+    dCtx.moveTo(points[0].x, h - padding.bottom);
+    points.forEach(p => dCtx.lineTo(p.x, p.y));
+    dCtx.lineTo(points[points.length-1].x, h - padding.bottom);
+    dCtx.closePath();
+    dCtx.fill();
+    dCtx.globalAlpha = 1;
+
+    // Points and labels
+    for (let i = 0; i < points.length; i++) {
+        dCtx.fillStyle = colors[i % colors.length];
+        dCtx.beginPath();
+        dCtx.arc(points[i].x, points[i].y, 5, 0, Math.PI * 2);
+        dCtx.fill();
+        dCtx.strokeStyle = '#fff';
+        dCtx.lineWidth = 2;
+        dCtx.stroke();
+
+        // Value
+        dCtx.fillStyle = '#334155';
+        dCtx.font = 'bold 11px sans-serif';
+        dCtx.textAlign = 'center';
+        dCtx.textBaseline = 'bottom';
+        dCtx.fillText(fmtDiagramVal(values[i]), points[i].x, points[i].y - 8);
+
+        // X label
+        dCtx.fillStyle = '#64748b';
+        dCtx.font = '11px sans-serif';
+        dCtx.textBaseline = 'top';
+        dCtx.fillText(labels[i], points[i].x, h - padding.bottom + 6);
+    }
+}
+
+function fmtDiagramVal(v) {
+    if (v === Math.round(v)) return v.toFixed(0);
+    return v.toFixed(1).replace('.', ',');
+}
+
+function insertDiagramToEditor() {
+    const dataUrl = diagramCanvas.toDataURL('image/png');
+    insertResizableImage(dataUrl, 'Diagram');
+}
+
+// Init diagram rows
+renderDiagramRows();
+new ResizeObserver(() => resizeDiagramCanvas()).observe(diagramCanvas.parentElement || document.body);
+
+// ========================
 // PERSISTENCE (localStorage)
 // ========================
 function saveState() {
     try {
+        // Ensure formula cells show results, not formula text, before saving
+        editor.querySelectorAll('td[data-formula], th[data-formula]').forEach(td => {
+            if (td === currentFormulaCell) return; // Skip cell being edited
+            const table = td.closest('table');
+            if (table) {
+                const result = evaluateFormula(td.dataset.formula, table);
+                let display;
+                if (typeof result === 'number' && td.dataset.format) {
+                    if (td.dataset.format === 'kr') {
+                        display = (Math.round(result * 100) / 100).toString().replace('.', ',') + ' kr.';
+                    } else if (td.dataset.format === 'pct') {
+                        display = (Math.round(result * 10) / 10).toString().replace('.', ',') + '%';
+                    } else {
+                        display = result.toString().replace('.', ',');
+                    }
+                } else {
+                    display = typeof result === 'number' ? result.toString().replace('.', ',') : result;
+                }
+                td.innerText = display;
+            }
+        });
         localStorage.setItem('mat-editor', editor.innerHTML);
         localStorage.setItem('mat-tab', document.querySelector('.tool-tab.active')?.textContent || '');
         localStorage.setItem('mat-shapes', JSON.stringify(shapes));
@@ -3663,6 +5960,16 @@ function saveState() {
         localStorage.setItem('mat-calcHistory', JSON.stringify(calcHistoryItems));
         localStorage.setItem('mat-showGrid', showGrid);
         localStorage.setItem('mat-showAxes', showAxes);
+        // Graph tab
+        localStorage.setItem('mat-graphPoints', JSON.stringify(graphPoints.filter(p => !p._deleted)));
+        localStorage.setItem('mat-graphLines', JSON.stringify(graphLines));
+        localStorage.setItem('mat-graphFunctions', JSON.stringify(graphFunctions.map(f => ({ expr: f.expr, color: f.color }))));
+        localStorage.setItem('mat-graphScaleX', document.getElementById('graphScaleX').value);
+        localStorage.setItem('mat-graphScaleY', document.getElementById('graphScaleY').value);
+        // Diagram tab
+        localStorage.setItem('mat-diagramData', JSON.stringify(diagramData));
+        localStorage.setItem('mat-diagramType', document.getElementById('diagramType').value);
+        localStorage.setItem('mat-diagramTitle', document.getElementById('diagramTitle').value);
     } catch(e) {}
 }
 
@@ -3710,6 +6017,30 @@ function loadState() {
             showAxes = savedAxes === 'true';
             document.getElementById('axesBtn').classList.toggle('active', showAxes);
         }
+
+        // Graph tab
+        const savedGP = localStorage.getItem('mat-graphPoints');
+        if (savedGP) { graphPoints = JSON.parse(savedGP); }
+        const savedGL = localStorage.getItem('mat-graphLines');
+        if (savedGL) { graphLines = JSON.parse(savedGL); }
+        const savedGF = localStorage.getItem('mat-graphFunctions');
+        if (savedGF) {
+            const gfData = JSON.parse(savedGF);
+            graphFunctions = gfData.map(f => ({ expr: f.expr, fn: parseGraphFunction(f.expr), color: f.color }));
+            updateGraphFuncList();
+        }
+        const savedGSX = localStorage.getItem('mat-graphScaleX');
+        if (savedGSX) document.getElementById('graphScaleX').value = savedGSX;
+        const savedGSY = localStorage.getItem('mat-graphScaleY');
+        if (savedGSY) document.getElementById('graphScaleY').value = savedGSY;
+
+        // Diagram tab
+        const savedDD = localStorage.getItem('mat-diagramData');
+        if (savedDD) { diagramData = JSON.parse(savedDD); renderDiagramRows(); }
+        const savedDT = localStorage.getItem('mat-diagramType');
+        if (savedDT) document.getElementById('diagramType').value = savedDT;
+        const savedDTitle = localStorage.getItem('mat-diagramTitle');
+        if (savedDTitle) document.getElementById('diagramTitle').value = savedDTitle;
     } catch(e) {}
 }
 
@@ -3722,6 +6053,10 @@ window.addEventListener('beforeunload', saveState);
 // INIT
 // ========================
 loadState();
+// Clean up any leftover plus buttons from old saves
+editor.querySelectorAll('.table-plus-btn').forEach(el => el.remove());
+// Recalc all table formulas on load
+recalcAllTables();
 resizeCanvas();
 // Detect example content loaded from localStorage
 if (editor.innerHTML.includes('Rabatter i SuperBilka')) {
