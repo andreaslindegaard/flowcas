@@ -122,6 +122,13 @@
             border-color: var(--primary);
         }
 
+        .math-btn {
+            font-family: 'Cambria Math', 'Times New Roman', serif;
+            font-size: 0.95rem;
+            min-width: 32px;
+            justify-content: center;
+        }
+
         .toolbar-separator {
             width: 1px;
             background: var(--border);
@@ -136,6 +143,8 @@
             font-size: 1rem;
             line-height: 1.7;
             min-height: 0;
+            position: relative;
+            isolation: isolate;
         }
 
         .editor-area:empty::before {
@@ -177,6 +186,75 @@
             margin: 8px 0;
             position: relative;
         }
+        .table-drag-handle {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            cursor: grab;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            color: #94a3b8;
+            font-size: 12px;
+            line-height: 1;
+            pointer-events: auto;
+        }
+        .table-drag-handle:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .table-drag-handle.visible {
+            display: flex;
+        }
+        .table-drag-handle.dragging {
+            display: flex;
+            cursor: grabbing;
+        }
+
+        .behind-img-handle {
+            position: absolute;
+            display: none;
+            z-index: 50;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 2px;
+            gap: 2px;
+            pointer-events: auto;
+        }
+        .behind-img-handle.visible {
+            display: flex;
+        }
+        .behind-img-handle button {
+            width: 22px;
+            height: 22px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 3px;
+            color: #64748b;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        .behind-img-handle button:hover {
+            background: #f1f5f9;
+            color: var(--primary);
+        }
+        .behind-img-handle .behind-grab {
+            cursor: grab;
+        }
+        .behind-img-handle .behind-grab:active {
+            cursor: grabbing;
+        }
 
         .editor-area table td, .editor-area table th {
             border: 1.5px solid #bbb;
@@ -189,6 +267,22 @@
         .editor-area table td.cell-selected,
         .editor-area table th.cell-selected {
             background-color: #d2e3fc !important;
+        }
+        .editor-area table td.cell-text-selected,
+        .editor-area table th.cell-text-selected {
+            background-color: #d2e3fc !important;
+        }
+        .editor-area table td.cell-text-selected ::selection,
+        .editor-area table th.cell-text-selected ::selection,
+        .editor-area table td.cell-text-selected::selection,
+        .editor-area table th.cell-text-selected::selection {
+            background: transparent;
+            color: inherit;
+        }
+        .editor-area table td.cell-active,
+        .editor-area table th.cell-active {
+            outline: 2px solid var(--primary);
+            outline-offset: -2px;
         }
 
         .editor-area table.cell-selecting td::selection,
@@ -253,25 +347,66 @@
             display: flex;
             flex-direction: column;
             background: var(--bg);
+            overflow: hidden;
+            min-height: 0;
         }
 
         .tool-tabs {
             display: flex;
+            align-items: stretch;
             background: var(--panel);
             border-bottom: 2px solid var(--border);
-            padding: 0 8px;
+            padding: 0;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .tool-tabs-inner {
+            display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+            flex: 1;
+            min-width: 0;
+            padding: 0 4px;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+        }
+        .tool-tabs-inner::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tool-tabs-scroll-btn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: var(--panel);
+            border: none;
+            cursor: pointer;
+            padding: 0 6px;
+            font-size: 1rem;
+            color: var(--text-light);
+            flex-shrink: 0;
+            z-index: 2;
+        }
+        .tool-tabs-scroll-btn:hover {
+            color: var(--primary);
+        }
+        .tool-tabs-scroll-btn.visible {
+            display: flex;
         }
 
         .tool-tab {
-            padding: 12px 18px;
+            padding: 12px 12px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 500;
             color: var(--text-light);
             border-bottom: 2px solid transparent;
             margin-bottom: -2px;
             transition: all 0.2s;
             white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .tool-tab:hover {
@@ -287,6 +422,7 @@
             flex: 1;
             overflow-y: auto;
             display: none;
+            min-height: 0;
         }
 
         .tool-content.active {
@@ -319,6 +455,7 @@
             color: #94a3b8;
             min-height: 1.2em;
             word-break: break-all;
+            letter-spacing: 0.5px;
         }
 
         .calc-result {
@@ -326,6 +463,9 @@
             font-weight: 600;
             word-break: break-all;
             min-height: 1.2em;
+            outline: none;
+            cursor: text;
+            letter-spacing: 0.5px;
         }
 
         .calc-history {
@@ -523,7 +663,6 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            flex: 1;
         }
 
         .geo-toolbar {
@@ -675,6 +814,72 @@
             border-color: var(--primary);
         }
 
+        .geo-ctx-menu {
+            position: absolute;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            z-index: 20;
+            padding: 8px;
+            min-width: 140px;
+        }
+        .geo-ctx-menu .ctx-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .geo-ctx-menu .ctx-colors {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .geo-ctx-menu .ctx-color-btn {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: border-color 0.15s, transform 0.1s;
+        }
+        .geo-ctx-menu .ctx-color-btn:hover {
+            transform: scale(1.15);
+            border-color: var(--text);
+        }
+        .geo-ctx-menu .ctx-color-btn.active {
+            border-color: var(--primary);
+        }
+        .geo-ctx-menu .ctx-no-fill {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid #cbd5e1;
+            cursor: pointer;
+            background: white;
+            position: relative;
+            transition: border-color 0.15s, transform 0.1s;
+        }
+        .geo-ctx-menu .ctx-no-fill::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -1px;
+            right: -1px;
+            height: 2px;
+            background: #ef4444;
+            transform: rotate(-45deg);
+        }
+        .geo-ctx-menu .ctx-no-fill:hover {
+            transform: scale(1.15);
+            border-color: var(--text);
+        }
+        .geo-ctx-menu .ctx-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 6px 0;
+        }
+
         .snip-overlay {
             position: absolute;
             border: 2px dashed var(--accent);
@@ -683,9 +888,17 @@
             z-index: 10;
         }
 
-        .snip-active #geoCanvas {
-            cursor: crosshair;
+        .snip-active #geoCanvas,
+        .snip-active #diagramCanvas,
+        .snip-active #graphCanvas {
+            cursor: crosshair !important;
         }
+
+        .color-swatch {
+            width: 24px; height: 24px; border: 2px solid #e2e8f0; border-radius: 4px;
+            cursor: pointer; padding: 0; transition: transform 0.1s, border-color 0.1s;
+        }
+        .color-swatch:hover { transform: scale(1.15); border-color: #94a3b8; }
 
         /* Scrollbar styling */
         ::-webkit-scrollbar { width: 8px; }
@@ -713,6 +926,37 @@
             position: relative;
             max-width: 100%;
             margin: 8px 0;
+            cursor: grab;
+        }
+        .inserted-geo-wrap.dragging,
+        table.dragging {
+            opacity: 0.4;
+            cursor: grabbing;
+            z-index: 5;
+        }
+        .img-drop-indicator {
+            height: 3px;
+            background: var(--primary);
+            border-radius: 2px;
+            margin: 2px 0;
+            pointer-events: none;
+        }
+
+        .inserted-geo-wrap.wrap-behind {
+            display: block;
+            position: relative;
+            z-index: -1;
+        }
+        .inserted-geo-wrap.wrap-behind .inserted-geo {
+            border: none;
+        }
+        .inserted-geo-wrap.wrap-float-left {
+            float: left;
+            margin: 4px 12px 4px 0;
+        }
+        .inserted-geo-wrap.wrap-float-right {
+            float: right;
+            margin: 4px 0 4px 12px;
         }
 
         .inserted-geo-wrap:hover .img-resize-handle,
@@ -724,7 +968,7 @@
             display: block;
             max-width: 100%;
             height: auto;
-            border: 1px solid var(--border);
+            border: none;
             border-radius: 4px;
             cursor: default;
         }
@@ -757,6 +1001,66 @@
             border-right: 2px solid white;
             border-bottom: 2px solid white;
         }
+
+        #imgContextMenu {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        #imgContextMenu button {
+            display: block;
+            width: 100%;
+            padding: 6px 16px;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        #imgContextMenu button:hover {
+            background: #f1f5f9;
+        }
+        .crop-active .crop-dim {
+            position: absolute;
+            background: rgba(0,0,0,0.45);
+            pointer-events: none;
+            z-index: 3;
+        }
+        .crop-active .crop-handle {
+            position: absolute;
+            z-index: 5;
+        }
+        .crop-active .crop-line {
+            position: absolute;
+            background: white;
+            pointer-events: none;
+            z-index: 4;
+        }
+        .crop-actions-inline {
+            position: absolute;
+            bottom: -36px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            z-index: 6;
+        }
+        .crop-actions-inline button {
+            padding: 5px 14px;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .crop-confirm { background: var(--primary); color: white; }
+        .crop-cancel { background: #e2e8f0; color: #334155; }
 
         /* Graph function input */
         .graph-input-area {
@@ -793,8 +1097,8 @@
         .graph-tab {
             display: flex;
             flex-direction: column;
-            height: 100%;
             gap: 6px;
+            padding-bottom: 8px;
         }
         .graph-toolbar {
             display: flex;
@@ -821,8 +1125,8 @@
         .diagram-tab {
             display: flex;
             flex-direction: column;
-            height: 100%;
             gap: 6px;
+            padding-bottom: 8px;
         }
         .diagram-toolbar {
             display: flex;
@@ -898,6 +1202,29 @@
                 </div>
             </div>
             <div class="toolbar-separator"></div>
+            <div style="position:relative;display:inline-block;" onmouseenter="document.getElementById('colorDropdown').style.display=''" onmouseleave="document.getElementById('colorDropdown').style.display='none'">
+                <button class="toolbar-btn" id="colorBtn" title="Tekstfarve" style="font-weight:bold;position:relative;">A<span id="colorIndicator" style="position:absolute;bottom:2px;left:3px;right:3px;height:3px;background:#000;border-radius:1px;"></span></button>
+                <div id="colorDropdown" style="display:none;position:absolute;top:100%;left:0;z-index:50;background:white;border:1px solid var(--border);border-radius:var(--radius);padding:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                    <div style="display:grid;grid-template-columns:repeat(5,24px);gap:3px;">
+                        <button class="color-swatch" style="background:#000000" onclick="setTextColor('#000000')" title="Sort"></button>
+                        <button class="color-swatch" style="background:#ef4444" onclick="setTextColor('#ef4444')" title="Rød"></button>
+                        <button class="color-swatch" style="background:#2563eb" onclick="setTextColor('#2563eb')" title="Blå"></button>
+                        <button class="color-swatch" style="background:#16a34a" onclick="setTextColor('#16a34a')" title="Grøn"></button>
+                        <button class="color-swatch" style="background:#f59e0b" onclick="setTextColor('#f59e0b')" title="Orange"></button>
+                        <button class="color-swatch" style="background:#8b5cf6" onclick="setTextColor('#8b5cf6')" title="Lilla"></button>
+                        <button class="color-swatch" style="background:#ec4899" onclick="setTextColor('#ec4899')" title="Pink"></button>
+                        <button class="color-swatch" style="background:#06b6d4" onclick="setTextColor('#06b6d4')" title="Turkis"></button>
+                        <button class="color-swatch" style="background:#64748b" onclick="setTextColor('#64748b')" title="Grå"></button>
+                        <button class="color-swatch" style="background:#92400e" onclick="setTextColor('#92400e')" title="Brun"></button>
+                    </div>
+                    <div style="margin-top:4px;border-top:1px solid var(--border);padding-top:4px;">
+                        <label style="display:flex;align-items:center;gap:4px;font-size:0.75rem;cursor:pointer;color:var(--text-light);">
+                            Vælg farve: <input type="color" id="customColorPicker" value="#000000" style="width:24px;height:20px;border:none;padding:0;cursor:pointer;" onchange="setTextColor(this.value)">
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="toolbar-separator"></div>
             <select class="toolbar-btn" id="fontSizeSelect" onchange="execCmdVal('fontSize', this.value);">
                 <option value="3" selected>Normal</option>
                 <option value="1">Mindst</option>
@@ -908,25 +1235,25 @@
                 <option value="6">Overskrift</option>
             </select>
             <div class="toolbar-separator"></div>
-            <button class="toolbar-btn" onclick="insertMathSymbol('²')" title="Opløftet 2">x²</button>
-            <button class="toolbar-btn" onclick="insertMathSymbol('³')" title="Opløftet 3">x³</button>
-            <button class="toolbar-btn" onclick="insertMathSymbol('√')" title="Kvadratrod">√</button>
-            <button class="toolbar-btn" onclick="insertMathSymbol('π')" title="Pi">π</button>
-            <button class="toolbar-btn" onclick="insertMathSymbol('±')" title="Plus/minus">±</button>
-            <button class="toolbar-btn" onclick="insertMathSymbol('≈')" title="Cirka lig med">≈</button>
-            <button class="toolbar-btn" onclick="insertMathSymbol('≠')" title="Ikke lig med">≠</button>
-            <button class="toolbar-btn" onclick="insertMathSymbol('≤')" title="Mindre end eller lig med">≤</button>
-            <button class="toolbar-btn" onclick="insertMathSymbol('≥')" title="Større end eller lig med">≥</button>
-            <button class="toolbar-btn" onclick="insertMathSymbol('°')" title="Grader">°</button>
+            <button class="toolbar-btn math-btn" onclick="insertMathSymbol('²')" title="Opløftet 2">x²</button>
+            <button class="toolbar-btn math-btn" onclick="insertMathSymbol('³')" title="Opløftet 3">x³</button>
+            <button class="toolbar-btn math-btn" onclick="insertMathSymbol('√')" title="Kvadratrod">√</button>
+            <button class="toolbar-btn math-btn" onclick="insertMathSymbol('π')" title="Pi">π</button>
+            <button class="toolbar-btn math-btn" onclick="insertMathSymbol('±')" title="Plus/minus">±</button>
+            <button class="toolbar-btn math-btn" onclick="insertMathSymbol('≈')" title="Cirka lig med">≈</button>
+            <button class="toolbar-btn math-btn" onclick="insertMathSymbol('≠')" title="Ikke lig med">≠</button>
+            <button class="toolbar-btn math-btn" onclick="insertMathSymbol('≤')" title="Mindre end eller lig med">≤</button>
+            <button class="toolbar-btn math-btn" onclick="insertMathSymbol('≥')" title="Større end eller lig med">≥</button>
+            <button class="toolbar-btn math-btn" onclick="insertMathSymbol('°')" title="Grader">°</button>
             <div class="toolbar-separator"></div>
             <div style="position:relative;display:inline-block;" onmouseenter="tablePicker.style.display=''" onmouseleave="tablePicker.style.display='none'">
-                <button class="toolbar-btn" title="Tabel">▦ Tabel</button>
+                <button class="toolbar-btn" title="Tabel"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></button>
                 <div id="tablePicker" style="display:none;position:absolute;top:100%;left:0;z-index:50;background:white;border:1px solid var(--border);border-radius:var(--radius);padding:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);min-width:180px;">
                     <div id="tablePickerLabel" style="font-size:0.8rem;color:var(--text-light);margin-bottom:4px;text-align:center;">Vælg størrelse</div>
                     <div id="tableGrid" style="display:grid;grid-template-columns:repeat(8,20px);gap:2px;"></div>
                 </div>
             </div>
-            <button class="toolbar-btn" onclick="window.print()" title="Print">🖨 Print</button>
+            <button class="toolbar-btn" onclick="window.print()" title="Print"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></button>
             <button class="toolbar-btn" id="exampleBtn" onclick="toggleExample()" title="Demo" style="display:none;">📋 Demo</button>
         </div>
         <div class="editor-area" id="editor" contenteditable="true" spellcheck="true"></div>
@@ -941,12 +1268,16 @@
 
     <!-- Right Panel: Tools -->
     <div class="right-panel" id="rightPanel">
-        <div class="tool-tabs">
-            <div class="tool-tab active" onclick="switchTab('calculator')">🧮 Lommeregner</div>
-            <div class="tool-tab" onclick="switchTab('formulas')">📖 Formelsamling</div>
-            <div class="tool-tab" onclick="switchTab('geometry')">📐 Tegning</div>
-            <div class="tool-tab" onclick="switchTab('graph')">📈 Graf</div>
-            <div class="tool-tab" onclick="switchTab('diagram')">📊 Diagram</div>
+        <div class="tool-tabs" id="toolTabs">
+            <button class="tool-tabs-scroll-btn" id="tabScrollLeft" onclick="scrollTabs(-1)">&lt;</button>
+            <div class="tool-tabs-inner" id="toolTabsInner">
+                <div class="tool-tab active" onclick="switchTab('calculator')">🧮 Lommeregner</div>
+                <div class="tool-tab" onclick="switchTab('formulas')">📖 Formelsamling</div>
+                <div class="tool-tab" onclick="switchTab('geometry')">📐 Tegning</div>
+                <div class="tool-tab" onclick="switchTab('graph')">📈 Graf</div>
+                <div class="tool-tab" onclick="switchTab('diagram')">📊 Diagram</div>
+            </div>
+            <button class="tool-tabs-scroll-btn" id="tabScrollRight" onclick="scrollTabs(1)">&gt;</button>
         </div>
 
         <!-- Calculator Tab -->
@@ -954,10 +1285,10 @@
             <div class="calculator">
                 <div class="calc-display">
                     <div class="calc-expression" id="calcExpr"></div>
-                    <div class="calc-result" id="calcResult">0</div>
+                    <div class="calc-result" id="calcResult" contenteditable="true" spellcheck="false">0</div>
                 </div>
 
-                <div class="calc-buttons">
+                <div class="calc-buttons" onmousedown="event.preventDefault()">
                     <button class="calc-btn function" onclick="calcInput('sin(')">sin</button>
                     <button class="calc-btn function" onclick="calcInput('cos(')">cos</button>
                     <button class="calc-btn function" onclick="calcInput('tan(')">tan</button>
@@ -1053,6 +1384,7 @@
                             <div onclick="selectTriType('triangle-right-iso')" style="display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;border-radius:4px;font-size:0.85rem;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''"><svg viewBox="0 0 24 24" width="16" height="16"><polygon points="3,3 3,21 21,21" fill="none" stroke="#334155" stroke-width="1.8"/><rect x="3" y="17" width="4" height="4" fill="none" stroke="#334155" stroke-width="1"/></svg> Retvinklet ligebenet</div>
                         </div>
                     </div>
+                    <button class="geo-btn" onclick="setGeoTool('polygon')" id="geo-polygon" title="Polygon"><svg viewBox="0 0 24 24"><polygon points="12,2 22,9 18,21 6,21 2,9" fill="none"/></svg></button>
                     <button class="geo-btn" onclick="setGeoTool('angle')" id="geo-angle" title="Vinkel"><svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="20" stroke-width="1.8"/><line x1="4" y1="20" x2="14" y2="4" stroke-width="1.8"/><path d="M9 20 A6 6 0 0 1 7.4 14.5" fill="none" stroke-width="1.5"/><text x="11" y="17" font-size="8" fill="currentColor">°</text></svg></button>
                     <button class="geo-btn" onclick="setGeoTool('freehand')" id="geo-freehand" title="Frihånd"><svg viewBox="0 0 24 24"><path d="M4 18c2-3 4-10 7-7s2 9 5 5 3-6 5-4" fill="none"/></svg></button>
                     <button class="geo-btn" onclick="setGeoTool('text')" id="geo-text" title="Tekst"><svg viewBox="0 0 24 24"><path d="M5 4h14M12 4v16"/><path d="M8 20h8" stroke-width="1.5"/></svg></button>
@@ -1072,9 +1404,11 @@
                     <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:0.85rem;color:var(--text-light);">Fyld<input type="checkbox" id="geoFill" style="width:14px;height:14px;margin:0;accent-color:var(--primary);cursor:pointer;"></label>
                     <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:0.85rem;color:var(--text-light);">Vis mål<input type="checkbox" id="geoMeasure" style="width:14px;height:14px;margin:0;accent-color:var(--primary);cursor:pointer;" onchange="redrawCanvas()"></label>
                     <button class="geo-btn" onclick="undoGeo()" title="Fortryd">↩</button>
-                    <button class="geo-btn" onclick="clearCanvas()" title="Ryd alt">🗑 Ryd</button>
+                    <span style="width:100%;"></span>
                     <button class="geo-btn" onclick="toggleGrid()" id="gridBtn" title="Vis/skjul gitter">⊞ Gitter</button>
-                    <button class="geo-btn" onclick="toggleAxes()" id="axesBtn" title="Vis/skjul koordinatsystem">📐 Graf</button>
+                    <button class="geo-btn" onclick="toggleAxes()" id="axesBtn" title="Vis/skjul koordinatsystem"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="21" x2="3" y2="3"/><line x1="3" y1="21" x2="21" y2="21"/><polyline points="3,3 5,6"/><polyline points="3,3 1,6"/><polyline points="21,21 18,19"/><polyline points="21,21 18,23"/><line x1="7" y1="21" x2="7" y2="20.5" stroke-width="1.5"/><line x1="11" y1="21" x2="11" y2="20.5" stroke-width="1.5"/><line x1="15" y1="21" x2="15" y2="20.5" stroke-width="1.5"/><line x1="3" y1="17" x2="3.5" y2="17" stroke-width="1.5"/><line x1="3" y1="13" x2="3.5" y2="13" stroke-width="1.5"/><line x1="3" y1="9" x2="3.5" y2="9" stroke-width="1.5"/></svg> Koordinatsystem</button>
+                    <span style="flex:1;"></span>
+                    <button class="geo-btn" onclick="clearCanvas()" title="Ryd alt" style="color:var(--danger);"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg> Ryd</button>
                 </div>
 
                 <div id="graphInputArea" class="graph-input-area" style="display:none;">
@@ -1085,7 +1419,7 @@
                     <button onclick="randomGraph()" title="Tilfældig graf">🎲</button>
                 </div>
 
-                <div class="canvas-container">
+                <div class="canvas-container" style="flex:0 0 auto;min-height:0;height:440px;">
                     <canvas id="geoCanvas"></canvas>
                 </div>
 
@@ -1157,12 +1491,15 @@
                 <div id="graphFuncList" style="font-size:0.8rem;padding:0 8px;display:flex;flex-wrap:wrap;gap:4px;"></div>
                 <div id="graphLineEqList" style="font-size:0.8rem;padding:0 8px;display:flex;flex-wrap:wrap;gap:4px;"></div>
 
-                <div class="canvas-container" style="flex:1;">
+                <div class="canvas-container" style="flex:0 0 auto;min-height:0;height:440px;">
                     <canvas id="graphCanvas"></canvas>
                 </div>
 
+                <button class="insert-btn" onclick="startGraphSnip()" style="background:var(--primary);">
+                    ✂ Klip & Indsæt udsnit
+                </button>
                 <button class="insert-btn" onclick="insertGraphToEditor()">
-                    ⬅ Indsæt graf i besvarelse
+                    ⬅ Indsæt hele graf i besvarelse
                 </button>
             </div>
         </div>
@@ -1196,12 +1533,15 @@
                     <button onclick="addDiagramRow()" style="margin-top:4px;padding:4px 12px;background:none;border:1px dashed var(--border);border-radius:var(--radius);cursor:pointer;font-size:0.8rem;color:var(--text-light);width:100%;">+ Tilføj række</button>
                 </div>
 
-                <div class="canvas-container" style="flex:1;min-height:200px;">
+                <div class="canvas-container" style="flex:0 0 auto;min-height:0;height:440px;">
                     <canvas id="diagramCanvas"></canvas>
                 </div>
 
+                <button class="insert-btn" onclick="startDiagramSnip()" style="background:var(--primary);">
+                    ✂ Klip & Indsæt udsnit
+                </button>
                 <button class="insert-btn" onclick="insertDiagramToEditor()">
-                    ⬅ Indsæt diagram i besvarelse
+                    ⬅ Indsæt hele diagram i besvarelse
                 </button>
             </div>
         </div>
@@ -1220,6 +1560,19 @@ document.getElementById('examDate').textContent = new Date().toLocaleDateString(
 const editor = document.getElementById('editor');
 
 function execCmd(cmd) {
+    // If table cells are selected, apply formatting to each cell
+    if (typeof selectedCells !== 'undefined' && selectedCells.length > 0) {
+        const sel = window.getSelection();
+        selectedCells.forEach(td => {
+            const range = document.createRange();
+            range.selectNodeContents(td);
+            sel.removeAllRanges();
+            sel.addRange(range);
+            document.execCommand(cmd, false, null);
+        });
+        sel.removeAllRanges();
+        return;
+    }
     document.execCommand(cmd, false, null);
     editor.focus();
 }
@@ -1249,6 +1602,14 @@ function setAlignIcon(type) {
     document.getElementById('alignDropdown').style.display = 'none';
 }
 
+function setTextColor(color) {
+    editor.focus();
+    document.execCommand('foreColor', false, color);
+    document.getElementById('colorIndicator').style.background = color;
+    document.getElementById('customColorPicker').value = color;
+    document.getElementById('colorDropdown').style.display = 'none';
+}
+
 function insertMathSymbol(symbol) {
     editor.focus();
     document.execCommand('insertText', false, symbol);
@@ -1260,7 +1621,7 @@ let savedContent = '';
 
 function toggleExample() {
     const btn = document.getElementById('exampleBtn');
-    if (!exampleActive && editor.innerHTML.includes('Matematik B — Eksamen 2026')) {
+    if (!exampleActive && editor.innerHTML.includes('Pr\u00f8ven med hj\u00e6lpemidler FP9 2026')) {
         editor.innerHTML = savedContent || '';
         btn.textContent = '📋 Demo';
         exampleActive = false;
@@ -1291,7 +1652,7 @@ function toggleExample() {
             { type: 'rect', x: 430, y: 60, w: 160, h: 100, color: '#10b981', width: 2, fill: false },
             { type: 'text', x: 490, y: 45, text: 'Grund', color: '#10b981', width: 2, fontSize: 14 },
             { type: 'text', x: 480, y: 180, text: '8 m', color: '#333', width: 2, fontSize: 14 },
-            { type: 'text', x: 600, y: 110, text: '5 m', color: '#333', width: 2, fontSize: 14 },
+            { type: 'text', x: 395, y: 110, text: '5 m', color: '#333', width: 2, fontSize: 14 },
         ];
 
         // Set up graph
@@ -1343,8 +1704,8 @@ function toggleExample() {
                         return '<span class="fraction" contenteditable="false"><span class="num">' + num + '</span><span class="den">' + den + '</span></span>';
                     }
 
-                    editor.innerHTML = '<h1>Matematik B \u2014 Eksamen 2026</h1>' +
-'<p><i>Navn: Sofie Hansen \u2014 2.g \u2014 Frederiksborg Gymnasium</i></p>' +
+                    editor.innerHTML = '<h1>Pr\u00f8ven med hj\u00e6lpemidler FP9 2026</h1>' +
+'<p><i>Navn: Terence Tao \u2014 9. klasse \u2014 Ugleg\u00e5rdsskolen</i></p>' +
 
 '<h2>Opgave 1: Budgetberegning for skolefest</h2>' +
 '<div style="' + qStyle + '">' +
@@ -1517,7 +1878,7 @@ function insertTableWithSize(rows, cols) {
     tablePicker.style.display = 'none';
     const colWidth = Math.floor(100 / cols);
     const cls = showCellRefs ? ' class="show-cell-refs"' : '';
-    let html = `<table${cls} style="width:100%;table-layout:fixed;">`;
+    let html = `<table${cls} spellcheck="false" style="width:100%;table-layout:fixed;">`;
     for (let i = 0; i < rows; i++) {
         html += '<tr>';
         for (let j = 0; j < cols; j++) {
@@ -1607,6 +1968,7 @@ editor.addEventListener('mousedown', (e) => {
     const td = e.target.closest('td, th');
     if (!td) {
         clearCellSelection();
+        clearActiveCell();
         return;
     }
     if (e.button !== 0) return;
@@ -1616,8 +1978,8 @@ editor.addEventListener('mousedown', (e) => {
     cellDragMoved = false;
     cellDragStartCell = td;
     cellDragTable = td.closest('table');
-    // Select the clicked cell immediately
-    selectCell(td);
+    // Show active cell border (not full selection highlight)
+    setActiveCell(td);
 });
 
 editor.addEventListener('mousemove', (e) => {
@@ -1630,6 +1992,7 @@ editor.addEventListener('mousemove', (e) => {
     if (!cellDragMoved) {
         cellDragMoved = true;
         cellDragTable.classList.add('cell-selecting');
+        clearActiveCell();
         window.getSelection()?.removeAllRanges();
     }
     e.preventDefault();
@@ -1658,6 +2021,50 @@ document.addEventListener('mouseup', () => {
 document.addEventListener('mousedown', (e) => {
     if (!e.target.closest('td, th') && !e.target.closest('#cellContextMenu') && !e.target.closest('.cell-fill-handle')) {
         clearCellSelection();
+        clearActiveCell();
+    }
+});
+
+let activeCell = null;
+function setActiveCell(td) {
+    clearActiveCell();
+    activeCell = td;
+    td.classList.add('cell-active');
+}
+function clearActiveCell() {
+    if (activeCell) activeCell.classList.remove('cell-active');
+    activeCell = null;
+}
+
+// Detect when all text in a single cell is selected → highlight it
+document.addEventListener('selectionchange', () => {
+    // Remove previous text-selection highlight
+    editor.querySelectorAll('.cell-text-selected').forEach(c => c.classList.remove('cell-text-selected'));
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    const td = range.startContainer.nodeType === 1
+        ? range.startContainer.closest?.('td, th')
+        : range.startContainer.parentElement?.closest?.('td, th');
+    if (!td || !editor.contains(td)) return;
+    const endTd = range.endContainer.nodeType === 1
+        ? range.endContainer.closest?.('td, th')
+        : range.endContainer.parentElement?.closest?.('td, th');
+    // Only for single cell selection
+    if (endTd !== td) return;
+    // Check if entire cell content is selected
+    const cellRange = document.createRange();
+    cellRange.selectNodeContents(td);
+    const cellText = td.textContent || '';
+    const selText = sel.toString();
+    if (selText.trim().length > 0 && selText.trim() === cellText.trim()) {
+        td.classList.add('cell-text-selected');
+        // Show fill handle for this cell
+        clearCellSelection();
+        selectCell(td);
+        showFillHandle();
+    } else {
+        removeFillHandle();
     }
 });
 
@@ -1696,6 +2103,7 @@ cellColors.forEach(c => {
 let contextMenuCell = null;
 
 editor.addEventListener('contextmenu', (e) => {
+    if (e.target.closest('.inserted-geo-wrap') || e.target.closest('img')) return; // handled by image menu
     const td = e.target.closest('td, th');
     if (!td) return;
     e.preventDefault();
@@ -2362,6 +2770,19 @@ document.addEventListener('keydown', (e) => {
 
 // Recalc on Enter/Tab in table cell
 editor.addEventListener('keydown', (e) => {
+    // Ctrl+A in a table cell: select only cell contents
+    if (e.key === 'a' && (e.ctrlKey || e.metaKey)) {
+        const td = getActiveTableCell();
+        if (td) {
+            e.preventDefault();
+            const range = document.createRange();
+            range.selectNodeContents(td);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            return;
+        }
+    }
     if (e.key === 'Enter' || e.key === 'Tab') {
         const td = getActiveTableCell();
         if (td) {
@@ -2385,6 +2806,62 @@ editor.addEventListener('keydown', (e) => {
             }
         }
     }
+    // Arrow key navigation in table cells
+    if (['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        const td = getActiveTableCell();
+        if (!td) return;
+        const table = td.closest('table');
+        if (!table) return;
+        const row = td.parentElement;
+        const rowIdx = row.rowIndex;
+        const colIdx = td.cellIndex;
+        const sel = window.getSelection();
+        const range = sel.rangeCount ? sel.getRangeAt(0) : null;
+
+        let targetCell = null;
+        if (e.key === 'ArrowDown') {
+            // Only navigate if cursor is at end of cell or cell is empty
+            const atEnd = !range || (range.collapsed && range.startOffset >= (range.startContainer.textContent || '').length);
+            const isEmpty = td.textContent.trim() === '';
+            if (atEnd || isEmpty) {
+                const nextRow = table.rows[rowIdx + 1];
+                if (nextRow) targetCell = nextRow.cells[colIdx];
+            }
+        } else if (e.key === 'ArrowUp') {
+            const atStart = !range || (range.collapsed && range.startOffset === 0);
+            const isEmpty = td.textContent.trim() === '';
+            if (atStart || isEmpty) {
+                const prevRow = table.rows[rowIdx - 1];
+                if (prevRow) targetCell = prevRow.cells[colIdx];
+            }
+        } else if (e.key === 'ArrowRight') {
+            const atEnd = !range || (range.collapsed && range.startOffset >= (range.startContainer.textContent || '').length);
+            const isEmpty = td.textContent.trim() === '';
+            if (atEnd || isEmpty) {
+                targetCell = row.cells[colIdx + 1];
+            }
+        } else if (e.key === 'ArrowLeft') {
+            const atStart = !range || (range.collapsed && range.startOffset === 0);
+            const isEmpty = td.textContent.trim() === '';
+            if (atStart || isEmpty) {
+                targetCell = row.cells[colIdx - 1];
+            }
+        }
+        if (targetCell) {
+            e.preventDefault();
+            targetCell.focus();
+            // Place cursor at start for down/right, end for up/left
+            const newRange = document.createRange();
+            newRange.selectNodeContents(targetCell);
+            if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                newRange.collapse(false); // end
+            } else {
+                newRange.collapse(true); // start
+            }
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+        }
+    }
 });
 
 // ========================
@@ -2398,6 +2875,49 @@ let fillStartRow = -1;
 let fillStartCol = -1;
 let fillEndRow = -1;
 let fillEndCol = -1;
+
+const autoFillMonths = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december'];
+const autoFillMonthsShort = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+const autoFillDays = ['mandag','tirsdag','onsdag','torsdag','fredag','lørdag','søndag'];
+const autoFillDaysShort = ['man','tir','ons','tor','fre','lør','søn'];
+
+function getAutoFillValue(text, offset) {
+    const lower = text.toLowerCase();
+    // Check months
+    let idx = autoFillMonths.indexOf(lower);
+    if (idx >= 0) {
+        const newIdx = ((idx + offset) % 12 + 12) % 12;
+        // Preserve capitalization
+        const result = autoFillMonths[newIdx];
+        return text[0] === text[0].toUpperCase() ? result[0].toUpperCase() + result.slice(1) : result;
+    }
+    idx = autoFillMonthsShort.indexOf(lower);
+    if (idx >= 0) {
+        const newIdx = ((idx + offset) % 12 + 12) % 12;
+        const result = autoFillMonthsShort[newIdx];
+        return text[0] === text[0].toUpperCase() ? result[0].toUpperCase() + result.slice(1) : result;
+    }
+    // Check days
+    idx = autoFillDays.indexOf(lower);
+    if (idx >= 0) {
+        const newIdx = ((idx + offset) % 7 + 7) % 7;
+        const result = autoFillDays[newIdx];
+        return text[0] === text[0].toUpperCase() ? result[0].toUpperCase() + result.slice(1) : result;
+    }
+    idx = autoFillDaysShort.indexOf(lower);
+    if (idx >= 0) {
+        const newIdx = ((idx + offset) % 7 + 7) % 7;
+        const result = autoFillDaysShort[newIdx];
+        return text[0] === text[0].toUpperCase() ? result[0].toUpperCase() + result.slice(1) : result;
+    }
+    // Check numbers
+    const n = parseFloat(text.replace(',', '.'));
+    if (!isNaN(n) && text.match(/^-?\d+([,.]\d+)?$/)) {
+        const result = n + offset;
+        return text.includes(',') ? result.toString().replace('.', ',') : result.toString();
+    }
+    return null;
+}
 
 function adjustCellRef(formula, rowOffset, colOffset) {
     // Adjust cell references like A1, B2 by offset
@@ -2538,8 +3058,17 @@ document.addEventListener('mouseup', (e) => {
                 const newFormula = adjustCellRef(srcCell.dataset.formula, rowOffset, colOffset);
                 targetCell.dataset.formula = newFormula;
                 if (srcCell.dataset.format) targetCell.dataset.format = srcCell.dataset.format;
+            } else {
+                // Auto-fill: months, days, numbers
+                const srcText = srcCell.innerText.trim();
+                const fillVal = getAutoFillValue(srcText, rowOffset || colOffset);
+                if (fillVal !== null) {
+                    targetCell.innerText = fillVal;
+                } else {
+                    targetCell.innerText = srcText;
+                }
+                if (srcCell.dataset.format) targetCell.dataset.format = srcCell.dataset.format;
             }
-            // Skip plain value cells — only copy formulas
         }
     }
 
@@ -2638,6 +3167,37 @@ function solveExpression(input) {
         return null;
     } catch (err) { return null; }
 }
+
+// Auto-convert ^digits to superscript
+const superscriptMap = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+function convertCaretToSuperscript() {
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return false;
+    const range = sel.getRangeAt(0);
+    const node = range.startContainer;
+    if (node.nodeType !== Node.TEXT_NODE) return false;
+    const text = node.textContent.substring(0, range.startOffset);
+    const match = text.match(/\^(\d+)$/);
+    if (!match) return false;
+    const digits = match[1];
+    const superscript = digits.split('').map(d => superscriptMap[d]).join('');
+    const start = range.startOffset - match[0].length;
+    const after = node.textContent.substring(range.startOffset);
+    node.textContent = node.textContent.substring(0, start) + superscript + after;
+    range.setStart(node, start + superscript.length);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    return true;
+}
+
+editor.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+        if (convertCaretToSuperscript()) {
+            if (e.key === ' ') return; // let space go through after conversion
+        }
+    }
+});
 
 editor.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
@@ -2798,6 +3358,264 @@ function updateCounts() {
     });
 })();
 
+// Drag-and-drop for images and tables in editor
+(function() {
+    let dragEl = null;
+    let dragStartY = 0;
+    let hasMoved = false;
+    let dropIndicator = null;
+
+    function createDropIndicator() {
+        if (dropIndicator) dropIndicator.remove();
+        dropIndicator = document.createElement('div');
+        dropIndicator.className = 'img-drop-indicator';
+        return dropIndicator;
+    }
+
+    function removeDropIndicator() {
+        if (dropIndicator) { dropIndicator.remove(); dropIndicator = null; }
+    }
+
+    function getDropTarget(y) {
+        const editorEl = document.getElementById('editor');
+        const children = Array.from(editorEl.childNodes);
+        let best = null;
+        let bestDist = Infinity;
+        for (const child of children) {
+            if (child === dragEl || child === dropIndicator) continue;
+            if (!child.getBoundingClientRect) continue;
+            const rect = child.getBoundingClientRect();
+            const dist = Math.abs(y - rect.top);
+            if (dist < bestDist) {
+                bestDist = dist;
+                best = { node: child, before: true };
+            }
+            const distBot = Math.abs(y - rect.bottom);
+            if (distBot < bestDist) {
+                bestDist = distBot;
+                best = { node: child, before: false };
+            }
+        }
+        return best;
+    }
+
+    // Floating handle for wrap-behind images
+    const behindHandle = document.createElement('div');
+    behindHandle.className = 'behind-img-handle';
+    behindHandle.contentEditable = 'false';
+    behindHandle.innerHTML = '<button class="behind-grab" title="Træk for at flytte">⠿</button><button class="behind-resize" title="Resize">⤡</button>';
+    document.body.appendChild(behindHandle);
+    let behindHandleTarget = null;
+    let behindHandleTimeout = null;
+
+    function showBehindHandle(wrap) {
+        if (behindHandleTarget === wrap && behindHandle.classList.contains('visible')) return;
+        behindHandleTarget = wrap;
+        clearTimeout(behindHandleTimeout);
+        const rect = wrap.getBoundingClientRect();
+        behindHandle.style.left = (rect.left + window.scrollX) + 'px';
+        behindHandle.style.top = (rect.top + window.scrollY - 28) + 'px';
+        behindHandle.classList.add('visible');
+    }
+
+    function hideBehindHandle() {
+        behindHandleTimeout = setTimeout(() => {
+            if (!behindResizing) {
+                behindHandle.classList.remove('visible');
+                behindHandleTarget = null;
+            }
+        }, 300);
+    }
+
+    // Show handle when hovering over wrap-behind images (check position since z-index:-1)
+    editor.addEventListener('mousemove', (e) => {
+        if (dragEl) return;
+        const behindWraps = editor.querySelectorAll('.inserted-geo-wrap.wrap-behind');
+        let found = false;
+        for (const bw of behindWraps) {
+            const rect = bw.getBoundingClientRect();
+            if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                showBehindHandle(bw);
+                found = true;
+                break;
+            }
+        }
+        if (!found && !behindHandle.matches(':hover')) {
+            hideBehindHandle();
+        }
+    });
+
+    behindHandle.addEventListener('mouseenter', () => {
+        clearTimeout(behindHandleTimeout);
+    });
+    behindHandle.addEventListener('mouseleave', () => {
+        hideBehindHandle();
+    });
+
+    // Drag via grab button
+    behindHandle.querySelector('.behind-grab').addEventListener('mousedown', (e) => {
+        if (e.button !== 0 || !behindHandleTarget) return;
+        e.preventDefault();
+        e.stopPropagation();
+        dragEl = behindHandleTarget;
+        dragStartY = e.clientY;
+        hasMoved = false;
+    });
+
+    // Resize via resize button
+    let behindResizing = false;
+    let behindResizeWrap = null;
+    let behindResizeStartX = 0;
+    let behindResizeStartW = 0;
+
+    behindHandle.querySelector('.behind-resize').addEventListener('mousedown', (e) => {
+        if (e.button !== 0 || !behindHandleTarget) return;
+        e.preventDefault();
+        e.stopPropagation();
+        behindResizing = true;
+        behindResizeWrap = behindHandleTarget;
+        behindResizeStartX = e.clientX;
+        const img = behindResizeWrap.querySelector('img');
+        behindResizeStartW = img ? img.offsetWidth : 200;
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!behindResizing || !behindResizeWrap) return;
+        e.preventDefault();
+        const img = behindResizeWrap.querySelector('img');
+        if (!img) return;
+        const newW = Math.max(50, behindResizeStartW + (e.clientX - behindResizeStartX));
+        img.style.width = newW + 'px';
+        // Update handle position
+        const rect = behindResizeWrap.getBoundingClientRect();
+        behindHandle.style.left = (rect.left + window.scrollX) + 'px';
+        behindHandle.style.top = (rect.top + window.scrollY - 28) + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (behindResizing) {
+            behindResizing = false;
+            behindResizeWrap = null;
+            saveState();
+        }
+    });
+
+    // Prevent browser's native drag on images/wraps in editor
+    editor.addEventListener('dragstart', (e) => {
+        if (e.target.closest('.inserted-geo-wrap') || e.target.tagName === 'IMG') {
+            e.preventDefault();
+        }
+    });
+
+    // Image drag
+    editor.addEventListener('mousedown', (e) => {
+        const wrap = e.target.closest('.inserted-geo-wrap');
+        if (!wrap) return;
+        if (e.target.closest('.img-resize-handle')) return;
+        if (e.button !== 0) return;
+        e.preventDefault();
+        dragEl = wrap;
+        dragStartY = e.clientY;
+        hasMoved = false;
+    });
+
+    // Table drag handle - floating, not inside <table>
+    const tableHandle = document.createElement('div');
+    tableHandle.className = 'table-drag-handle';
+    tableHandle.contentEditable = 'false';
+    tableHandle.innerHTML = '⠿';
+    tableHandle.title = 'Træk for at flytte tabel';
+    document.body.appendChild(tableHandle);
+    let tableHandleTarget = null;
+    let tableHandleTimeout = null;
+
+    function showTableHandle(table) {
+        if (tableHandleTarget === table && tableHandle.classList.contains('visible')) return;
+        tableHandleTarget = table;
+        clearTimeout(tableHandleTimeout);
+        const rect = table.getBoundingClientRect();
+        tableHandle.style.left = (rect.left + window.scrollX - 2) + 'px';
+        tableHandle.style.top = (rect.top + window.scrollY - 22) + 'px';
+        tableHandle.classList.add('visible');
+    }
+
+    function hideTableHandle() {
+        tableHandleTimeout = setTimeout(() => {
+            tableHandle.classList.remove('visible');
+            tableHandleTarget = null;
+        }, 200);
+    }
+
+    editor.addEventListener('mouseover', (e) => {
+        const table = e.target.closest('table');
+        if (table && editor.contains(table)) {
+            showTableHandle(table);
+        }
+    });
+
+    editor.addEventListener('mouseout', (e) => {
+        const table = e.target.closest('table');
+        if (table) {
+            const related = e.relatedTarget;
+            if (!related || (!table.contains(related) && related !== tableHandle)) {
+                hideTableHandle();
+            }
+        }
+    });
+
+    tableHandle.addEventListener('mouseenter', () => {
+        clearTimeout(tableHandleTimeout);
+    });
+
+    tableHandle.addEventListener('mouseleave', () => {
+        hideTableHandle();
+    });
+
+    tableHandle.addEventListener('mousedown', (e) => {
+        if (e.button !== 0 || !tableHandleTarget) return;
+        e.preventDefault();
+        e.stopPropagation();
+        dragEl = tableHandleTarget;
+        dragStartY = e.clientY;
+        hasMoved = false;
+        tableHandle.classList.add('dragging');
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!dragEl) return;
+        if (!hasMoved) {
+            if (Math.abs(e.clientY - dragStartY) < 5) return;
+            hasMoved = true;
+            dragEl.classList.add('dragging');
+        }
+        e.preventDefault();
+
+        const target = getDropTarget(e.clientY);
+        if (target) {
+            const indicator = createDropIndicator();
+            if (target.before) {
+                target.node.parentNode.insertBefore(indicator, target.node);
+            } else {
+                target.node.parentNode.insertBefore(indicator, target.node.nextSibling);
+            }
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (!dragEl) return;
+        if (hasMoved && dropIndicator && dropIndicator.parentNode) {
+            dropIndicator.parentNode.insertBefore(dragEl, dropIndicator);
+            saveState();
+        }
+        dragEl.classList.remove('dragging');
+        tableHandle.classList.remove('dragging');
+        removeDropIndicator();
+        dragEl = null;
+        hasMoved = false;
+        hideTableHandle();
+    });
+})();
+
 // ========================
 // PANEL RESIZER
 // ========================
@@ -2819,6 +3637,7 @@ function onMouseMove(e) {
     const newWidth = (e.clientX / containerWidth) * 100;
     if (newWidth > 20 && newWidth < 80) {
         leftPanel.style.width = newWidth + '%';
+        if (typeof updateTabScrollArrows === 'function') updateTabScrollArrows();
     }
 }
 
@@ -2850,6 +3669,47 @@ function switchTab(tab) {
 }
 
 // ========================
+// TAB SCROLL ARROWS
+// ========================
+function scrollTabs(direction) {
+    const inner = document.getElementById('toolTabsInner');
+    inner.scrollBy({ left: direction * 120, behavior: 'smooth' });
+}
+
+function updateTabScrollArrows() {
+    const inner = document.getElementById('toolTabsInner');
+    const leftBtn = document.getElementById('tabScrollLeft');
+    const rightBtn = document.getElementById('tabScrollRight');
+    if (!inner || !leftBtn || !rightBtn) return;
+
+    const overflowing = inner.scrollWidth > inner.clientWidth + 1;
+    if (!overflowing) {
+        leftBtn.classList.remove('visible');
+        rightBtn.classList.remove('visible');
+        return;
+    }
+
+    leftBtn.classList.toggle('visible', inner.scrollLeft > 1);
+    rightBtn.classList.toggle('visible', inner.scrollLeft + inner.clientWidth < inner.scrollWidth - 1);
+}
+
+(function initTabScroll() {
+    const inner = document.getElementById('toolTabsInner');
+    if (!inner) return;
+    // Mouse wheel scrolls tabs horizontally
+    inner.addEventListener('wheel', (e) => {
+        if (inner.scrollWidth > inner.clientWidth) {
+            e.preventDefault();
+            inner.scrollLeft += e.deltaY || e.deltaX;
+            updateTabScrollArrows();
+        }
+    }, { passive: false });
+    inner.addEventListener('scroll', updateTabScrollArrows);
+    window.addEventListener('resize', updateTabScrollArrows);
+    setTimeout(updateTabScrollArrows, 100);
+})();
+
+// ========================
 // CALCULATOR
 // ========================
 let calcExpression = '';
@@ -2865,7 +3725,27 @@ function calcUpdateDisplay() {
     } else {
         // While typing: expression in big area, small area empty
         exprEl.textContent = '';
-        resultEl.textContent = formatExpression(calcExpression) || '0';
+        const formatted = formatExpression(calcExpression) || '0';
+        // If user is typing directly in display, update carefully to preserve cursor
+        if (document.activeElement === resultEl) {
+            // Only update if content differs (button was pressed while display focused)
+            if (resultEl.textContent !== formatted) {
+                calcSettingResult = true;
+                resultEl.textContent = formatted;
+                calcSettingResult = false;
+                // Place cursor at end
+                const range = document.createRange();
+                range.selectNodeContents(resultEl);
+                range.collapse(false);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+        } else {
+            calcSettingResult = true;
+            resultEl.textContent = formatted;
+            calcSettingResult = false;
+        }
     }
 }
 
@@ -2914,11 +3794,203 @@ function formatExpression(expr) {
         .replace(/\*/g, '×')
         .replace(/\//g, '÷')
         .replace(/pi/g, 'π')
-        .replace(/sqrt/g, '√');
+        .replace(/sqrt/g, '√')
+;
+}
+
+// Allow direct editing in calculator display
+document.getElementById('calcResult').addEventListener('focus', () => {
+    const el = document.getElementById('calcResult');
+    // Select all when focusing so typing replaces the content
+    if (el.textContent === '0' || calcShowingResult) {
+        setTimeout(() => {
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }, 0);
+    }
+});
+
+let calcSettingResult = false;
+document.getElementById('calcResult').addEventListener('input', () => {
+    if (calcSettingResult) return;
+    const el = document.getElementById('calcResult');
+    let text = el.textContent;
+    // Convert display symbols back to internal representation
+    text = text.replace(/×/g, '*').replace(/÷/g, '/').replace(/π/g, 'pi').replace(/√/g, 'sqrt');
+    calcExpression = text;
+    calcShowingResult = false;
+    document.getElementById('calcExpr').textContent = '';
+});
+
+document.getElementById('calcResult').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        calcEvaluate();
+        document.getElementById('calcResult').blur();
+    }
+    if (e.key === 'Escape') {
+        e.preventDefault();
+        document.getElementById('calcResult').blur();
+    }
+});
+
+// ---- Equation solver ----
+function solveEquation(input) {
+    // Detect variable - strip known function names first
+    const stripped = input.replace(/sin|cos|tan|asin|acos|atan|sqrt|log|ln|abs|pi/g, '');
+    const varMatch = stripped.match(/[a-z]/i);
+    if (!varMatch) return null;
+    const v = varMatch[0];
+
+    let lhs, rhs;
+    if (input.includes('=')) {
+        [lhs, rhs] = input.split('=');
+    } else {
+        // Expression = 0
+        lhs = input; rhs = '0';
+    }
+
+    // Move everything to one side: f(v) = lhs - rhs = 0
+    function buildFunc(expr) {
+        // First insert implicit multiplication (before replacing function names)
+        let s = expr.trim()
+            .replace(/\^/g, '**');
+        // Protect function names with placeholders
+        s = s.replace(/asin/g, '##ASIN##').replace(/acos/g, '##ACOS##').replace(/atan/g, '##ATAN##')
+             .replace(/sin/g, '##SIN##').replace(/cos/g, '##COS##').replace(/tan/g, '##TAN##')
+             .replace(/sqrt/g, '##SQRT##').replace(/log/g, '##LOG##').replace(/ln/g, '##LN##')
+             .replace(/abs/g, '##ABS##').replace(/pi/g, '##PI##');
+        // Insert * between number and variable: 2x → 2*x
+        s = s.replace(/(\d)([a-z])/gi, '$1*$2')
+             .replace(/(\d)\(/g, '$1*(')
+             .replace(/\)(\d)/g, ')*$1')
+             .replace(/\)([a-z])/gi, ')*$1')
+             .replace(/([a-z])\(/gi, '$1*(');
+        // Restore function names
+        s = s.replace(/##ASIN##/g, 'Math.asin').replace(/##ACOS##/g, 'Math.acos').replace(/##ATAN##/g, 'Math.atan')
+             .replace(/##SIN##/g, 'Math.sin').replace(/##COS##/g, 'Math.cos').replace(/##TAN##/g, 'Math.tan')
+             .replace(/##SQRT##/g, 'Math.sqrt').replace(/##LOG##/g, 'Math.log10').replace(/##LN##/g, 'Math.log')
+             .replace(/##ABS##/g, 'Math.abs').replace(/##PI##/g, 'Math.PI')
+             .replace(/e(?![a-z])/g, 'Math.E');
+        return s;
+    }
+
+    const fStr = `(${buildFunc(lhs)}) - (${buildFunc(rhs)})`;
+    const f = (val) => {
+        try {
+            return Function(v, '"use strict"; return (' + fStr + ')')(val);
+        } catch { return NaN; }
+    };
+
+    // Check if it's linear: f(x) = ax + b
+    const f0 = f(0), f1 = f(1);
+    if (isFinite(f0) && isFinite(f1)) {
+        const a = f1 - f0, b = f0;
+        // Verify linearity
+        const f2 = f(2);
+        if (Math.abs((2 * a + b) - f2) < 1e-8 && Math.abs(a) > 1e-12) {
+            const sol = -b / a;
+            return [Math.round(sol * 1e10) / 1e10];
+        }
+    }
+
+    // Check if quadratic: f(x) = ax² + bx + c
+    const fm1 = f(-1);
+    if (isFinite(f0) && isFinite(f1) && isFinite(fm1)) {
+        const c = f0;
+        const a = (f1 + fm1) / 2 - c;
+        const b = f1 - a - c;
+        // Verify quadratic
+        const f2 = f(2), f3 = f(3);
+        if (Math.abs(a) > 1e-12 &&
+            Math.abs(a * 4 + b * 2 + c - f2) < 1e-6 &&
+            Math.abs(a * 9 + b * 3 + c - f3) < 1e-6) {
+            const disc = b * b - 4 * a * c;
+            if (disc < -1e-10) return []; // No real solutions
+            if (Math.abs(disc) < 1e-10) {
+                const sol = -b / (2 * a);
+                return [Math.round(sol * 1e10) / 1e10];
+            }
+            const s1 = (-b + Math.sqrt(disc)) / (2 * a);
+            const s2 = (-b - Math.sqrt(disc)) / (2 * a);
+            return [Math.round(s1 * 1e10) / 1e10, Math.round(s2 * 1e10) / 1e10].sort((a, b) => a - b);
+        }
+    }
+
+    // Numerical: Newton-Raphson from multiple starting points
+    const solutions = [];
+    const starts = [-100, -10, -5, -2, -1, -0.5, 0, 0.5, 1, 2, 5, 10, 100];
+    const eps = 1e-10;
+
+    for (const x0 of starts) {
+        let x = x0;
+        let converged = false;
+        for (let i = 0; i < 200; i++) {
+            const fx = f(x);
+            if (!isFinite(fx)) break;
+            if (Math.abs(fx) < eps) { converged = true; break; }
+            const dx = 1e-8;
+            const fpx = (f(x + dx) - f(x - dx)) / (2 * dx);
+            if (Math.abs(fpx) < 1e-15) break;
+            const step = fx / fpx;
+            x = x - step;
+            if (Math.abs(step) < eps) { converged = true; break; }
+        }
+        if (converged && isFinite(x) && Math.abs(f(x)) < 1e-6) {
+            const rounded = Math.round(x * 1e8) / 1e8;
+            // Check if this solution is already found
+            if (!solutions.some(s => Math.abs(s - rounded) < 1e-6)) {
+                solutions.push(rounded);
+            }
+        }
+    }
+
+    return solutions.sort((a, b) => a - b);
 }
 
 function calcEvaluate() {
     if (!calcExpression) return;
+
+    // Check if it's an equation (contains a variable letter)
+    const strippedExpr = calcExpression.replace(/sin|cos|tan|asin|acos|atan|sqrt|log|ln|abs|pi/g, '');
+    const hasVariable = /[a-z]/i.test(strippedExpr);
+    const hasEquals = calcExpression.includes('=');
+
+    if (hasVariable || hasEquals) {
+        try {
+            const solutions = solveEquation(calcExpression);
+            if (solutions === null) throw new Error('No variable');
+
+            const v = strippedExpr.match(/[a-z]/i)[0];
+            const displayExpr = formatExpression(calcExpression);
+            let resultStr;
+
+            if (solutions.length === 0) {
+                resultStr = 'Ingen løsning';
+            } else if (solutions.length === 1) {
+                resultStr = v + ' = ' + solutions[0];
+            } else {
+                resultStr = solutions.map(s => v + ' = ' + s).join('  ∨  ');
+            }
+
+            calcHistoryItems.push({ expr: displayExpr, result: resultStr, raw: calcExpression });
+            updateCalcHistory();
+
+            document.getElementById('calcExpr').textContent = displayExpr;
+            calcSettingResult = true;
+            document.getElementById('calcResult').textContent = resultStr;
+            calcSettingResult = false;
+            calcExpression = solutions.length === 1 ? String(solutions[0]) : '';
+            calcShowingResult = true;
+            return;
+        } catch (e) {
+            // Fall through to normal evaluation
+        }
+    }
+
     try {
         let expr = calcExpression
             .replace(/pi/g, 'Math.PI')
@@ -2947,7 +4019,9 @@ function calcEvaluate() {
         updateCalcHistory();
 
         document.getElementById('calcExpr').textContent = displayExpr + ' =';
+        calcSettingResult = true;
         document.getElementById('calcResult').textContent = result;
+        calcSettingResult = false;
         calcExpression = String(result);
         calcShowingResult = true;
     } catch (e) {
@@ -3008,6 +4082,7 @@ function insertCalcToEditor() {
 // Keyboard support for calculator
 document.addEventListener('keydown', (e) => {
     if (document.activeElement === editor) return;
+    if (document.activeElement === document.getElementById('calcResult')) return;
     const activeTab = document.querySelector('.tool-content.active');
     if (!activeTab || activeTab.id !== 'tab-calculator') return;
 
@@ -3020,6 +4095,8 @@ document.addEventListener('keydown', (e) => {
     else if (e.key === '(') calcInput('(');
     else if (e.key === ')') calcInput(')');
     else if (e.key === '^') calcInput('^');
+    else if (e.key === '=') calcInput('=');
+    else if (/^[a-z]$/i.test(e.key)) calcInput(e.key);
     else if (e.key === 'Enter') calcEvaluate();
     else if (e.key === 'Backspace') calcBackspace();
     else if (e.key === 'Escape') calcClear();
@@ -3080,6 +4157,15 @@ const formulas = {
         { name: 'Cosinus', formula: 'cos(v) = hosliggende / hypotenuse', text: 'cos(v) = hosliggende / hypotenuse' },
         { name: 'Tangens', formula: 'tan(v) = modstående / hosliggende', text: 'tan(v) = modstående / hosliggende' },
     ],
+    'Tabelformler': [
+        { name: 'Cellereference', formula: '=A1', text: '=A1' },
+        { name: 'Regn med celler', formula: '=A1*B1', text: '=A1*B1' },
+        { name: 'Sum af område', formula: '=SUM(A1:A5)', text: '=SUM(A1:A5)' },
+        { name: 'Gennemsnit', formula: '=GENNEMSNIT(A1:A5)', text: '=GENNEMSNIT(A1:A5)' },
+        { name: 'Minimum', formula: '=MIN(A1:A5)', text: '=MIN(A1:A5)' },
+        { name: 'Maksimum', formula: '=MAX(A1:A5)', text: '=MAX(A1:A5)' },
+        { name: 'Antal', formula: '=COUNT(A1:A5)', text: '=COUNT(A1:A5)' },
+    ],
 };
 
 const categoryIcons = {
@@ -3092,6 +4178,7 @@ const categoryIcons = {
     'Lineære funktioner': '📈',
     'Statistik': '📊',
     'Trigonometri': '🔺',
+    'Tabelformler': '▦',
 };
 
 function buildFormulas() {
@@ -3166,6 +4253,7 @@ let showAxes = false;
 let graphs = [];
 let freehandPoints = [];
 let anglePoints = []; // For angle tool: [arm1, vertex, arm2]
+let polygonPoints = []; // For polygon tool
 const ANGLE_SNAP_DEGREES = [0, 30, 45, 60, 90, 120, 135, 150, 180];
 const ANGLE_SNAP_THRESHOLD = 0.5; // degrees tolerance
 
@@ -3195,6 +4283,21 @@ function snapAnglePoint(vertex, arm1, rawPoint) {
         }
     }
     return { x: rawPoint.x, y: rawPoint.y, snapped: false, snapDeg: null };
+}
+
+const POLY_SNAP_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315, 360];
+const POLY_SNAP_THRESHOLD = 2; // degrees tolerance
+function snapPolyPoint(from, rawTo) {
+    const angle = Math.atan2(rawTo.y - from.y, rawTo.x - from.x) * 180 / Math.PI;
+    const dist = Math.sqrt((rawTo.x - from.x) ** 2 + (rawTo.y - from.y) ** 2);
+    for (const sa of POLY_SNAP_ANGLES) {
+        const check = sa > 180 ? sa - 360 : sa;
+        if (Math.abs(angle - check) <= POLY_SNAP_THRESHOLD) {
+            const rad = check * Math.PI / 180;
+            return { x: from.x + Math.cos(rad) * dist, y: from.y + Math.sin(rad) * dist, snapped: true, snapDeg: sa };
+        }
+    }
+    return { x: rawTo.x, y: rawTo.y, snapped: false, snapDeg: null };
 }
 
 function resizeCanvas() {
@@ -3268,6 +4371,12 @@ document.addEventListener('click', (e) => {
 });
 
 function setGeoTool(tool) {
+    if (currentTool === 'polygon' && tool !== 'polygon') polygonPoints = [];
+    if (currentTool === 'angle' && tool !== 'angle') anglePoints = [];
+    // Remove snip cursor from previous tool
+    if (currentTool === 'snip' && tool !== 'snip') {
+        canvas.parentElement.classList.remove('snip-active');
+    }
     currentTool = tool;
     document.querySelectorAll('.geo-btn').forEach(b => b.classList.remove('active'));
     // For square/diamond, highlight the rect button
@@ -3287,6 +4396,11 @@ function setGeoTool(tool) {
     // Default text tool to black
     if (tool === 'text') {
         setQuickColor('#000000', document.querySelector('.color-quick[onclick*="000000"]'));
+    }
+
+    // Set crosshair cursor immediately for snip tool
+    if (tool === 'snip') {
+        canvas.parentElement.classList.add('snip-active');
     }
 }
 
@@ -3477,6 +4591,20 @@ function drawMeasurements(shape) {
             });
             break;
         }
+        case 'polygon': {
+            const pts = shape.points;
+            for (let i = 0; i < pts.length; i++) {
+                const a = pts[i], b = pts[(i + 1) % pts.length];
+                const len = Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
+                const t = lbl('side' + i, fmtCm(len) + ' cm');
+                if (!t) continue;
+                const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+                const dx = b.y - a.y, dy = -(b.x - a.x);
+                const d = Math.sqrt(dx * dx + dy * dy) || 1;
+                ctx.fillText(t, mx + dx / d * 14, my + dy / d * 14);
+            }
+            break;
+        }
         case 'line': {
             const len = Math.sqrt((shape.x2 - shape.x1) ** 2 + (shape.y2 - shape.y1) ** 2);
             const t = lbl('len', fmtCm(len) + ' cm');
@@ -3576,6 +4704,20 @@ function applyMeasurementEdit(shape, dim, newCm) {
 
 let editingMeasurement = false;
 canvas.addEventListener('dblclick', (e) => {
+    // Close polygon on double-click
+    if (currentTool === 'polygon' && polygonPoints.length >= 3) {
+        // Remove the last point (added by the second click of the dblclick)
+        polygonPoints.pop();
+        const color = document.getElementById('geoColor').value;
+        const width = parseInt(document.getElementById('geoWidth').value);
+        const fill = document.getElementById('geoFill').checked;
+        const shape = { type: 'polygon', points: [...polygonPoints], color, width, fill };
+        undoStack.push([...shapes]);
+        shapes.push(shape);
+        polygonPoints = [];
+        redrawCanvas();
+        return;
+    }
     if (!document.getElementById('geoMeasure')?.checked) return;
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
@@ -3713,9 +4855,10 @@ function getShapeCenter(shape) {
 
 function drawShape(shape) {
     ctx.save();
+    if (shape.opacity != null) ctx.globalAlpha = shape.opacity;
     ctx.strokeStyle = shape.color;
     ctx.lineWidth = shape.width;
-    ctx.fillStyle = shape.color + '33';
+    ctx.fillStyle = shape.fillColor || (shape.color + '33');
 
     // Apply rotation if set
     if (shape.rotation) {
@@ -3765,6 +4908,17 @@ function drawShape(shape) {
             ctx.moveTo(shape.x1, shape.y1);
             ctx.lineTo(shape.x2, shape.y2);
             ctx.lineTo(shape.x3, shape.y3);
+            ctx.closePath();
+            if (shape.fill) ctx.fill();
+            ctx.stroke();
+            break;
+        case 'polygon':
+            if (shape.points.length < 3) { ctx.restore(); return; }
+            ctx.beginPath();
+            ctx.moveTo(shape.points[0].x, shape.points[0].y);
+            for (let i = 1; i < shape.points.length; i++) {
+                ctx.lineTo(shape.points[i].x, shape.points[i].y);
+            }
             ctx.closePath();
             if (shape.fill) ctx.fill();
             ctx.stroke();
@@ -3886,6 +5040,12 @@ function hitTestShape(ox, oy) {
                 const tw = ctx.measureText(s.text).width;
                 if (x >= s.x - margin && x <= s.x + tw + margin && y >= s.y - s.width * 8 - margin && y <= s.y + margin) return i;
                 break;
+            case 'polygon': {
+                let minPX = Infinity, minPY = Infinity, maxPX = -Infinity, maxPY = -Infinity;
+                s.points.forEach(p => { minPX = Math.min(minPX, p.x); minPY = Math.min(minPY, p.y); maxPX = Math.max(maxPX, p.x); maxPY = Math.max(maxPY, p.y); });
+                if (x >= minPX - margin && x <= maxPX + margin && y >= minPY - margin && y <= maxPY + margin) return i;
+                break;
+            }
             case 'freehand':
                 for (const p of s.points) {
                     if (Math.sqrt((x - p.x) ** 2 + (y - p.y) ** 2) < margin + 4) return i;
@@ -3922,6 +5082,7 @@ function moveShape(shape, dx, dy) {
         case 'line': shape.x1 += dx; shape.y1 += dy; shape.x2 += dx; shape.y2 += dy; break;
         case 'triangle': shape.x1 += dx; shape.y1 += dy; shape.x2 += dx; shape.y2 += dy; shape.x3 += dx; shape.y3 += dy; break;
         case 'text': shape.x += dx; shape.y += dy; break;
+        case 'polygon': shape.points.forEach(p => { p.x += dx; p.y += dy; }); break;
         case 'freehand': shape.points.forEach(p => { p.x += dx; p.y += dy; }); break;
         case 'angle': shape.vx += dx; shape.vy += dy; shape.x1 += dx; shape.y1 += dy; shape.x2 += dx; shape.y2 += dy; break;
     }
@@ -3946,6 +5107,11 @@ function getShapeTopRight(idx) {
         case 'text':
             ctx.font = (s.fontSize || s.width * 8) + 'px sans-serif';
             return { x: s.x + ctx.measureText(s.text).width, y: s.y - s.width * 8 };
+        case 'polygon': {
+            let pmaxX = -Infinity, pminY = Infinity;
+            s.points.forEach(p => { if (p.x > pmaxX) pmaxX = p.x; if (p.y < pminY) pminY = p.y; });
+            return { x: pmaxX, y: pminY };
+        }
         case 'freehand':
             let maxX = -Infinity, minY = Infinity;
             s.points.forEach(p => { if (p.x > maxX) maxX = p.x; if (p.y < minY) minY = p.y; });
@@ -4004,6 +5170,162 @@ function showDeleteBtn(idx) {
     deleteBtnIdx = idx;
 }
 
+// Right-click context menu for shape fill color
+let geoCtxMenu = null;
+const FILL_COLORS = [
+    { color: null, label: 'Ingen fyld' },
+    { color: '#ef444466', label: 'Rød' },
+    { color: '#f97316aa', label: 'Orange' },
+    { color: '#eab30866', label: 'Gul' },
+    { color: '#22c55e66', label: 'Grøn' },
+    { color: '#3b82f666', label: 'Blå' },
+    { color: '#8b5cf666', label: 'Lilla' },
+    { color: '#ec489966', label: 'Pink' },
+    { color: '#00000022', label: 'Grå' },
+    { color: '#ef4444', label: 'Rød solid' },
+    { color: '#f97316', label: 'Orange solid' },
+    { color: '#eab308', label: 'Gul solid' },
+    { color: '#22c55e', label: 'Grøn solid' },
+    { color: '#3b82f6', label: 'Blå solid' },
+    { color: '#8b5cf6', label: 'Lilla solid' },
+    { color: '#ec4899', label: 'Pink solid' },
+    { color: '#000000', label: 'Sort solid' },
+];
+
+function closeGeoCtxMenu() {
+    if (geoCtxMenu) { geoCtxMenu.remove(); geoCtxMenu = null; }
+}
+
+canvas.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    closeGeoCtxMenu();
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const idx = hitTestShape(mx, my);
+    if (idx < 0) return;
+    const shape = shapes[idx];
+    const isFillable = !['line', 'freehand', 'text', 'angle'].includes(shape.type);
+
+    selectedShape = idx;
+    redrawCanvas();
+    showDeleteBtn(idx);
+
+    geoCtxMenu = document.createElement('div');
+    geoCtxMenu.className = 'geo-ctx-menu';
+    geoCtxMenu.style.left = (mx + 8) + 'px';
+    geoCtxMenu.style.top = (my + 8) + 'px';
+
+    if (isFillable) {
+        const label = document.createElement('div');
+        label.className = 'ctx-label';
+        label.textContent = 'Fyldfarve';
+        geoCtxMenu.appendChild(label);
+
+        const colorsDiv = document.createElement('div');
+        colorsDiv.className = 'ctx-colors';
+
+        // No-fill button
+        const noFill = document.createElement('button');
+        noFill.className = 'ctx-no-fill';
+        if (!shape.fill && !shape.fillColor) noFill.style.borderColor = 'var(--primary)';
+        noFill.title = 'Ingen fyld';
+        noFill.addEventListener('mousedown', (ev) => {
+            ev.stopPropagation();
+            undoStack.push(JSON.parse(JSON.stringify(shapes)));
+            shape.fill = false;
+            shape.fillColor = null;
+            redrawCanvas();
+            closeGeoCtxMenu();
+        });
+        colorsDiv.appendChild(noFill);
+
+        FILL_COLORS.forEach(fc => {
+            if (!fc.color) return;
+            const btn = document.createElement('button');
+            btn.className = 'ctx-color-btn';
+            btn.style.background = fc.color;
+            btn.title = fc.label;
+            if (shape.fillColor === fc.color) btn.classList.add('active');
+            btn.addEventListener('mousedown', (ev) => {
+                ev.stopPropagation();
+                undoStack.push(JSON.parse(JSON.stringify(shapes)));
+                shape.fill = true;
+                shape.fillColor = fc.color;
+                redrawCanvas();
+                closeGeoCtxMenu();
+            });
+            colorsDiv.appendChild(btn);
+        });
+
+        // Custom color picker
+        const customLabel = document.createElement('div');
+        customLabel.className = 'ctx-label';
+        customLabel.style.marginTop = '6px';
+        customLabel.textContent = 'Brugerdefineret';
+
+        const customInput = document.createElement('input');
+        customInput.type = 'color';
+        customInput.value = shape.fillColor ? shape.fillColor.substring(0, 7) : '#3b82f6';
+        customInput.style.cssText = 'width:22px;height:22px;padding:0;border:1px solid var(--border);border-radius:50%;cursor:pointer;';
+        customInput.addEventListener('input', (ev) => {
+            undoStack.push(JSON.parse(JSON.stringify(shapes)));
+            shape.fill = true;
+            shape.fillColor = ev.target.value + '88';
+            redrawCanvas();
+        });
+
+        geoCtxMenu.appendChild(colorsDiv);
+        geoCtxMenu.appendChild(customLabel);
+        geoCtxMenu.appendChild(customInput);
+    }
+
+    // Opacity slider
+    const opDiv = document.createElement('div');
+    opDiv.style.cssText = 'display:flex;align-items:center;gap:6px;margin-top:6px;';
+    const opLabel = document.createElement('span');
+    opLabel.className = 'ctx-label';
+    opLabel.style.margin = '0';
+    opLabel.textContent = 'Gennemsigtighed';
+    const opSlider = document.createElement('input');
+    opSlider.type = 'range';
+    opSlider.min = '10';
+    opSlider.max = '100';
+    opSlider.value = Math.round((shape.opacity ?? 1) * 100);
+    opSlider.style.cssText = 'flex:1;width:60px;accent-color:var(--primary);';
+    const opVal = document.createElement('span');
+    opVal.style.cssText = 'min-width:28px;text-align:right;font-size:12px;';
+    opVal.textContent = opSlider.value + '%';
+    opSlider.addEventListener('input', () => {
+        const v = opSlider.value;
+        opVal.textContent = v + '%';
+        shape.opacity = v / 100;
+        redrawCanvas();
+    });
+    opSlider.addEventListener('mousedown', (ev) => ev.stopPropagation());
+    opDiv.appendChild(opLabel);
+    opDiv.appendChild(opSlider);
+    opDiv.appendChild(opVal);
+    geoCtxMenu.appendChild(opDiv);
+
+    canvas.parentElement.appendChild(geoCtxMenu);
+
+    // Keep menu in bounds
+    requestAnimationFrame(() => {
+        if (!geoCtxMenu) return;
+        const container = canvas.parentElement.getBoundingClientRect();
+        const menuRect = geoCtxMenu.getBoundingClientRect();
+        if (menuRect.right > container.right) geoCtxMenu.style.left = (mx - menuRect.width - 8) + 'px';
+        if (menuRect.bottom > container.bottom) geoCtxMenu.style.top = (my - menuRect.height - 8) + 'px';
+    });
+});
+
+// Close context menu on click elsewhere
+canvas.addEventListener('mousedown', () => closeGeoCtxMenu());
+document.addEventListener('mousedown', (e) => {
+    if (geoCtxMenu && !geoCtxMenu.contains(e.target)) closeGeoCtxMenu();
+});
+
 // Hide delete button when switching tools
 const origSetGeoTool = setGeoTool;
 setGeoTool = function(tool) {
@@ -4036,6 +5358,11 @@ function getShapeBounds(s) {
             ctx.font = (s.fontSize || s.width * 8) + 'px sans-serif';
             const tw = ctx.measureText(s.text).width;
             return { x: s.x, y: s.y - s.width * 8, w: tw, h: s.width * 8 };
+        }
+        case 'polygon': {
+            let pMinX = Infinity, pMinY = Infinity, pMaxX = -Infinity, pMaxY = -Infinity;
+            s.points.forEach(p => { pMinX = Math.min(pMinX, p.x); pMinY = Math.min(pMinY, p.y); pMaxX = Math.max(pMaxX, p.x); pMaxY = Math.max(pMaxY, p.y); });
+            return { x: pMinX, y: pMinY, w: pMaxX - pMinX, h: pMaxY - pMinY };
         }
         case 'freehand': {
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -4075,6 +5402,12 @@ function resizeShape(shape, scaleX, scaleY, anchorX, anchorY) {
             break;
         case 'text':
             shape.width = Math.max(1, Math.round(shape.width * Math.max(scaleX, scaleY)));
+            break;
+        case 'polygon':
+            shape.points.forEach(p => {
+                p.x = anchorX + (p.x - anchorX) * scaleX;
+                p.y = anchorY + (p.y - anchorY) * scaleY;
+            });
             break;
         case 'freehand':
             shape.points.forEach(p => {
@@ -4331,8 +5664,14 @@ canvas.addEventListener('mousemove', (e) => {
         const bounds = getShapeBounds(shapes[selectedShape]);
         const newW = bounds.w + (mx - dragStartX);
         const newH = bounds.h + (my - dragStartY);
-        const scaleX = bounds.w > 0 ? newW / bounds.w : 1;
-        const scaleY = bounds.h > 0 ? newH / bounds.h : 1;
+        let scaleX = bounds.w > 0 ? newW / bounds.w : 1;
+        let scaleY = bounds.h > 0 ? newH / bounds.h : 1;
+        // Uniform scaling for polygons
+        if (shapes[selectedShape].type === 'polygon') {
+            const uniformScale = Math.max(scaleX, scaleY);
+            scaleX = uniformScale;
+            scaleY = uniformScale;
+        }
         if (scaleX > 0.1 && scaleY > 0.1) {
             resizeShape(shapes[selectedShape], scaleX, scaleY, bounds.x, bounds.y);
             dragStartX = mx;
@@ -4371,6 +5710,8 @@ canvas.addEventListener('mousemove', (e) => {
         } else {
             canvas.style.cursor = hitTestShape(mx, my) >= 0 ? 'move' : 'default';
         }
+    } else if (currentTool !== 'select') {
+        canvas.style.cursor = '';
     }
 });
 
@@ -4382,7 +5723,7 @@ canvas.addEventListener('mouseup', () => {
         isDragging = false;
         isShapeResizing = false;
         isRotating = false;
-        canvas.style.cursor = 'default';
+        if (currentTool === 'select') canvas.style.cursor = 'default';
         if (selectedShape >= 0) {
             redrawCanvas();
             drawSelectionUI(selectedShape);
@@ -4394,6 +5735,61 @@ canvas.addEventListener('mouseup', () => {
 canvas.addEventListener('mousedown', (e) => {
     if (editingMeasurement) return;
     if (currentTool === 'select' || currentTool === 'graph') return;
+
+    // Polygon tool: click to add points, double-click or click near first point to close
+    if (currentTool === 'polygon') {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const color = document.getElementById('geoColor').value;
+        const width = parseInt(document.getElementById('geoWidth').value);
+        const fill = document.getElementById('geoFill').checked;
+
+        // Close polygon if clicking near first point (and at least 3 points)
+        if (polygonPoints.length >= 3) {
+            const first = polygonPoints[0];
+            if (Math.sqrt((mx - first.x) ** 2 + (my - first.y) ** 2) < 12) {
+                const shape = { type: 'polygon', points: [...polygonPoints], color, width, fill };
+                undoStack.push([...shapes]);
+                shapes.push(shape);
+                polygonPoints = [];
+                redrawCanvas();
+                return;
+            }
+        }
+
+        // Snap to 45° if near
+        let px = mx, py = my;
+        if (polygonPoints.length > 0) {
+            const lastPt = polygonPoints[polygonPoints.length - 1];
+            const snap = snapPolyPoint(lastPt, { x: mx, y: my });
+            if (snap.snapped) { px = snap.x; py = snap.y; }
+        }
+        polygonPoints.push({ x: px, y: py });
+        redrawCanvas();
+        // Draw preview
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(polygonPoints[0].x, polygonPoints[0].y);
+        for (let i = 1; i < polygonPoints.length; i++) {
+            ctx.lineTo(polygonPoints[i].x, polygonPoints[i].y);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // Draw dots
+        polygonPoints.forEach((p, i) => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, i === 0 ? 6 : 4, 0, Math.PI * 2);
+            ctx.fillStyle = i === 0 ? color + '66' : color;
+            ctx.fill();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        });
+        return;
+    }
 
     // Angle tool: click-based (3 points)
     if (currentTool === 'angle') {
@@ -4483,6 +5879,120 @@ canvas.addEventListener('mousedown', (e) => {
         const existing = document.querySelector('.geo-text-input');
         if (existing) existing.remove();
         // isDrawing stays true - we use mousemove/mouseup to define box size
+    }
+});
+
+// Polygon tool preview on mousemove
+canvas.addEventListener('mousemove', (e) => {
+    if (currentTool !== 'polygon' || polygonPoints.length === 0) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const color = document.getElementById('geoColor').value;
+    const width = parseInt(document.getElementById('geoWidth').value);
+
+    // Snap to 45° increments from last point
+    const lastPt = polygonPoints[polygonPoints.length - 1];
+    const snap = snapPolyPoint(lastPt, { x: mx, y: my });
+    const sx = snap.x, sy = snap.y;
+    const isSnapped = snap.snapped;
+
+    redrawCanvas();
+    ctx.strokeStyle = isSnapped ? '#10b981' : color;
+    ctx.lineWidth = width;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(polygonPoints[0].x, polygonPoints[0].y);
+    for (let i = 1; i < polygonPoints.length; i++) {
+        ctx.lineTo(polygonPoints[i].x, polygonPoints[i].y);
+    }
+    if (isSnapped) {
+        // Draw previous segments in normal color, last segment in green
+        ctx.strokeStyle = color;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(lastPt.x, lastPt.y);
+        ctx.lineTo(sx, sy);
+        ctx.strokeStyle = '#10b981';
+        ctx.setLineDash([]);
+    } else {
+        ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // Draw side length labels
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    for (let i = 0; i < polygonPoints.length; i++) {
+        const a = polygonPoints[i];
+        const b = i < polygonPoints.length - 1 ? polygonPoints[i + 1] : { x: sx, y: sy };
+        const len = Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
+        const midX = (a.x + b.x) / 2, midY = (a.y + b.y) / 2;
+        const nx = b.y - a.y, ny = -(b.x - a.x);
+        const nd = Math.sqrt(nx * nx + ny * ny) || 1;
+        const isLastSeg = i === polygonPoints.length - 1;
+        ctx.fillStyle = isLastSeg && isSnapped ? '#10b981' : '#334155';
+        ctx.fillText(fmtCm(len) + ' cm', midX + nx / nd * 14, midY + ny / nd * 14);
+    }
+    // Show snap angle indicator
+    if (isSnapped) {
+        ctx.font = 'bold 11px sans-serif';
+        ctx.fillStyle = '#10b981';
+        ctx.fillText(snap.snapDeg + '°', sx + 14, sy - 10);
+    }
+    ctx.textAlign = 'start';
+    // Draw dots
+    polygonPoints.forEach((p, i) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, i === 0 ? 6 : 4, 0, Math.PI * 2);
+        ctx.fillStyle = i === 0 ? color + '66' : color;
+        ctx.fill();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    });
+    // Snap indicator dot
+    if (isSnapped) {
+        ctx.beginPath();
+        ctx.arc(sx, sy, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#10b98133';
+        ctx.fill();
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+    // Highlight close indicator near first point
+    if (polygonPoints.length >= 3) {
+        const first = polygonPoints[0];
+        if (Math.sqrt((sx - first.x) ** 2 + (sy - first.y) ** 2) < 12) {
+            ctx.beginPath();
+            ctx.arc(first.x, first.y, 8, 0, Math.PI * 2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+    }
+});
+
+// Enter key closes polygon and switches to select
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const geoTab = document.getElementById('tab-geometry');
+    if (!geoTab || !geoTab.classList.contains('active')) return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+    if (currentTool === 'polygon' && polygonPoints.length >= 3) {
+        e.preventDefault();
+        const color = document.getElementById('geoColor').value;
+        const width = parseInt(document.getElementById('geoWidth').value);
+        const fill = document.getElementById('geoFill').checked;
+        const shape = { type: 'polygon', points: [...polygonPoints], color, width, fill };
+        undoStack.push([...shapes]);
+        shapes.push(shape);
+        polygonPoints = [];
+        redrawCanvas();
+        setGeoTool('select');
+        selectedShape = shapes.length - 1;
+        showDeleteBtn(selectedShape);
     }
 });
 
@@ -5040,6 +6550,344 @@ function insertResizableImage(dataUrl, alt) {
     editor.focus();
     document.execCommand('insertHTML', false, html);
     updateCounts();
+}
+
+// Image context menu
+const imgMenu = document.createElement('div');
+imgMenu.id = 'imgContextMenu';
+imgMenu.innerHTML = `
+<button id="imgCopyBtn">📋 Kopier</button>
+<button id="imgCropBtn">✂ Beskær</button>
+<div style="height:1px;background:#e2e8f0;margin:2px 4px;"></div>
+<button id="imgWrapInlineBtn">📄 På linje med tekst</button>
+<button id="imgWrapBehindBtn">⬇ Bagved tekst</button>
+<button id="imgWrapFloatLeftBtn">◧ Flyd til venstre</button>
+<button id="imgWrapFloatRightBtn">◨ Flyd til højre</button>
+<div style="height:1px;background:#e2e8f0;margin:2px 4px;"></div>
+<button id="imgBringFwdBtn">↑ Ryk frem</button>
+<button id="imgSendBackBtn">↓ Ryk tilbage</button>
+<div style="height:1px;background:#e2e8f0;margin:2px 4px;"></div>
+<div style="padding:4px 16px 4px;display:flex;align-items:center;gap:8px;font-size:13px;">
+<span>Gennemsigtighed</span>
+<input type="range" id="imgOpacitySlider" min="10" max="100" value="100" style="flex:1;width:80px;accent-color:var(--primary);">
+<span id="imgOpacityVal" style="min-width:28px;text-align:right;font-size:12px;">100%</span>
+</div>
+<div style="height:1px;background:#e2e8f0;margin:2px 4px;"></div>
+<button id="imgDeleteBtn">🗑 Slet</button>
+`;
+document.body.appendChild(imgMenu);
+
+let contextMenuImg = null;
+
+editor.addEventListener('contextmenu', (e) => {
+    let wrap = e.target.closest('.inserted-geo-wrap');
+    let img = wrap ? wrap.querySelector('img.inserted-geo') || wrap.querySelector('img') : null;
+    // Also handle bare images not in a wrap
+    if (!wrap && e.target.closest('img')) {
+        img = e.target.closest('img');
+        // Wrap the bare image in an inserted-geo-wrap
+        wrap = document.createElement('span');
+        wrap.className = 'inserted-geo-wrap';
+        wrap.contentEditable = 'false';
+        img.parentNode.insertBefore(wrap, img);
+        wrap.appendChild(img);
+        img.classList.add('inserted-geo');
+        const handle = document.createElement('span');
+        handle.className = 'img-resize-handle';
+        wrap.appendChild(handle);
+    }
+    // Check if right-click is over a wrap-behind image (behind text, so not directly clicked)
+    if (!wrap && !img) {
+        const behindWraps = editor.querySelectorAll('.inserted-geo-wrap.wrap-behind');
+        for (const bw of behindWraps) {
+            const rect = bw.getBoundingClientRect();
+            if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                wrap = bw;
+                img = bw.querySelector('img');
+                break;
+            }
+        }
+    }
+    if (!wrap || !img) { imgMenu.style.display = 'none'; return; }
+    e.preventDefault();
+    e.stopPropagation();
+    contextMenuImg = { wrap, img };
+    // Highlight active wrap mode
+    const isBehind = wrap.classList.contains('wrap-behind');
+    const isFloatL = wrap.classList.contains('wrap-float-left');
+    const isFloatR = wrap.classList.contains('wrap-float-right');
+    const isInline = !isBehind && !isFloatL && !isFloatR;
+    document.getElementById('imgWrapInlineBtn').style.fontWeight = isInline ? '700' : '';
+    document.getElementById('imgWrapBehindBtn').style.fontWeight = isBehind ? '700' : '';
+    document.getElementById('imgWrapFloatLeftBtn').style.fontWeight = isFloatL ? '700' : '';
+    document.getElementById('imgWrapFloatRightBtn').style.fontWeight = isFloatR ? '700' : '';
+    // Set opacity slider to current value
+    const curOpacity = Math.round((parseFloat(img.style.opacity) || 1) * 100);
+    document.getElementById('imgOpacitySlider').value = curOpacity;
+    document.getElementById('imgOpacityVal').textContent = curOpacity + '%';
+    imgMenu.style.left = e.clientX + 'px';
+    imgMenu.style.top = e.clientY + 'px';
+    imgMenu.style.display = 'block';
+    // Flip menu upward/leftward if it overflows viewport
+    requestAnimationFrame(() => {
+        const mr = imgMenu.getBoundingClientRect();
+        if (mr.bottom > window.innerHeight) {
+            imgMenu.style.top = (e.clientY - mr.height) + 'px';
+        }
+        if (mr.right > window.innerWidth) {
+            imgMenu.style.left = (e.clientX - mr.width) + 'px';
+        }
+    });
+});
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('#imgContextMenu')) imgMenu.style.display = 'none';
+});
+
+document.getElementById('imgCopyBtn').addEventListener('click', async () => {
+    imgMenu.style.display = 'none';
+    if (!contextMenuImg) return;
+    const img = contextMenuImg.img;
+    try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const c = canvas.getContext('2d');
+        c.drawImage(img, 0, 0);
+        const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    } catch (e) {
+        // Fallback: copy as HTML
+        const range = document.createRange();
+        range.selectNode(contextMenuImg.wrap);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        document.execCommand('copy');
+        sel.removeAllRanges();
+    }
+});
+
+document.getElementById('imgCropBtn').addEventListener('click', () => {
+    imgMenu.style.display = 'none';
+    if (contextMenuImg) startCrop(contextMenuImg.wrap, contextMenuImg.img);
+});
+
+document.getElementById('imgDeleteBtn').addEventListener('click', () => {
+    imgMenu.style.display = 'none';
+    if (contextMenuImg) {
+        contextMenuImg.wrap.remove();
+        contextMenuImg = null;
+        saveState();
+    }
+});
+
+function clearWrapMode(wrap) {
+    wrap.classList.remove('wrap-behind', 'wrap-float-left', 'wrap-float-right');
+    wrap.style.position = '';
+    wrap.style.zIndex = '';
+    wrap.style.float = '';
+    wrap.style.marginBottom = '';
+}
+
+document.getElementById('imgWrapInlineBtn').addEventListener('click', () => {
+    imgMenu.style.display = 'none';
+    if (!contextMenuImg) return;
+    clearWrapMode(contextMenuImg.wrap);
+    saveState();
+});
+
+document.getElementById('imgWrapBehindBtn').addEventListener('click', () => {
+    imgMenu.style.display = 'none';
+    if (!contextMenuImg) return;
+    const wrap = contextMenuImg.wrap;
+    const img = contextMenuImg.img;
+    clearWrapMode(wrap);
+    wrap.classList.add('wrap-behind');
+    // Pull subsequent content up over the image
+    requestAnimationFrame(() => {
+        wrap.style.marginBottom = -wrap.offsetHeight + 'px';
+    });
+    saveState();
+});
+
+document.getElementById('imgWrapFloatLeftBtn').addEventListener('click', () => {
+    imgMenu.style.display = 'none';
+    if (!contextMenuImg) return;
+    clearWrapMode(contextMenuImg.wrap);
+    contextMenuImg.wrap.classList.add('wrap-float-left');
+    saveState();
+});
+
+document.getElementById('imgWrapFloatRightBtn').addEventListener('click', () => {
+    imgMenu.style.display = 'none';
+    if (!contextMenuImg) return;
+    clearWrapMode(contextMenuImg.wrap);
+    contextMenuImg.wrap.classList.add('wrap-float-right');
+    saveState();
+});
+
+document.getElementById('imgBringFwdBtn').addEventListener('click', () => {
+    imgMenu.style.display = 'none';
+    if (!contextMenuImg) return;
+    const wrap = contextMenuImg.wrap;
+    const z = parseInt(wrap.style.zIndex || '0');
+    wrap.style.zIndex = z + 1;
+    saveState();
+});
+
+document.getElementById('imgSendBackBtn').addEventListener('click', () => {
+    imgMenu.style.display = 'none';
+    if (!contextMenuImg) return;
+    const wrap = contextMenuImg.wrap;
+    const z = parseInt(wrap.style.zIndex || '0');
+    wrap.style.zIndex = z - 1;
+    saveState();
+});
+
+document.getElementById('imgOpacitySlider').addEventListener('input', (e) => {
+    if (!contextMenuImg) return;
+    const val = e.target.value;
+    contextMenuImg.img.style.opacity = val / 100;
+    document.getElementById('imgOpacityVal').textContent = val + '%';
+});
+document.getElementById('imgOpacitySlider').addEventListener('change', () => {
+    saveState();
+});
+
+function startCrop(wrap, img) {
+    if (wrap.classList.contains('crop-active')) return;
+    wrap.classList.add('crop-active');
+    wrap.style.marginBottom = '40px';
+
+    // Dim overlays
+    const dims = {};
+    ['top','right','bottom','left'].forEach(side => {
+        const d = document.createElement('div');
+        d.className = 'crop-dim';
+        wrap.appendChild(d);
+        dims[side] = d;
+    });
+
+    // Edge handles
+    const handles = {};
+    ['top','right','bottom','left'].forEach(side => {
+        const h = document.createElement('div');
+        h.className = 'crop-handle';
+        if (side === 'top' || side === 'bottom') {
+            h.style.cssText = 'left:0;right:0;height:8px;cursor:ns-resize;';
+        } else {
+            h.style.cssText = 'top:0;bottom:0;width:8px;cursor:ew-resize;';
+        }
+        wrap.appendChild(h);
+        handles[side] = h;
+    });
+
+    // Edge lines
+    const lines = {};
+    ['top','right','bottom','left'].forEach(side => {
+        const l = document.createElement('div');
+        l.className = 'crop-line';
+        if (side === 'top' || side === 'bottom') {
+            l.style.left = '0'; l.style.right = '0'; l.style.height = '2px';
+        } else {
+            l.style.top = '0'; l.style.bottom = '0'; l.style.width = '2px';
+        }
+        wrap.appendChild(l);
+        lines[side] = l;
+    });
+
+    // Action buttons
+    const actions = document.createElement('div');
+    actions.className = 'crop-actions-inline';
+    actions.innerHTML = '<button class="crop-confirm">✓ Beskær</button><button class="crop-cancel">✕ Annuller</button>';
+    wrap.appendChild(actions);
+
+    let cropTop = 0, cropRight = 0, cropBottom = 0, cropLeft = 0;
+    let dragging = null, dragStart = 0, dragVal = 0;
+
+    function ww() { return img.offsetWidth; }
+    function hh() { return img.offsetHeight; }
+
+    function updateCrop() {
+        dims.top.style.cssText = 'position:absolute;background:rgba(0,0,0,0.45);pointer-events:none;z-index:3;top:0;left:0;right:0;height:' + cropTop + 'px;';
+        dims.bottom.style.cssText = 'position:absolute;background:rgba(0,0,0,0.45);pointer-events:none;z-index:3;bottom:0;left:0;right:0;height:' + cropBottom + 'px;';
+        dims.left.style.cssText = 'position:absolute;background:rgba(0,0,0,0.45);pointer-events:none;z-index:3;top:' + cropTop + 'px;left:0;width:' + cropLeft + 'px;bottom:' + cropBottom + 'px;';
+        dims.right.style.cssText = 'position:absolute;background:rgba(0,0,0,0.45);pointer-events:none;z-index:3;top:' + cropTop + 'px;right:0;width:' + cropRight + 'px;bottom:' + cropBottom + 'px;';
+        lines.top.style.top = cropTop + 'px'; lines.top.style.left = cropLeft + 'px'; lines.top.style.right = cropRight + 'px';
+        lines.bottom.style.bottom = cropBottom + 'px'; lines.bottom.style.left = cropLeft + 'px'; lines.bottom.style.right = cropRight + 'px';
+        lines.left.style.left = cropLeft + 'px'; lines.left.style.top = cropTop + 'px'; lines.left.style.bottom = cropBottom + 'px';
+        lines.right.style.right = cropRight + 'px'; lines.right.style.top = cropTop + 'px'; lines.right.style.bottom = cropBottom + 'px';
+        handles.top.style.top = (cropTop - 4) + 'px'; handles.top.style.left = cropLeft + 'px'; handles.top.style.right = cropRight + 'px';
+        handles.bottom.style.bottom = (cropBottom - 4) + 'px'; handles.bottom.style.left = cropLeft + 'px'; handles.bottom.style.right = cropRight + 'px';
+        handles.left.style.left = (cropLeft - 4) + 'px'; handles.left.style.top = cropTop + 'px'; handles.left.style.bottom = cropBottom + 'px';
+        handles.right.style.right = (cropRight - 4) + 'px'; handles.right.style.top = cropTop + 'px'; handles.right.style.bottom = cropBottom + 'px';
+    }
+    updateCrop();
+
+    Object.keys(handles).forEach(side => {
+        handles[side].addEventListener('mousedown', (e) => {
+            dragging = side;
+            dragStart = (side === 'top' || side === 'bottom') ? e.clientY : e.clientX;
+            dragVal = side === 'top' ? cropTop : side === 'bottom' ? cropBottom : side === 'left' ? cropLeft : cropRight;
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
+
+    function onMove(e) {
+        if (!dragging) return;
+        let delta;
+        if (dragging === 'top') {
+            delta = e.clientY - dragStart;
+            cropTop = Math.max(0, Math.min(dragVal + delta, hh() - cropBottom - 20));
+        } else if (dragging === 'bottom') {
+            delta = dragStart - e.clientY;
+            cropBottom = Math.max(0, Math.min(dragVal + delta, hh() - cropTop - 20));
+        } else if (dragging === 'left') {
+            delta = e.clientX - dragStart;
+            cropLeft = Math.max(0, Math.min(dragVal + delta, ww() - cropRight - 20));
+        } else if (dragging === 'right') {
+            delta = dragStart - e.clientX;
+            cropRight = Math.max(0, Math.min(dragVal + delta, ww() - cropLeft - 20));
+        }
+        updateCrop();
+    }
+    function onUp() { dragging = null; }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+
+    function cleanup() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        wrap.querySelectorAll('.crop-dim, .crop-handle, .crop-line, .crop-actions-inline').forEach(el => el.remove());
+        wrap.classList.remove('crop-active');
+        wrap.style.marginBottom = '';
+    }
+
+    actions.querySelector('.crop-cancel').onclick = cleanup;
+
+    actions.querySelector('.crop-confirm').onclick = () => {
+        const w = ww() - cropLeft - cropRight;
+        const h = hh() - cropTop - cropBottom;
+        if (w < 5 || h < 5) { cleanup(); return; }
+
+        const scaleX = img.naturalWidth / ww();
+        const scaleY = img.naturalHeight / hh();
+
+        const c = document.createElement('canvas');
+        c.width = w * scaleX; c.height = h * scaleY;
+        const ctx = c.getContext('2d');
+        const srcImg = new Image();
+        srcImg.onload = () => {
+            ctx.drawImage(srcImg, cropLeft * scaleX, cropTop * scaleY, c.width, c.height, 0, 0, c.width, c.height);
+            img.src = c.toDataURL('image/png');
+            img.style.width = '';
+            cleanup();
+            saveState();
+        };
+        srcImg.src = img.src;
+    };
 }
 
 function insertCanvasToEditor() {
@@ -5716,6 +7564,71 @@ function insertGraphToEditor() {
     insertResizableImage(dataUrl, 'Graf');
 }
 
+function startGraphSnip() {
+    graphCanvas.parentElement.classList.add('snip-active');
+    graphCanvas.style.cursor = 'crosshair';
+
+    let startX, startY, overlay = null;
+    const rect = graphCanvas.getBoundingClientRect();
+
+    const onDown = (e) => {
+        startX = e.clientX - rect.left;
+        startY = e.clientY - rect.top;
+        if (overlay) overlay.remove();
+        overlay = document.createElement('div');
+        overlay.className = 'snip-overlay';
+        graphCanvas.parentElement.appendChild(overlay);
+
+        const onMove = (ev) => {
+            const mx = ev.clientX - rect.left;
+            const my = ev.clientY - rect.top;
+            overlay.style.left = Math.min(startX, mx) + 'px';
+            overlay.style.top = Math.min(startY, my) + 'px';
+            overlay.style.width = Math.abs(mx - startX) + 'px';
+            overlay.style.height = Math.abs(my - startY) + 'px';
+        };
+
+        const onUp = (ev) => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            graphCanvas.parentElement.classList.remove('snip-active');
+            graphCanvas.style.cursor = '';
+
+            const mx = ev.clientX - rect.left;
+            const my = ev.clientY - rect.top;
+            const x = Math.max(0, Math.min(startX, mx));
+            const y = Math.max(0, Math.min(startY, my));
+            const w = Math.abs(mx - startX);
+            const h = Math.abs(my - startY);
+
+            if (overlay) overlay.remove();
+            overlay = null;
+
+            if (w < 5 || h < 5) return;
+
+            const scaleX = graphCanvas.width / rect.width;
+            const scaleY = graphCanvas.height / rect.height;
+            const sx = x * scaleX, sy = y * scaleY, sw = w * scaleX, sh = h * scaleY;
+
+            const tmpCanvas = document.createElement('canvas');
+            tmpCanvas.width = sw;
+            tmpCanvas.height = sh;
+            const tmpCtx = tmpCanvas.getContext('2d');
+            tmpCtx.drawImage(graphCanvas, sx, sy, sw, sh, 0, 0, sw, sh);
+
+            const dataUrl = tmpCanvas.toDataURL('image/png');
+            insertResizableImage(dataUrl, 'Graf udsnit');
+
+            graphCanvas.removeEventListener('mousedown', onDown);
+        };
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+    };
+
+    graphCanvas.addEventListener('mousedown', onDown, { once: true });
+}
+
 // Resize observer for graph canvas
 new ResizeObserver(() => resizeGraphCanvas()).observe(graphCanvas.parentElement || document.body);
 
@@ -6067,6 +7980,76 @@ function insertDiagramToEditor() {
     insertResizableImage(dataUrl, 'Diagram');
 }
 
+let diagramSnipActive = false;
+function startDiagramSnip() {
+    diagramSnipActive = true;
+    diagramCanvas.parentElement.classList.add('snip-active');
+    diagramCanvas.style.cursor = 'crosshair';
+
+    let startX, startY, overlay = null;
+
+    const rect = diagramCanvas.getBoundingClientRect();
+
+    const onDown = (e) => {
+        startX = e.clientX - rect.left;
+        startY = e.clientY - rect.top;
+        if (overlay) overlay.remove();
+        overlay = document.createElement('div');
+        overlay.className = 'snip-overlay';
+        diagramCanvas.parentElement.appendChild(overlay);
+
+        const onMove = (ev) => {
+            const mx = ev.clientX - rect.left;
+            const my = ev.clientY - rect.top;
+            overlay.style.left = Math.min(startX, mx) + 'px';
+            overlay.style.top = Math.min(startY, my) + 'px';
+            overlay.style.width = Math.abs(mx - startX) + 'px';
+            overlay.style.height = Math.abs(my - startY) + 'px';
+        };
+
+        const onUp = (ev) => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            diagramCanvas.parentElement.classList.remove('snip-active');
+            diagramCanvas.style.cursor = '';
+            diagramSnipActive = false;
+
+            const mx = ev.clientX - rect.left;
+            const my = ev.clientY - rect.top;
+            const x = Math.max(0, Math.min(startX, mx));
+            const y = Math.max(0, Math.min(startY, my));
+            const w = Math.abs(mx - startX);
+            const h = Math.abs(my - startY);
+
+            if (overlay) overlay.remove();
+            overlay = null;
+
+            if (w < 5 || h < 5) return;
+
+            // Account for canvas scaling (display size vs actual pixel size)
+            const scaleX = diagramCanvas.width / rect.width;
+            const scaleY = diagramCanvas.height / rect.height;
+            const sx = x * scaleX, sy = y * scaleY, sw = w * scaleX, sh = h * scaleY;
+
+            const tmpCanvas = document.createElement('canvas');
+            tmpCanvas.width = sw;
+            tmpCanvas.height = sh;
+            const tmpCtx = tmpCanvas.getContext('2d');
+            tmpCtx.drawImage(diagramCanvas, sx, sy, sw, sh, 0, 0, sw, sh);
+
+            const dataUrl = tmpCanvas.toDataURL('image/png');
+            insertResizableImage(dataUrl, 'Diagram udsnit');
+
+            diagramCanvas.removeEventListener('mousedown', onDown);
+        };
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+    };
+
+    diagramCanvas.addEventListener('mousedown', onDown, { once: true });
+}
+
 // Init diagram rows
 renderDiagramRows();
 new ResizeObserver(() => resizeDiagramCanvas()).observe(diagramCanvas.parentElement || document.body);
@@ -6097,7 +8080,12 @@ function saveState() {
                 td.innerText = display;
             }
         });
+        // Temporarily remove selection classes before saving
+        editor.querySelectorAll('.cell-selected, .cell-active').forEach(c => c.classList.remove('cell-selected', 'cell-active'));
         localStorage.setItem('mat-editor', editor.innerHTML);
+        // Restore them
+        if (activeCell) activeCell.classList.add('cell-active');
+        selectedCells.forEach(c => c.classList.add('cell-selected'));
         localStorage.setItem('mat-tab', document.querySelector('.tool-tab.active')?.textContent || '');
         localStorage.setItem('mat-shapes', JSON.stringify(shapes));
         localStorage.setItem('mat-graphs', JSON.stringify(graphs.map(g => ({ expr: g.expr, color: g.color }))));
@@ -6122,7 +8110,16 @@ function saveState() {
 function loadState() {
     try {
         const editorContent = localStorage.getItem('mat-editor');
-        if (editorContent) { editor.innerHTML = editorContent; updateCounts(); }
+        if (editorContent) {
+            editor.innerHTML = editorContent;
+            // Clean up stale selection classes from saved state
+            editor.querySelectorAll('.cell-selected, .cell-active').forEach(c => {
+                c.classList.remove('cell-selected', 'cell-active');
+            });
+            // Disable spellcheck on all tables
+            editor.querySelectorAll('table').forEach(t => t.setAttribute('spellcheck', 'false'));
+            updateCounts();
+        }
 
         const tab = localStorage.getItem('mat-tab');
         if (tab) {
@@ -6201,6 +8198,8 @@ window.addEventListener('beforeunload', saveState);
 loadState();
 // Clean up any leftover plus buttons from old saves
 editor.querySelectorAll('.table-plus-btn').forEach(el => el.remove());
+// Clean up any leftover crop buttons from old saves
+editor.querySelectorAll('.img-crop-btn').forEach(el => el.remove());
 // Recalc all table formulas on load
 recalcAllTables();
 resizeCanvas();
