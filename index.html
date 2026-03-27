@@ -1423,6 +1423,54 @@
                     <canvas id="geoCanvas"></canvas>
                 </div>
 
+                <!-- Triangle Calculator -->
+                <div id="triCalcPanel" style="display:none; background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:12px; margin:0 8px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                        <div style="font-weight:600; font-size:0.85rem; color:var(--primary);">Trekantberegner</div>
+                        <div style="display:flex;gap:4px;">
+                            <button onclick="triCalcSetType('triangle')" id="tct-triangle" class="geo-btn active" title="Trekant" style="padding:3px 7px;font-size:0.78rem;">Trekant</button>
+                            <button onclick="triCalcSetType('triangle-right')" id="tct-triangle-right" class="geo-btn" title="Retvinklet" style="padding:3px 7px;font-size:0.78rem;">Retvinklet</button>
+                            <button onclick="triCalcSetType('triangle-iso')" id="tct-triangle-iso" class="geo-btn" title="Ligebenet" style="padding:3px 7px;font-size:0.78rem;">Ligebenet</button>
+                            <button onclick="triCalcSetType('triangle-right-iso')" id="tct-triangle-right-iso" class="geo-btn" title="Retvinklet ligebenet" style="padding:3px 7px;font-size:0.78rem;">Retvinklet ligebenet</button>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:8px;">
+                        <div style="display:flex;flex-direction:column;gap:2px;">
+                            <label style="font-size:0.75rem;color:var(--text-light);">Side a</label>
+                            <input type="number" id="triSideA" placeholder="—" step="any" min="0" style="width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:0.85rem;" oninput="calcTriangle()">
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:2px;">
+                            <label style="font-size:0.75rem;color:var(--text-light);">Side b</label>
+                            <input type="number" id="triSideB" placeholder="—" step="any" min="0" style="width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:0.85rem;" oninput="calcTriangle()">
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:2px;">
+                            <label style="font-size:0.75rem;color:var(--text-light);">Side c</label>
+                            <input type="number" id="triSideC" placeholder="—" step="any" min="0" style="width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:0.85rem;" oninput="calcTriangle()">
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:8px;">
+                        <div style="display:flex;flex-direction:column;gap:2px;">
+                            <label style="font-size:0.75rem;color:var(--text-light);">Vinkel A (°)</label>
+                            <input type="number" id="triAngleA" placeholder="—" step="any" min="0" max="180" style="width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:0.85rem;" oninput="calcTriangle()">
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:2px;">
+                            <label style="font-size:0.75rem;color:var(--text-light);">Vinkel B (°)</label>
+                            <input type="number" id="triAngleB" placeholder="—" step="any" min="0" max="180" style="width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:0.85rem;" oninput="calcTriangle()">
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:2px;">
+                            <label style="font-size:0.75rem;color:var(--text-light);">Vinkel C (°)</label>
+                            <input type="number" id="triAngleC" placeholder="—" step="any" min="0" max="180" style="width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:0.85rem;" oninput="calcTriangle()">
+                        </div>
+                    </div>
+                    <div id="triCalcStatus" style="font-size:0.8rem; padding:6px 8px; border-radius:4px; background:#f0fdf4; color:#166534; border:1px solid #bbf7d0;">
+                        Indtast mindst 3 værdier (heraf mindst 1 side) for at beregne trekanten.
+                    </div>
+                    <div style="display:flex;gap:6px;margin-top:8px;">
+                        <button onclick="triCalcDraw()" id="triCalcDrawBtn" class="geo-btn" style="flex:1;justify-content:center;padding:6px;font-size:0.85rem;" disabled>Tegn trekant</button>
+                        <button onclick="triCalcReset()" class="geo-btn" style="padding:6px 12px;font-size:0.85rem;">Nulstil</button>
+                    </div>
+                </div>
+
                 <button class="insert-btn" onclick="setGeoTool('snip')" id="geo-snip" style="background:var(--primary);">
                     ✂ Klip & Indsæt udsnit
                 </button>
@@ -4356,6 +4404,11 @@ function selectTriType(type) {
     }
     document.getElementById('triDropdown').style.display = 'none';
     setGeoTool(type);
+    // Sync triangle calculator type buttons (without resetting inputs)
+    triCalcType = type;
+    ['triangle','triangle-right','triangle-iso','triangle-right-iso'].forEach(t => {
+        document.getElementById('tct-' + t)?.classList.toggle('active', t === type);
+    });
 }
 
 document.addEventListener('click', (e) => {
@@ -4392,6 +4445,7 @@ function setGeoTool(tool) {
     }
 
     document.getElementById('graphInputArea').style.display = tool === 'graph' ? 'flex' : 'none';
+    document.getElementById('triCalcPanel').style.display = tool.startsWith('triangle') ? 'block' : 'none';
 
     // Default text tool to black
     if (tool === 'text') {
@@ -4575,19 +4629,30 @@ function drawMeasurements(shape) {
             break;
         }
         case 'triangle': {
-            const sides = [
+            // Compute centroid to determine outside direction
+            const cx = (shape.x1 + shape.x2 + shape.x3) / 3;
+            const cy = (shape.y1 + shape.y2 + shape.y3) / 3;
+            const triSides = [
                 { x1: shape.x1, y1: shape.y1, x2: shape.x2, y2: shape.y2 },
                 { x1: shape.x2, y1: shape.y2, x2: shape.x3, y2: shape.y3 },
                 { x1: shape.x3, y1: shape.y3, x2: shape.x1, y2: shape.y1 },
             ];
-            sides.forEach((s, si) => {
+            const sideNames = ['a', 'b', 'c'];
+            triSides.forEach((s, si) => {
                 const len = Math.sqrt((s.x2 - s.x1) ** 2 + (s.y2 - s.y1) ** 2);
-                const t = lbl('side' + si, fmtCm(len) + ' cm');
+                const t = lbl('side' + si, sideNames[si] + ' = ' + fmtCm(len));
                 if (!t) return;
                 const mx = (s.x1 + s.x2) / 2, my = (s.y1 + s.y2) / 2;
-                const dx = s.y2 - s.y1, dy = -(s.x2 - s.x1);
-                const d = Math.sqrt(dx * dx + dy * dy) || 1;
-                ctx.fillText(t, mx + dx / d * 14, my + dy / d * 14);
+                // Normal perpendicular to side
+                let nx = s.y2 - s.y1, ny = -(s.x2 - s.x1);
+                const nd = Math.sqrt(nx * nx + ny * ny) || 1;
+                nx /= nd; ny /= nd;
+                // Ensure normal points AWAY from centroid
+                const toCenterX = cx - mx, toCenterY = cy - my;
+                if (nx * toCenterX + ny * toCenterY > 0) {
+                    nx = -nx; ny = -ny;
+                }
+                ctx.fillText(t, mx + nx * 22, my + ny * 22);
             });
             break;
         }
@@ -4640,17 +4705,23 @@ function getMeasurementLabels(shape, idx) {
             labels.push({ x: shape.cx - shape.hw - 8, y: shape.cy, text: lt('h', 'h = ' + fmtCm(shape.hh * 2) + ' cm'), dim: 'h', idx });
             break;
         case 'triangle': {
-            const sides = [
+            const tcx = (shape.x1 + shape.x2 + shape.x3) / 3;
+            const tcy = (shape.y1 + shape.y2 + shape.y3) / 3;
+            const tSides = [
                 { x1: shape.x1, y1: shape.y1, x2: shape.x2, y2: shape.y2 },
                 { x1: shape.x2, y1: shape.y2, x2: shape.x3, y2: shape.y3 },
                 { x1: shape.x3, y1: shape.y3, x2: shape.x1, y2: shape.y1 },
             ];
-            sides.forEach((s, si) => {
+            const tNames = ['a', 'b', 'c'];
+            tSides.forEach((s, si) => {
                 const len = Math.sqrt((s.x2 - s.x1) ** 2 + (s.y2 - s.y1) ** 2);
                 const mx = (s.x1 + s.x2) / 2, my = (s.y1 + s.y2) / 2;
-                const dx = s.y2 - s.y1, dy = -(s.x2 - s.x1);
-                const d = Math.sqrt(dx * dx + dy * dy) || 1;
-                labels.push({ x: mx + dx / d * 14, y: my + dy / d * 14, text: lt('side' + si, fmtCm(len) + ' cm'), dim: 'side' + si, idx });
+                let nx = s.y2 - s.y1, ny = -(s.x2 - s.x1);
+                const nd = Math.sqrt(nx * nx + ny * ny) || 1;
+                nx /= nd; ny /= nd;
+                const toCX = tcx - mx, toCY = tcy - my;
+                if (nx * toCX + ny * toCY > 0) { nx = -nx; ny = -ny; }
+                labels.push({ x: mx + nx * 22, y: my + ny * 22, text: lt('side' + si, tNames[si] + ' = ' + fmtCm(len)), dim: 'side' + si, idx });
             });
             break;
         }
@@ -4682,14 +4753,68 @@ function applyMeasurementEdit(shape, dim, newCm) {
             break;
         case 'triangle': {
             const sideIdx = parseInt(dim.replace('side', ''));
-            const pts = [{x:shape.x1,y:shape.y1},{x:shape.x2,y:shape.y2},{x:shape.x3,y:shape.y3}];
-            const a = pts[sideIdx], b = pts[(sideIdx + 1) % 3];
-            const oldLen = Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2) || 1;
-            const scale = newPx / oldLen;
             const keys = [['x1','y1'],['x2','y2'],['x3','y3']];
-            const bk = keys[(sideIdx + 1) % 3];
-            shape[bk[0]] = a.x + (b.x - a.x) * scale;
-            shape[bk[1]] = a.y + (b.y - a.y) * scale;
+            const pts = [{x:shape.x1,y:shape.y1},{x:shape.x2,y:shape.y2},{x:shape.x3,y:shape.y3}];
+
+            if (shape.subType === 'right' || shape.subType === 'right-iso') {
+                // Find the right-angle vertex
+                let rIdx = -1;
+                for (let ri = 0; ri < 3; ri++) {
+                    const p0 = pts[ri], p1 = pts[(ri+1)%3], p2 = pts[(ri+2)%3];
+                    const v1x = p1.x-p0.x, v1y = p1.y-p0.y, v2x = p2.x-p0.x, v2y = p2.y-p0.y;
+                    const dot = v1x*v2x + v1y*v2y;
+                    const mag = Math.sqrt(v1x*v1x+v1y*v1y)*Math.sqrt(v2x*v2x+v2y*v2y);
+                    if (mag > 0 && Math.abs(dot/mag) < 0.1) { rIdx = ri; break; }
+                }
+                if (rIdx === -1) rIdx = 1; // fallback: p2 is right angle for standard right triangle
+
+                // Sides: side i connects pts[i] → pts[(i+1)%3]
+                // Determine if edited side is a katet or the hypotenuse
+                // Hypotenuse is the side opposite the right angle (doesn't touch rIdx)
+                const hypSide = (rIdx + 1) % 3; // side that starts at (rIdx+1) and goes to (rIdx+2), opposite rIdx
+                // Actually: hypotenuse is the side where neither endpoint is the right angle vertex
+                // side i has endpoints i and (i+1)%3
+                const isHypotenuse = (sideIdx !== rIdx && (sideIdx + 1) % 3 !== rIdx);
+
+                if (isHypotenuse) {
+                    // Scale both kateter proportionally from right-angle vertex
+                    const rPt = pts[rIdx];
+                    const otherA = pts[(rIdx+1)%3], otherB = pts[(rIdx+2)%3];
+                    const curHyp = Math.sqrt((otherA.x-otherB.x)**2 + (otherA.y-otherB.y)**2) || 1;
+                    const scale = newPx / curHyp;
+                    const kA = keys[(rIdx+1)%3], kB = keys[(rIdx+2)%3];
+                    shape[kA[0]] = rPt.x + (otherA.x - rPt.x) * scale;
+                    shape[kA[1]] = rPt.y + (otherA.y - rPt.y) * scale;
+                    shape[kB[0]] = rPt.x + (otherB.x - rPt.x) * scale;
+                    shape[kB[1]] = rPt.y + (otherB.y - rPt.y) * scale;
+                } else {
+                    // Editing a katet: move the non-right-angle endpoint along the katet direction
+                    // Keep right-angle vertex fixed
+                    const startPt = pts[sideIdx], endPt = pts[(sideIdx+1)%3];
+                    let movIdx, fixPt;
+                    if (sideIdx === rIdx) {
+                        // Right angle is at start of this side, move end point
+                        fixPt = startPt; movIdx = (sideIdx+1)%3;
+                    } else {
+                        // Right angle is at end of this side, move start point
+                        fixPt = endPt; movIdx = sideIdx;
+                    }
+                    const movPt = pts[movIdx];
+                    const dx = movPt.x - fixPt.x, dy = movPt.y - fixPt.y;
+                    const oldLen = Math.sqrt(dx*dx + dy*dy) || 1;
+                    const mk = keys[movIdx];
+                    shape[mk[0]] = fixPt.x + dx / oldLen * newPx;
+                    shape[mk[1]] = fixPt.y + dy / oldLen * newPx;
+                }
+            } else {
+                // Regular triangle: just scale the edited side
+                const a = pts[sideIdx], b = pts[(sideIdx + 1) % 3];
+                const oldLen = Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2) || 1;
+                const scale = newPx / oldLen;
+                const bk = keys[(sideIdx + 1) % 3];
+                shape[bk[0]] = a.x + (b.x - a.x) * scale;
+                shape[bk[1]] = a.y + (b.y - a.y) * scale;
+            }
             break;
         }
         case 'line': {
@@ -4712,7 +4837,7 @@ canvas.addEventListener('dblclick', (e) => {
         const width = parseInt(document.getElementById('geoWidth').value);
         const fill = document.getElementById('geoFill').checked;
         const shape = { type: 'polygon', points: [...polygonPoints], color, width, fill };
-        undoStack.push([...shapes]);
+        undoStack.push(JSON.parse(JSON.stringify(shapes)));
         shapes.push(shape);
         polygonPoints = [];
         redrawCanvas();
@@ -4819,6 +4944,7 @@ canvas.addEventListener('dblclick', (e) => {
                             if (numMatch) {
                                 const val = parseFloat(numMatch[1]);
                                 if (val > 0 && !isNaN(val)) {
+                                    undoStack.push(JSON.parse(JSON.stringify(shapes)));
                                     applyMeasurementEdit(shapes[label.idx], label.dim, val);
                                 }
                             }
@@ -5750,7 +5876,7 @@ canvas.addEventListener('mousedown', (e) => {
             const first = polygonPoints[0];
             if (Math.sqrt((mx - first.x) ** 2 + (my - first.y) ** 2) < 12) {
                 const shape = { type: 'polygon', points: [...polygonPoints], color, width, fill };
-                undoStack.push([...shapes]);
+                undoStack.push(JSON.parse(JSON.stringify(shapes)));
                 shapes.push(shape);
                 polygonPoints = [];
                 redrawCanvas();
@@ -5854,7 +5980,7 @@ canvas.addEventListener('mousedown', (e) => {
                 color, width
             };
 
-            undoStack.push([...shapes]);
+            undoStack.push(JSON.parse(JSON.stringify(shapes)));
             shapes.push(shape);
             anglePoints = [];
             redrawCanvas();
@@ -5986,7 +6112,7 @@ document.addEventListener('keydown', (e) => {
         const width = parseInt(document.getElementById('geoWidth').value);
         const fill = document.getElementById('geoFill').checked;
         const shape = { type: 'polygon', points: [...polygonPoints], color, width, fill };
-        undoStack.push([...shapes]);
+        undoStack.push(JSON.parse(JSON.stringify(shapes)));
         shapes.push(shape);
         polygonPoints = [];
         redrawCanvas();
@@ -6257,14 +6383,20 @@ canvas.addEventListener('mousemove', (e) => {
                 pts = [{x:startX,y:startY},{x:startX,y:startY+ts*tsy},{x:startX+ts*tsx,y:startY+ts*tsy}];
             }
             if (pts) {
+                const pcx = (pts[0].x+pts[1].x+pts[2].x)/3;
+                const pcy = (pts[0].y+pts[1].y+pts[2].y)/3;
+                const sNames = ['a','b','c'];
                 for (let i = 0; i < 3; i++) {
                     const a = pts[i], b = pts[(i+1)%3];
                     const len = Math.sqrt((b.x-a.x)**2 + (b.y-a.y)**2);
                     const midX = (a.x+b.x)/2, midY = (a.y+b.y)/2;
-                    const ndx = b.y-a.y, ndy = -(b.x-a.x);
+                    let ndx = b.y-a.y, ndy = -(b.x-a.x);
                     const nd = Math.sqrt(ndx*ndx+ndy*ndy) || 1;
+                    ndx /= nd; ndy /= nd;
+                    // Ensure normal points away from centroid
+                    if (ndx*(pcx-midX)+ndy*(pcy-midY) > 0) { ndx=-ndx; ndy=-ndy; }
                     ctx.textAlign = 'center';
-                    ctx.fillText(fmtCm(len)+' cm', midX+ndx/nd*14, midY+ndy/nd*14);
+                    ctx.fillText(sNames[i]+' = '+fmtCm(len), midX+ndx*22, midY+ndy*22);
                 }
             }
         }
@@ -6320,7 +6452,7 @@ canvas.addEventListener('mouseup', (e) => {
             break;
         case 'triangle-right':
             shape = {
-                type: 'triangle',
+                type: 'triangle', subType: 'right',
                 x1: startX, y1: startY,
                 x2: startX, y2: endY,
                 x3: endX, y3: endY,
@@ -6329,7 +6461,7 @@ canvas.addEventListener('mouseup', (e) => {
             break;
         case 'triangle-iso':
             shape = {
-                type: 'triangle',
+                type: 'triangle', subType: 'iso',
                 x1: (startX + endX) / 2, y1: startY,
                 x2: endX, y2: endY,
                 x3: startX, y3: endY,
@@ -6340,7 +6472,7 @@ canvas.addEventListener('mouseup', (e) => {
             const ts = Math.min(Math.abs(endX - startX), Math.abs(endY - startY));
             const tsx = Math.sign(endX - startX), tsy = Math.sign(endY - startY);
             shape = {
-                type: 'triangle',
+                type: 'triangle', subType: 'right-iso',
                 x1: startX, y1: startY,
                 x2: startX, y2: startY + ts * tsy,
                 x3: startX + ts * tsx, y3: startY + ts * tsy,
@@ -6419,7 +6551,7 @@ canvas.addEventListener('mouseup', (e) => {
     }
 
     if (shape) {
-        undoStack.push([...shapes]);
+        undoStack.push(JSON.parse(JSON.stringify(shapes)));
         shapes.push(shape);
         redrawCanvas();
         // Auto-switch to select after drawing a shape
@@ -6453,10 +6585,284 @@ function undoGeo() {
 }
 
 function clearCanvas() {
-    undoStack.push([...shapes]);
+    undoStack.push(JSON.parse(JSON.stringify(shapes)));
     shapes = [];
     graphs = [];
     redrawCanvas();
+}
+
+// ========================
+// TRIANGLE CALCULATOR
+// ========================
+let triCalcType = 'triangle';
+
+function triCalcSetType(type) {
+    triCalcType = type;
+    ['triangle','triangle-right','triangle-iso','triangle-right-iso'].forEach(t => {
+        document.getElementById('tct-' + t)?.classList.toggle('active', t === type);
+    });
+    // Pre-fill constraints and reset
+    triCalcReset();
+    if (type === 'triangle-right') {
+        // Force C = 90
+        document.getElementById('triAngleC').value = 90;
+        document.getElementById('triAngleC').readOnly = true;
+        document.getElementById('triAngleC').style.background = '#f1f5f9';
+    } else if (type === 'triangle-iso') {
+        // Force A = B
+        document.getElementById('triAngleA').placeholder = '= B';
+        document.getElementById('triAngleB').placeholder = '= A';
+    } else if (type === 'triangle-right-iso') {
+        // Force C = 90, A = B = 45
+        document.getElementById('triAngleA').value = 45;
+        document.getElementById('triAngleA').readOnly = true;
+        document.getElementById('triAngleA').style.background = '#f1f5f9';
+        document.getElementById('triAngleB').value = 45;
+        document.getElementById('triAngleB').readOnly = true;
+        document.getElementById('triAngleB').style.background = '#f1f5f9';
+        document.getElementById('triAngleC').value = 90;
+        document.getElementById('triAngleC').readOnly = true;
+        document.getElementById('triAngleC').style.background = '#f1f5f9';
+    }
+    calcTriangle();
+}
+
+function calcTriangle() {
+    const sA = parseFloat(document.getElementById('triSideA').value);
+    const sB = parseFloat(document.getElementById('triSideB').value);
+    const sC = parseFloat(document.getElementById('triSideC').value);
+    const aA = parseFloat(document.getElementById('triAngleA').value);
+    const aB = parseFloat(document.getElementById('triAngleB').value);
+    const aC = parseFloat(document.getElementById('triAngleC').value);
+
+    const sides = [sA, sB, sC];
+    const angles = [aA, aB, aC];
+    const hasSide = sides.map(v => !isNaN(v) && v > 0);
+    const hasAngle = angles.map(v => !isNaN(v) && v > 0);
+    const nSides = hasSide.filter(Boolean).length;
+    const nAngles = hasAngle.filter(Boolean).length;
+    const total = nSides + nAngles;
+
+    const status = document.getElementById('triCalcStatus');
+    const drawBtn = document.getElementById('triCalcDrawBtn');
+    drawBtn.disabled = true;
+
+    function setError(msg) {
+        status.style.background = '#fef2f2';
+        status.style.color = '#991b1b';
+        status.style.borderColor = '#fecaca';
+        status.textContent = msg;
+    }
+    function setSuccess(msg) {
+        status.style.background = '#f0fdf4';
+        status.style.color = '#166534';
+        status.style.borderColor = '#bbf7d0';
+        status.innerHTML = msg;
+    }
+    function setInfo(msg) {
+        status.style.background = '#eff6ff';
+        status.style.color = '#1e40af';
+        status.style.borderColor = '#bfdbfe';
+        status.textContent = msg;
+    }
+
+    // Validate entered values
+    for (let i = 0; i < 3; i++) {
+        if (hasSide[i] && sides[i] <= 0) return setError('Sidelængder skal være positive.');
+        if (hasAngle[i] && (angles[i] <= 0 || angles[i] >= 180)) return setError('Vinkler skal være mellem 0° og 180°.');
+    }
+
+    // Check if angles that are entered sum to more than 180
+    const angleSum = angles.reduce((s, v, i) => hasAngle[i] ? s + v : s, 0);
+    if (nAngles >= 2 && angleSum >= 180) return setError('Vinklerne kan ikke tilsammen overstige 180°.');
+    if (nAngles === 3 && Math.abs(angleSum - 180) > 0.01) return setError('Vinklerne skal tilsammen give 180°.');
+
+    if (total < 3 || nSides < 1) {
+        return setInfo('Indtast mindst 3 værdier (heraf mindst 1 side) for at beregne trekanten.');
+    }
+
+    const deg = Math.PI / 180;
+    let a = sides[0], b = sides[1], c = sides[2];
+    let A = angles[0], B = angles[1], C = angles[2];
+    let solved = false;
+
+    try {
+        // SSS - all three sides
+        if (hasSide[0] && hasSide[1] && hasSide[2]) {
+            if (a + b <= c || a + c <= b || b + c <= a) return setError('Trekantsuligheden er ikke opfyldt: summen af to sider skal være større end den tredje.');
+            A = Math.acos((b*b + c*c - a*a) / (2*b*c)) / deg;
+            B = Math.acos((a*a + c*c - b*b) / (2*a*c)) / deg;
+            C = 180 - A - B;
+            solved = true;
+        }
+        // SAS cases
+        else if (hasSide[0] && hasSide[1] && hasAngle[2]) {
+            // sides a, b and angle C between them
+            c = Math.sqrt(a*a + b*b - 2*a*b*Math.cos(C*deg));
+            A = Math.acos((b*b + c*c - a*a) / (2*b*c)) / deg;
+            B = 180 - A - C;
+            solved = true;
+        }
+        else if (hasSide[0] && hasSide[2] && hasAngle[1]) {
+            b = Math.sqrt(a*a + c*c - 2*a*c*Math.cos(B*deg));
+            A = Math.acos((b*b + c*c - a*a) / (2*b*c)) / deg;
+            C = 180 - A - B;
+            solved = true;
+        }
+        else if (hasSide[1] && hasSide[2] && hasAngle[0]) {
+            a = Math.sqrt(b*b + c*c - 2*b*c*Math.cos(A*deg));
+            B = Math.acos((a*a + c*c - b*b) / (2*a*c)) / deg;
+            C = 180 - A - B;
+            solved = true;
+        }
+        // ASA / AAS cases - two angles + one side
+        else if (nAngles >= 2 && nSides >= 1) {
+            // Compute missing angle
+            if (!hasAngle[0]) A = 180 - B - C;
+            else if (!hasAngle[1]) B = 180 - A - C;
+            else if (!hasAngle[2]) C = 180 - A - B;
+            if (A <= 0 || B <= 0 || C <= 0) return setError('Vinklerne giver en ugyldig trekant (en vinkel ≤ 0°).');
+            // Use sine rule to find missing sides
+            if (hasSide[0]) {
+                b = a * Math.sin(B*deg) / Math.sin(A*deg);
+                c = a * Math.sin(C*deg) / Math.sin(A*deg);
+            } else if (hasSide[1]) {
+                a = b * Math.sin(A*deg) / Math.sin(B*deg);
+                c = b * Math.sin(C*deg) / Math.sin(B*deg);
+            } else {
+                a = c * Math.sin(A*deg) / Math.sin(C*deg);
+                b = c * Math.sin(B*deg) / Math.sin(C*deg);
+            }
+            solved = true;
+        }
+        // SSA case - two sides and non-included angle (ambiguous)
+        else if (nSides === 2 && nAngles === 1) {
+            // Determine which side is opposite the known angle
+            if (hasSide[0] && hasSide[1] && hasAngle[0]) {
+                // Known: a, b, A — find B with sine rule
+                const sinB = b * Math.sin(A*deg) / a;
+                if (sinB > 1) return setError('Ingen trekant mulig med disse værdier (sinusreglen giver > 1).');
+                B = Math.asin(sinB) / deg;
+                C = 180 - A - B;
+                c = a * Math.sin(C*deg) / Math.sin(A*deg);
+                solved = true;
+            } else if (hasSide[0] && hasSide[1] && hasAngle[1]) {
+                const sinA = a * Math.sin(B*deg) / b;
+                if (sinA > 1) return setError('Ingen trekant mulig med disse værdier.');
+                A = Math.asin(sinA) / deg;
+                C = 180 - A - B;
+                c = a * Math.sin(C*deg) / Math.sin(A*deg);
+                solved = true;
+            } else if (hasSide[0] && hasSide[2] && hasAngle[0]) {
+                const sinC = c * Math.sin(A*deg) / a;
+                if (sinC > 1) return setError('Ingen trekant mulig med disse værdier.');
+                C = Math.asin(sinC) / deg;
+                B = 180 - A - C;
+                b = a * Math.sin(B*deg) / Math.sin(A*deg);
+                solved = true;
+            } else if (hasSide[0] && hasSide[2] && hasAngle[2]) {
+                const sinA = a * Math.sin(C*deg) / c;
+                if (sinA > 1) return setError('Ingen trekant mulig med disse værdier.');
+                A = Math.asin(sinA) / deg;
+                B = 180 - A - C;
+                b = c * Math.sin(B*deg) / Math.sin(C*deg);
+                solved = true;
+            } else if (hasSide[1] && hasSide[2] && hasAngle[1]) {
+                const sinC = c * Math.sin(B*deg) / b;
+                if (sinC > 1) return setError('Ingen trekant mulig med disse værdier.');
+                C = Math.asin(sinC) / deg;
+                A = 180 - B - C;
+                a = b * Math.sin(A*deg) / Math.sin(B*deg);
+                solved = true;
+            } else if (hasSide[1] && hasSide[2] && hasAngle[2]) {
+                const sinB = b * Math.sin(C*deg) / c;
+                if (sinB > 1) return setError('Ingen trekant mulig med disse værdier.');
+                B = Math.asin(sinB) / deg;
+                A = 180 - B - C;
+                a = c * Math.sin(A*deg) / Math.sin(C*deg);
+                solved = true;
+            }
+        }
+
+        if (!solved) return setInfo('Kombinationen af værdier er ikke tilstrækkelig til at bestemme trekanten.');
+
+        // Validate result
+        if (isNaN(a) || isNaN(b) || isNaN(c) || isNaN(A) || isNaN(B) || isNaN(C)) return setError('Beregningen gav ugyldige værdier.');
+        if (a <= 0 || b <= 0 || c <= 0 || A <= 0 || B <= 0 || C <= 0) return setError('Trekanten er ugyldig (negative eller nul-værdier).');
+
+        // Store computed values for drawing
+        window._triCalcResult = { a, b, c, A, B, C };
+
+        const fmt = v => Math.round(v * 100) / 100;
+        setSuccess(
+            `<b>Trekant fundet!</b><br>` +
+            `a = ${fmt(a)}, b = ${fmt(b)}, c = ${fmt(c)}<br>` +
+            `A = ${fmt(A)}°, B = ${fmt(B)}°, C = ${fmt(C)}°<br>` +
+            `<span style="font-size:0.75rem;color:#666;">Areal = ${fmt(0.5 * a * b * Math.sin(C * deg))}, Omkreds = ${fmt(a + b + c)}</span>`
+        );
+        drawBtn.disabled = false;
+
+    } catch (e) {
+        setError('Beregningsfejl: ' + e.message);
+    }
+}
+
+function triCalcDraw() {
+    const r = window._triCalcResult;
+    if (!r) return;
+    // Place triangle on canvas using computed sides
+    // A is at origin, B along x-axis, C computed
+    const scale = 20; // cm to pixels (CM_SCALE)
+    const ax = 0, ay = 0;
+    const bx = r.c * scale, by = 0;
+    const cx = r.b * Math.cos(r.A * Math.PI / 180) * scale;
+    const cy = r.b * Math.sin(r.A * Math.PI / 180) * scale;
+
+    // Center on canvas
+    const canvasW = document.getElementById('geoCanvas').width;
+    const canvasH = document.getElementById('geoCanvas').height;
+    const minX = Math.min(ax, bx, cx), maxX = Math.max(ax, bx, cx);
+    const minY = Math.min(ay, by, cy), maxY = Math.max(ay, by, cy);
+    const offX = (canvasW - (maxX - minX)) / 2 - minX;
+    const offY = (canvasH - (maxY - minY)) / 2 - minY;
+
+    const color = document.getElementById('geoColor').value;
+    const width = parseInt(document.getElementById('geoWidth').value);
+    const fill = document.getElementById('geoFill').checked;
+
+    undoStack.push(JSON.parse(JSON.stringify(shapes)));
+    const subType = triCalcType === 'triangle' ? undefined :
+                    triCalcType === 'triangle-right' ? 'right' :
+                    triCalcType === 'triangle-iso' ? 'iso' : 'right-iso';
+    shapes.push({
+        type: 'triangle',
+        ...(subType ? { subType } : {}),
+        x1: ax + offX, y1: ay + offY,
+        x2: bx + offX, y2: by + offY,
+        x3: cx + offX, y3: cy + offY,
+        color, width, fill
+    });
+    redrawCanvas();
+    setGeoTool('select');
+    selectedShape = shapes.length - 1;
+    showDeleteBtn(selectedShape);
+}
+
+function triCalcReset() {
+    ['triSideA','triSideB','triSideC','triAngleA','triAngleB','triAngleC'].forEach(id => {
+        const el = document.getElementById(id);
+        el.value = '';
+        el.readOnly = false;
+        el.style.background = '';
+        el.placeholder = '—';
+    });
+    window._triCalcResult = null;
+    document.getElementById('triCalcDrawBtn').disabled = true;
+    const status = document.getElementById('triCalcStatus');
+    status.style.background = '#eff6ff';
+    status.style.color = '#1e40af';
+    status.style.borderColor = '#bfdbfe';
+    status.textContent = 'Indtast mindst 3 værdier (heraf mindst 1 side) for at beregne trekanten.';
 }
 
 // ========================
